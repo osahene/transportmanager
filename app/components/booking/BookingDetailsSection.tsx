@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { FaCalendarAlt, FaRegAddressCard } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { Driver } from "../../types/bookings";
+import { Driver } from "../../types/booking";
 
 interface BookingDetailsSectionProps {
   startDate: string;
