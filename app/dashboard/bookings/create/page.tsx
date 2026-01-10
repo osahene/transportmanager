@@ -67,6 +67,7 @@ export default function CreateBookingPage() {
 
   // Mobile money details
   const [mobileMoneyDetails, setMobileMoneyDetails] = useState({
+    transactionId: "",
     provider: "MTN",
     phoneNumber: "",
   });

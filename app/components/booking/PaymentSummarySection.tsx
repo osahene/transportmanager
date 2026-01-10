@@ -1,12 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-  Car,
-  PayInSlipDetails,
-  MobileMoneyDetails,
-} from "../../types/bookings";
-
+import { PayInSlipDetails, MobileMoneyDetails } from "../../types/booking";
+import { Car } from "@/app/types/cars";
 interface PaymentSummarySectionProps {
   totalAmount: number;
   paymentMethod: string;
@@ -20,6 +16,10 @@ interface PaymentSummarySectionProps {
   mobileMoneyDetails?: MobileMoneyDetails;
   onMobileMoneyChange?: (field: string, value: string) => void;
 }
+
+const generateId = (prefix: string): string => {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+};
 
 export default function PaymentSummarySection({
   totalAmount,
@@ -40,6 +40,7 @@ export default function PaymentSummarySection({
   },
   onPayInSlipChange,
   mobileMoneyDetails = {
+    transactionId: generateId("MOMO-"),
     provider: "MTN",
     phoneNumber: "",
   },
