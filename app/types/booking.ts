@@ -76,7 +76,7 @@ export interface Booking {
   driverLicenseExpiryDate?: string;
 
   // Timestamps
-  createdAt?: string;
+  createdAt: string;
   updatedAt?: string;
   cancelledAt?: string;
   completedAt?: string;

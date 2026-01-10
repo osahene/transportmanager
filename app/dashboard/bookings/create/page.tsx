@@ -679,6 +679,7 @@ export default function CreateBookingPage() {
       customerName: customerName,
       startDate: formData.startDate,
       endDate: formData.endDate,
+      createdAt: new Date().toISOString().split("T")[0],
       status: "confirmed" as const,
       pickupLocation: formData.pickupLocation,
       dropoffLocation: formData.dropoffLocation,

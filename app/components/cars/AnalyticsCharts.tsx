@@ -1,4 +1,3 @@
-// /components/cars/AnalyticsCharts.tsx
 import { FinancialTransaction } from "../../types/finance";
 import { Line } from "react-chartjs-2";
 import {
@@ -162,7 +161,7 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ transactions }) => {
         cornerRadius: 6,
         callbacks: {
           label: (context: TooltipItem<"line">) => {
-            const value = context.parsed.y;
+            const value = context.parsed.y ?? 0;
             const label = context.dataset.label || "";
             return `${label}: $${value.toLocaleString()}`;
           },
@@ -172,9 +171,9 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ transactions }) => {
     scales: {
       x: {
         type: "category",
+        border: { display: false },
         grid: {
           color: "rgba(156, 163, 175, 0.1)",
-          drawBorder: false,
         },
         ticks: {
           color: "#6b7280",
@@ -186,16 +185,16 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ transactions }) => {
       y: {
         type: "linear",
         beginAtZero: true,
+        border: { display: false },
         grid: {
           color: "rgba(156, 163, 175, 0.1)",
-          drawBorder: false,
         },
         ticks: {
           color: "#6b7280",
           font: {
             size: 11,
           },
-          callback: function (this: any, value: number | string) {
+          callback: (value: string | number) => {
             if (typeof value === "number") {
               return value >= 1000 ? `$${value / 1000}k` : `$${value}`;
             }

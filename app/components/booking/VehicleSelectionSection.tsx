@@ -2,7 +2,7 @@
 
 import { FaCar } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { Car } from "../../types/bookings";
+import { Car } from "../../types/cars";
 
 interface VehicleSelectionSectionProps {
   availableCars: Car[];
