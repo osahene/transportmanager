@@ -22,7 +22,7 @@ import VehicleSelectionSection from "../../../components/booking/VehicleSelectio
 import BookingDetailsSection from "../../../components/booking/BookingDetailsSection";
 import PaymentSummarySection from "../../../components/booking/PaymentSummarySection";
 import ConfirmationModal from "../../../components/booking/ConfirmationModal";
-import PaystackPop from "@paystack/inline-js";
+// import PaystackPop from "@paystack/inline-js";
 
 // Helper function to generate unique IDs
 const generateId = (prefix: string): string => {
@@ -741,6 +741,7 @@ export default function CreateBookingPage() {
       switch (formData.paymentMethod) {
         case "mobile_money":
           // Initialize Paystack payment
+          const PaystackPop = (await import("@paystack/inline-js")).default;
           const paystack = new PaystackPop();
 
           paystack.newTransaction({
