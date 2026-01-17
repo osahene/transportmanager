@@ -182,21 +182,23 @@ export default function CreateBookingPage() {
 
   const filteredCustomers = useMemo(() => {
     if (customerMode !== "existing") return [];
-    if (!customerSearch.trim()) return [];
 
-    return activeCustomers
-      .filter(
-        (customer: Customer) =>
-          customer.firstName
-            .toLowerCase()
-            .includes(customerSearch.toLowerCase()) ||
-          customer.lastName
-            .toLowerCase()
-            .includes(customerSearch.toLowerCase()) ||
-          customer.email.toLowerCase().includes(customerSearch.toLowerCase()) ||
-          customer.phone.includes(customerSearch)
-      )
-      .slice(0, 5);
+    const query = customerSearch.trim().toLowerCase();
+    if (!query) return [];
+    console.log("query", query);
+    console.log("cust", activeCustomers);
+
+    return activeCustomers.filter((customer: Customer) => {
+      return (
+        `${customer.firstName} ${customer.lastName}`
+          .toLowerCase()
+          .includes(query) ||
+        customer.email.toLowerCase().includes(query) ||
+        customer.phone.includes(customerSearch) ||
+        customer.ghanaCardId?.toLowerCase().includes(query) ||
+        customer.gpsAddress?.toLowerCase().includes(query)
+      );
+    });
   }, [activeCustomers, customerSearch, customerMode]);
 
   // Calculate total amount based on dates and car daily rate
@@ -228,10 +230,50 @@ export default function CreateBookingPage() {
 
   // Handle new customer form changes
   const handleNewCustomerChange = useCallback((name: string, value: string) => {
-    setNewCustomer((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setNewCustomer((prev) => {
+      const addressFields = ["locality", "town", "city", "region", "country"];
+      if (addressFields.includes(name)) {
+        return {
+          ...prev,
+          address: {
+            ...prev.address,
+            [name]: value,
+          },
+        };
+      }
+
+      if (name.startsWith("guarantor_")) {
+        const fieldName = name.replace("guarantor_", "");
+
+        if (addressFields.includes(fieldName)) {
+          return {
+            ...prev,
+            guarantor: {
+              ...prev.guarantor,
+              address: {
+                ...prev.guarantor.address,
+                [fieldName]: value,
+              },
+            },
+          };
+        }
+      }
+      if (name.includes("_")) {
+        const [parent, child] = name.split("_");
+        return {
+          ...prev,
+          [parent]: {
+            ...(prev[parent as keyof typeof prev] as object),
+            [child]: value,
+          },
+        };
+      }
+
+      return {
+        ...prev,
+        [name]: value,
+      };
+    });
   }, []);
 
   // Handle communication preferences changes
@@ -272,6 +314,43 @@ export default function CreateBookingPage() {
       }
     },
     [formData.totalAmount]
+  );
+
+  // Add this handler after your other handlers
+  const handleExistingCustomerGuarantorChange = useCallback(
+    (field: string, value: string) => {
+      if (!selectedCustomer) return;
+
+      // Split: ["selectedCustomer", "guarantor", "firstName"]
+      const fieldParts = field.split("_");
+
+      setSelectedCustomer((prev) => {
+        if (!prev) return prev;
+        const updated = { ...prev };
+
+        // Check if the second part is "guarantor"
+        if (fieldParts[1] === "guarantor") {
+          console.log("field", value);
+          if (fieldParts.length === 3) {
+            updated.guarantor = {
+              ...updated.guarantor,
+              [fieldParts[2]]: value,
+            };
+          } else if (fieldParts.length === 4 && fieldParts[2] === "address") {
+            updated.guarantor = {
+              ...updated.guarantor,
+              address: {
+                ...updated.guarantor.address,
+                [fieldParts[3]]: value,
+              },
+            };
+          }
+        }
+
+        return updated;
+      });
+    },
+    [selectedCustomer]
   );
 
   // Validate form
@@ -843,6 +922,9 @@ export default function CreateBookingPage() {
           onCustomerSelect={handleCustomerSelect}
           newCustomer={newCustomer}
           onNewCustomerChange={handleNewCustomerChange}
+          onExistingCustomerGuarantorChange={
+            handleExistingCustomerGuarantorChange
+          } // Add this
           onCommunicationPrefChange={handleCommunicationPrefChange}
           customers={allCustomers}
         />

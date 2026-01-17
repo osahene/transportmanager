@@ -8,7 +8,7 @@ import { Driver } from "../../types/booking";
 interface BookingDetailsSectionProps {
   startDate: string;
   endDate: string;
-  selfDrive: string; // Changed from boolean to string to match parent
+  selfDrive: string;
   pickupLocation: string;
   dropoffLocation: string;
   driverId: string;

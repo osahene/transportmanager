@@ -12,6 +12,7 @@ interface CustomerSelectionSectionProps {
   setCustomerSearch: (search: string) => void;
   filteredCustomers: Customer[];
   selectedCustomer: Customer | null;
+  onExistingCustomerGuarantorChange: (field: string, value: string) => void;
   onCustomerSelect: (customer: Customer) => void;
   newCustomer: {
     firstName: string;
@@ -83,6 +84,7 @@ export default function CustomerSelectionSection({
   newCustomer,
   onNewCustomerChange,
   onCommunicationPrefChange,
+  onExistingCustomerGuarantorChange,
 }: CustomerSelectionSectionProps) {
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -191,21 +193,22 @@ export default function CustomerSelectionSection({
                     onClick={() => handleSelectCustomer(customer)}
                     className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0"
                   >
-                    <div className="font-medium text-gray-900 dark:text-white">
-                      {customer.firstName}
-                    </div>
-                    <div className="font-medium text-gray-900 dark:text-white">
-                      {customer.lastName}
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {customer.email}
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {customer.phone}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      {customer.totalBookings} previous bookings •{" "}
-                      {customer.loyaltyTier}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium text-gray-900 dark:text-white">
+                          {customer.firstName} {customer.lastName}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          {customer.email}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          {customer.phone}
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-500">
+                        {customer.totalBookings} bookings •{" "}
+                        {customer.loyaltyTier}
+                      </div>
                     </div>
                   </button>
                 ))}
@@ -224,7 +227,7 @@ export default function CustomerSelectionSection({
               </h3>
               <div>
                 <h3 className="font-medium text-2xl text-gray-900 text-center dark:text-white">
-                  Cutomer Details
+                  Customer Details
                 </h3>
               </div>
               <div className="grid grid-row-2 md:grid-rows-2 gap-4">
@@ -278,7 +281,6 @@ export default function CustomerSelectionSection({
                       Driver Licence
                     </p>
                     <p className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                      <FaPhone className="text-sm" />
                       {selectedCustomer.driverLicenseId}
                     </p>
                   </div>
@@ -287,7 +289,6 @@ export default function CustomerSelectionSection({
                       Occupation
                     </p>
                     <p className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                      <FaEnvelope className="text-sm" />
                       {selectedCustomer.occupation}
                     </p>
                   </div>
@@ -312,7 +313,6 @@ export default function CustomerSelectionSection({
                       Town
                     </p>
                     <p className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                      <FaPhone className="text-sm" />
                       {selectedCustomer.address.town}
                     </p>
                   </div>
@@ -321,7 +321,6 @@ export default function CustomerSelectionSection({
                       City
                     </p>
                     <p className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                      <FaPhone className="text-sm" />
                       {selectedCustomer.address.city}
                     </p>
                   </div>
@@ -330,7 +329,6 @@ export default function CustomerSelectionSection({
                       Region
                     </p>
                     <p className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                      <FaEnvelope className="text-sm" />
                       {selectedCustomer.address.region}
                     </p>
                   </div>
@@ -339,7 +337,6 @@ export default function CustomerSelectionSection({
                       Country
                     </p>
                     <p className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                      <FaEnvelope className="text-sm" />
                       {selectedCustomer.address.country}
                     </p>
                   </div>
@@ -355,113 +352,244 @@ export default function CustomerSelectionSection({
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         First Name of Guarantor
                       </p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {selectedCustomer.guarantor.firstName}
-                      </p>
+                      <input
+                        type="text"
+                        name="selectedCustomer_guarantor_firstName"
+                        value={selectedCustomer.guarantor.firstName}
+                        onChange={(e) =>
+                          onExistingCustomerGuarantorChange(
+                            "selectedCustomer_guarantor_firstName",
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        required
+                      />
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Last Name of Guarantor
                       </p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {selectedCustomer.guarantor.lastName}
-                      </p>
+                      <input
+                        type="text"
+                        name="selectedCustomer_guarantor_lastName"
+                        value={selectedCustomer.guarantor.lastName}
+                        onChange={(e) =>
+                          onExistingCustomerGuarantorChange(
+                            "selectedCustomer_guarantor_lastName",
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        required
+                      />
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Phone Number
                       </p>
-                      <p className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                      <div className="flex flex-row items-baseline space-x-4">
                         <FaPhone className="text-sm" />
-                        {selectedCustomer.guarantor.phone}
-                      </p>
+                        <input
+                          type="text"
+                          name="selectedCustomer_guarantor_phone"
+                          value={selectedCustomer.guarantor.phone}
+                          onChange={(e) =>
+                            onExistingCustomerGuarantorChange(
+                              "selectedCustomer_guarantor_phone",
+                              e.target.value
+                            )
+                          }
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          required
+                        />
+                      </div>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         E-mail Address
                       </p>
-                      <p className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                      <div className="flex items-baseline space-x-4">
                         <FaEnvelope className="text-sm" />
-                        {selectedCustomer.guarantor.email}
-                      </p>
+                        <input
+                          type="text"
+                          name="selectedCustomer_guarantor_email"
+                          value={selectedCustomer.guarantor.email}
+                          onChange={(e) =>
+                            onExistingCustomerGuarantorChange(
+                              "selectedCustomer_guarantor_email",
+                              e.target.value
+                            )
+                          }
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          required
+                        />
+                      </div>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Ghana Card ID / Passport Number
                       </p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {selectedCustomer.guarantor.ghanaCardId}
-                      </p>
+                      <input
+                        type="text"
+                        name="selectedCustomer_guarantor_ghanaCardId"
+                        value={selectedCustomer.guarantor.ghanaCardId}
+                        onChange={(e) =>
+                          onExistingCustomerGuarantorChange(
+                            "selectedCustomer_guarantor_ghanaCardId",
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        required
+                      />
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Occupation
                       </p>
-                      <p className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                        <FaPhone className="text-sm" />
-                        {selectedCustomer.guarantor.occupation}
-                      </p>
+                      <div className="flex items-baseline space-x-4">
+                        <input
+                          type="text"
+                          name="selectedCustomer_guarantor_occupation"
+                          value={selectedCustomer.guarantor.occupation}
+                          onChange={(e) =>
+                            onExistingCustomerGuarantorChange(
+                              "selectedCustomer_guarantor_occupation",
+                              e.target.value
+                            )
+                          }
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          required
+                        />
+                      </div>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Relation to Customer
                       </p>
-                      <p className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                        <FaEnvelope className="text-sm" />
-                        {selectedCustomer.guarantor.relationship}
-                      </p>
+                      <input
+                        type="text"
+                        name="selectedCustomer_guarantor_relationship"
+                        value={selectedCustomer.guarantor.relationship}
+                        onChange={(e) =>
+                          onExistingCustomerGuarantorChange(
+                            "selectedCustomer_guarantor_relationship",
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        required
+                      />
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         GPS Address
                       </p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {selectedCustomer.guarantor.gpsAddress}
-                      </p>
+                      <input
+                        type="text"
+                        name="selectedCustomer_guarantor_gpsAddress"
+                        value={selectedCustomer.guarantor.gpsAddress}
+                        onChange={(e) =>
+                          onExistingCustomerGuarantorChange(
+                            "selectedCustomer_guarantor_gpsAddress",
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        required
+                      />
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Locality
                       </p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {selectedCustomer.guarantor.address.locality}
-                      </p>
+                      <input
+                        type="text"
+                        name="selectedCustomer_guarantor_address_locality"
+                        value={selectedCustomer.guarantor.address.locality}
+                        onChange={(e) =>
+                          onExistingCustomerGuarantorChange(
+                            "selectedCustomer_guarantor_address_locality",
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        required
+                      />
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Town
                       </p>
-                      <p className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                        <FaPhone className="text-sm" />
-                        {selectedCustomer.guarantor.address.town}
-                      </p>
+                      <input
+                        type="text"
+                        name="selectedCustomer_guarantor_address_town"
+                        value={selectedCustomer.guarantor.address.town}
+                        onChange={(e) =>
+                          onExistingCustomerGuarantorChange(
+                            "selectedCustomer_guarantor_address_town",
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        required
+                      />
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         City
                       </p>
-                      <p className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                        <FaPhone className="text-sm" />
-                        {selectedCustomer.guarantor.address.city}
-                      </p>
+
+                      <input
+                        type="text"
+                        name="selectedCustomer_guarantor_address_city"
+                        value={selectedCustomer.guarantor.address.city}
+                        onChange={(e) =>
+                          onExistingCustomerGuarantorChange(
+                            "selectedCustomer_guarantor_address_city",
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        required
+                      />
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Region
                       </p>
-                      <p className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                        <FaEnvelope className="text-sm" />
-                        {selectedCustomer.guarantor.address.region}
-                      </p>
+                      <input
+                        type="text"
+                        name="selectedCustomer_guarantor_address_region"
+                        value={selectedCustomer.guarantor.address.region}
+                        onChange={(e) =>
+                          onExistingCustomerGuarantorChange(
+                            "selectedCustomer_guarantor_address_region",
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        required
+                      />
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Country
                       </p>
-                      <p className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                        <FaEnvelope className="text-sm" />
-                        {selectedCustomer.guarantor.address.country}
-                      </p>
+                      <input
+                        type="text"
+                        name="selectedCustomer_guarantor_address_country"
+                        value={selectedCustomer.guarantor.address.country}
+                        onChange={(e) =>
+                          onExistingCustomerGuarantorChange(
+                            "selectedCustomer_guarantor_address_country",
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        required
+                      />
                     </div>
                   </div>
                 </div>
@@ -477,7 +605,7 @@ export default function CustomerSelectionSection({
         >
           <div className="mb-4 p-0">
             <h3 className="font-medium text-2xl text-gray-900 text-center dark:text-white">
-              Cutomer Details
+              Customer Details
             </h3>
           </div>
           <div className="grid grid-row-2 md:grid-rows-2 gap-4">
@@ -488,10 +616,10 @@ export default function CustomerSelectionSection({
                 </label>
                 <input
                   type="text"
-                  name="first_name"
+                  name="firstName"
                   value={newCustomer.firstName}
                   onChange={(e) =>
-                    onNewCustomerChange("first_name", e.target.value)
+                    onNewCustomerChange("firstName", e.target.value)
                   }
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   required
@@ -503,10 +631,10 @@ export default function CustomerSelectionSection({
                 </label>
                 <input
                   type="text"
-                  name="last_name"
+                  name="lastName"
                   value={newCustomer.lastName}
                   onChange={(e) =>
-                    onNewCustomerChange("last_name", e.target.value)
+                    onNewCustomerChange("lastName", e.target.value)
                   }
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   required
@@ -663,10 +791,10 @@ export default function CustomerSelectionSection({
                 </label>
                 <input
                   type="text"
-                  name="guarantor_first_name"
+                  name="guarantor_firstName"
                   value={newCustomer.guarantor.firstName}
                   onChange={(e) =>
-                    onNewCustomerChange("guarantor_first_name", e.target.value)
+                    onNewCustomerChange("guarantor_firstName", e.target.value)
                   }
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   required
@@ -678,10 +806,10 @@ export default function CustomerSelectionSection({
                 </label>
                 <input
                   type="text"
-                  name="guarantor_last_name"
+                  name="guarantor_lastName"
                   value={newCustomer.guarantor.lastName}
                   onChange={(e) =>
-                    onNewCustomerChange("guarantor_last_name", e.target.value)
+                    onNewCustomerChange("guarantor_lastName", e.target.value)
                   }
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   required

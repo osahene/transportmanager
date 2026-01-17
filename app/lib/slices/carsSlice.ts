@@ -16,7 +16,41 @@ export interface CarsState {
 }
 
 const initialState: CarsState = {
-  Cars: [],
+  Cars: [
+    {
+      id: "1",
+      make: "Benz",
+      model: "C230",
+      year: 2010,
+      licensePlate: "GT-2023-19",
+      vin: "grrrr",
+      color: "red",
+      dailyRate: 180,
+      status: "available",
+      stats: {
+        totalBookings: 50,
+        totalRevenue: 1000,
+      },
+      features: {
+        airConditioning: true,
+        bluetooth: true,
+        gps: false,
+        backupCamera: true,
+        wifi: true,
+        navigation: true,
+        premiumAudio: true,
+      },
+      specifications: {
+        fuelType: "diesel",
+        transmission: "true",
+        seatingCapacity: 5,
+        fuelCapacity: 150,
+        engineType: "automatic",
+      },
+      createdAt: "10/12/2026",
+      updatedAt: "12/12/2026",
+    },
+  ],
   selectedCar: null,
   loading: false,
   error: null,

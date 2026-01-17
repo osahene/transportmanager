@@ -9,8 +9,10 @@ export const selectBookings = (state: RootState) => state.bookings.bookings;
 export const selectCustomers = (state: RootState) => state.customers.customers;
 export const selectFinance = (state: RootState) => state.finance;
 export const selectStaff = (state: RootState) => state.staff.staff;
-export const selectActiveCustomers = (state: RootState) =>
-  state.customers.customers.filter((customer) => customer.status === "active");
+export const selectActiveCustomers = createSelector(
+  [selectCustomers],
+  (customers) => customers.filter((c) => c.status === "active")
+);
 export const selectSuspendedCustomers = (state: RootState) =>
   state.customers.customers.filter(
     (customer) => customer.status === "suspended"
