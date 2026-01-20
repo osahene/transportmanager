@@ -97,7 +97,7 @@ const initialState: CustomersState = {
         region: "Ashanti",
         country: "Ghana",
       },
-      status: "active",
+      status: "suspended",
       loyaltyTier: "silver",
       totalSpent: 7200,
       totalBookings: 5,

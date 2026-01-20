@@ -20,6 +20,7 @@ import {
 import { motion } from "framer-motion";
 import { useAppSelector } from "../../lib/store";
 import { selectAllBookingsWithDetails } from "../../lib/slices/selectors";
+import BookingActions from "@/app/components/booking/bookingActions";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -47,11 +48,11 @@ export default function BookingsPage() {
   const [sortField, setSortField] = useState<SortField>("startDate");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
-  // Fixed: Using memoized selector
   const allDetailedBookings = useAppSelector(selectAllBookingsWithDetails);
   const [selectedBooking, setSelectedBooking] = useState<ReceiptData | null>(
-    null
+    null,
   );
+
   const receiptRef = useRef<HTMLDivElement>(null);
 
   // Client-side filtering
@@ -97,10 +98,19 @@ export default function BookingsPage() {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentBookings = filteredBookings.slice(
-    indexOfFirstItem,
-    indexOfLastItem
-  );
+  const currentBookings = allDetailedBookings
+    .slice(indexOfFirstItem, indexOfLastItem)
+    .map((booking: any) => {
+      if (booking.payload) {
+        console.log("booking", booking);
+        console.log("booking payload", booking.payload);
+        return {
+          ...booking,
+          ...booking.payload,
+        };
+      }
+      return booking;
+    });
 
   // Handle sort
   const handleSort = (field: SortField) => {
@@ -155,13 +165,13 @@ export default function BookingsPage() {
           }`}
         >
           1
-        </button>
+        </button>,
       );
       if (startPage > 2) {
         buttons.push(
           <span key="ellipsis1" className="px-2 text-gray-500">
             ...
-          </span>
+          </span>,
         );
       }
     }
@@ -179,7 +189,7 @@ export default function BookingsPage() {
           }`}
         >
           {i}
-        </button>
+        </button>,
       );
     }
 
@@ -189,7 +199,7 @@ export default function BookingsPage() {
         buttons.push(
           <span key="ellipsis2" className="px-2 text-gray-500">
             ...
-          </span>
+          </span>,
         );
       }
       buttons.push(
@@ -203,43 +213,74 @@ export default function BookingsPage() {
           }`}
         >
           {totalPages}
-        </button>
+        </button>,
       );
     }
 
     return buttons;
   };
 
-  const generateReceiptData = (bookingId: string): ReceiptData | null => {
-    const booking = allDetailedBookings.find((b) => b.id === bookingId);
-    if (!booking) return null;
+  // const generateReceiptData = (bookingId: string): ReceiptData | null => {
+  //   const booking = allDetailedBookings.find((b) => b.carId === bookingId);
+  //   console.log("Allbookings", allDetailedBookings);
+  //   console.log("bookings", booking);
+  //   if (!booking) return null;
 
-    const customer = booking.customerName;
-    const car = booking.car;
+  //   const customer = booking.customerName;
+  //   const car = booking.car;
+
+  //   return {
+  //     bookingId: booking.id,
+  //     customerName: customer || "Unknown",
+  //     carDetails: car
+  //       ? `${car.make} ${car.model} (${car.licensePlate})`
+  //       : "Unknown",
+  //     bookingDates: `${format(
+  //       new Date(booking.startDate),
+  //       "MMM d, yyyy",
+  //     )} - ${format(new Date(booking.endDate), "MMM d, yyyy")}`,
+  //     totalAmount: booking.totalAmount,
+  //     paymentMethod: "Credit Card",
+  //     transactionId: `TXN-${booking.id.slice(0, 8).toUpperCase()}`,
+  //     date: new Date(),
+  //   };
+  // };
+
+  const generateReceiptData = (bookingId: string): ReceiptData | null => {
+    // Search by booking.id, not carId
+    const booking = allDetailedBookings.find((b) => b.payload.id === bookingId);
+    console.log("genAllBook", allDetailedBookings);
+    console.log("genBook", booking);
+
+    if (!booking) return null;
+    const { payload } = booking;
+    // The selector already provides car details
+    const carDetails = `${booking.carMake} ${booking.carModel} (${booking.carLicensePlate})`;
 
     return {
-      bookingId: booking.id,
-      customerName: customer || "Unknown",
-      carDetails: car
-        ? `${car.make} ${car.model} (${car.licensePlate})`
-        : "Unknown",
+      bookingId: payload.id,
+      customerName: payload.customerName || "Unknown",
+      carDetails: carDetails || "Unknown",
       bookingDates: `${format(
-        new Date(booking.startDate),
-        "MMM d, yyyy"
-      )} - ${format(new Date(booking.endDate), "MMM d, yyyy")}`,
-      totalAmount: booking.totalAmount,
-      paymentMethod: "Credit Card",
-      transactionId: `TXN-${booking.id.slice(0, 8).toUpperCase()}`,
+        new Date(payload.startDate),
+        "MMM d, yyyy",
+      )} - ${format(new Date(payload.endDate), "MMM d, yyyy")}`,
+      totalAmount: payload.totalAmount,
+      paymentMethod: payload.paymentMethod || "Credit Card",
+      transactionId: `TXN-${payload.id.slice(0, 8).toUpperCase()}`,
       date: new Date(),
     };
   };
 
   const generatePDF = async (bookingId: string) => {
+    console.log("console.log", bookingId);
     const receiptData = generateReceiptData(bookingId);
+    console.log("here i am", receiptData);
     if (!receiptData) return;
 
     setSelectedBooking(receiptData);
 
+    console.log("here i am");
     setTimeout(async () => {
       if (receiptRef.current) {
         const canvas = await html2canvas(receiptRef.current, {
@@ -430,7 +471,7 @@ export default function BookingsPage() {
                 >
                   {status.charAt(0).toUpperCase() + status.slice(1)}
                 </button>
-              )
+              ),
             )}
           </div>
         </div>
@@ -467,7 +508,7 @@ export default function BookingsPage() {
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-900">
-              <tr>
+              <tr className="items-center">
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                   Booking ID
                 </th>
@@ -503,6 +544,9 @@ export default function BookingsPage() {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                   Actions
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                  More Actions
                 </th>
               </tr>
             </thead>
@@ -562,7 +606,7 @@ export default function BookingsPage() {
                         {Math.ceil(
                           (new Date(booking.endDate).getTime() -
                             new Date(booking.startDate).getTime()) /
-                            (1000 * 60 * 60 * 24)
+                            (1000 * 60 * 60 * 24),
                         )}{" "}
                         days
                       </div>
@@ -578,36 +622,50 @@ export default function BookingsPage() {
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(
-                          booking.status
+                          booking.status,
                         )}`}
                       >
                         {booking.status.toUpperCase()}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => generatePDF(booking.id)}
-                          className="p-2 bg-red-600 dark:bg-red-700 text-white rounded-lg hover:bg-red-700 dark:hover:bg-red-800 transition"
-                          title="Generate PDF"
-                        >
-                          <FaFilePdf />
-                        </button>
-                        <button
-                          onClick={() => sendEmailReceipt(booking.id)}
-                          className="p-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition"
-                          title="Send Email"
-                        >
-                          <FaEnvelope />
-                        </button>
-                        <button
-                          onClick={() => sendSMSReceipt(booking.id)}
-                          className="p-2 bg-green-600 dark:bg-green-700 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-800 transition"
-                          title="Send SMS"
-                        >
-                          <FaSms />
-                        </button>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => generatePDF(booking.id)}
+                            className="p-2 bg-red-600 dark:bg-red-700 text-white rounded-lg hover:bg-red-700 dark:hover:bg-red-800 transition"
+                            title="Generate PDF"
+                          >
+                            <FaFilePdf />
+                          </button>
+                          <button
+                            onClick={() => sendEmailReceipt(booking.id)}
+                            className="p-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition"
+                            title="Send Email"
+                          >
+                            <FaEnvelope />
+                          </button>
+                          <button
+                            onClick={() => sendSMSReceipt(booking.id)}
+                            className="p-2 bg-green-600 dark:bg-green-700 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-800 transition"
+                            title="Send SMS"
+                          >
+                            <FaSms />
+                          </button>
+                        </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <BookingActions
+                        bookingId={booking.id}
+                        carId={booking.carId}
+                        currentStatus={booking.status}
+                        customerName={booking.customerName}
+                        carName={`${booking.carMake} ${booking.carModel}`}
+                        amountPaid={booking.totalAmount}
+                        dailyRate={booking.carDailyRate}
+                        endDate={booking.endDate}
+                      />
                     </td>
                   </motion.tr>
                 ))

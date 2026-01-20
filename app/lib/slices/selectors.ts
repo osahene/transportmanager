@@ -11,11 +11,11 @@ export const selectFinance = (state: RootState) => state.finance;
 export const selectStaff = (state: RootState) => state.staff.staff;
 export const selectActiveCustomers = createSelector(
   [selectCustomers],
-  (customers) => customers.filter((c) => c.status === "active")
+  (customers) => customers.filter((c) => c.status === "active"),
 );
 export const selectSuspendedCustomers = (state: RootState) =>
   state.customers.customers.filter(
-    (customer) => customer.status === "suspended"
+    (customer) => customer.status === "suspended",
   );
 export const selectCustomerById = (customerId: string) => (state: RootState) =>
   state.customers.customers.find((customer) => customer.id === customerId);
@@ -33,7 +33,7 @@ export const selectBookingsByCarId = (carId: string) => (state: RootState) =>
 export const selectCompletedBookingsByCarId =
   (carId: string) => (state: RootState) =>
     state.bookings.bookings.filter(
-      (booking) => booking.carId === carId && booking.status === "completed"
+      (booking) => booking.carId === carId && booking.status === "completed",
     );
 
 export const selectActiveBookingsByCarId =
@@ -41,28 +41,28 @@ export const selectActiveBookingsByCarId =
     state.bookings.bookings.filter(
       (booking) =>
         booking.carId === carId &&
-        ["pending", "confirmed"].includes(booking.status)
+        ["pending", "confirmed"].includes(booking.status),
     );
 
 // Memoized selectors
 export const selectAvailablecars = createSelector([selectcars], (cars) =>
-  cars.filter((car) => car.status === "available")
+  cars.filter((car) => car.status === "available"),
 );
 
 export const selectActiveBookings = createSelector(
   [selectBookings],
   (bookings) =>
     bookings.filter((booking) =>
-      ["pending", "confirmed"].includes(booking.status)
-    )
+      ["pending", "confirmed"].includes(booking.status),
+    ),
 );
 
 export const selectDrivers = createSelector([selectStaff], (staff) =>
   staff.filter(
     (member) =>
       member.role.toLowerCase().includes("driver") ||
-      member.department.toLowerCase().includes("operations")
-  )
+      member.department.toLowerCase().includes("operations"),
+  ),
 );
 
 // Memoized selectors
@@ -103,7 +103,7 @@ export const selectFilteredCustomers = createSelector(
 
       return true;
     });
-  }
+  },
 );
 
 export const selectCustomerLoyaltyTiers = createSelector(
@@ -121,7 +121,7 @@ export const selectCustomerLoyaltyTiers = createSelector(
     });
 
     return tiers;
-  }
+  },
 );
 
 export const selectTopSpendingCustomers = createSelector(
@@ -130,7 +130,7 @@ export const selectTopSpendingCustomers = createSelector(
     return [...customers]
       .sort((a, b) => b.totalSpent - a.totalSpent)
       .slice(0, 10);
-  }
+  },
 );
 
 export const selectDashboardStats = createSelector(
@@ -144,12 +144,12 @@ export const selectDashboardStats = createSelector(
   (cars, bookings, finance, availableCars, activeBookings) => {
     const today = new Date().toISOString().split("T")[0];
     const todayTransactions = finance.transactions.filter((t) =>
-      t.date.startsWith(today)
+      t.date.startsWith(today),
     );
 
     // Calculate maintenance due
     const maintenanceDue = cars.filter(
-      (car) => car.status === "maintenance"
+      (car) => car.status === "maintenance",
     ).length;
 
     return {
@@ -165,75 +165,8 @@ export const selectDashboardStats = createSelector(
         .filter((t) => t.type === "revenue")
         .reduce((sum, t) => sum + t.amount, 0),
     };
-  }
+  },
 );
-
-// Memoized selectors for car stats
-// export const selectCarStats = createSelector(
-//   [
-//     selectSelectedCar,
-//     selectBookings,
-//     (state: RootState) => state.maintenance.records,
-//     (state: RootState) => state.insurance.policies,
-//   ],
-//   (selectedCar, bookings, maintenanceRecords, insurancePolicies) => {
-//     if (!selectedCar) return null;
-
-//     const carBookings = bookings.filter((b) => b.carId === selectedCar.id);
-//     const completedBookings = carBookings.filter(
-//       (b) => b.status === "completed"
-//     );
-//     const carMaintenance = maintenanceRecords.filter(
-//       (r) => r.vehicleId === selectedCar.id
-//     );
-//     const carInsurance = insurancePolicies.filter(
-//       (p) => p.vehicleId === selectedCar.id
-//     );
-
-//     // Utilization rate calculation
-//     const totalBookings = carBookings.length;
-//     const utilizationRate =
-//       totalBookings > 0
-//         ? Math.round((completedBookings.length / totalBookings) * 100)
-//         : 0;
-
-//     // Revenue calculation
-//     const totalRevenue = completedBookings.reduce(
-//       (sum, booking) => sum + booking.totalAmount,
-//       0
-//     );
-
-//     // Maintenance costs
-//     const maintenanceCosts = carMaintenance.reduce(
-//       (sum, record) => sum + record.cost,
-//       0
-//     );
-
-//     // Active insurance
-//     const activeInsurance = carInsurance.find(
-//       (policy) =>
-//         policy.status === "active" && new Date(policy.endDate) > new Date()
-//     );
-
-//     return {
-//       totalBookings,
-//       completedBookings: completedBookings.length,
-//       utilizationRate,
-//       totalRevenue,
-//       maintenanceCosts,
-//       hasActiveInsurance: !!activeInsurance,
-//       lastMaintenance:
-//         carMaintenance.length > 0
-//           ? carMaintenance[carMaintenance.length - 1]
-//           : null,
-//       upcomingBookings: carBookings.filter(
-//         (b) =>
-//           ["pending", "confirmed"].includes(b.status) &&
-//           new Date(b.startDate) > new Date()
-//       ).length,
-//     };
-//   }
-// );
 
 export const selectCarStats = createSelector(
   [
@@ -247,7 +180,7 @@ export const selectCarStats = createSelector(
 
     const carBookings = bookings.filter((b) => b.carId === selectedCar.id);
     const completedBookings = carBookings.filter(
-      (b) => b.status === "completed"
+      (b) => b.status === "completed",
     );
 
     // Minimal computation - these should ideally come from backend
@@ -262,10 +195,10 @@ export const selectCarStats = createSelector(
       upcomingBookings: carBookings.filter(
         (b) =>
           ["pending", "confirmed"].includes(b.status) &&
-          new Date(b.startDate) > new Date()
+          new Date(b.startDate) > new Date(),
       ).length,
     };
-  }
+  },
 );
 
 export const selectCarDetails = createSelector(
@@ -283,16 +216,16 @@ export const selectCarDetails = createSelector(
     bookings,
     maintenanceRecords,
     insurancePolicies,
-    stats
+    stats,
   ) => {
     if (!selectedCar) return null;
 
     const carBookings = bookings.filter((b) => b.carId === selectedCar.id);
     const carMaintenance = maintenanceRecords.filter(
-      (r) => r.vehicleId === selectedCar.id
+      (r) => r.vehicleId === selectedCar.id,
     );
     const carInsurance = insurancePolicies.filter(
-      (p) => p.vehicleId === selectedCar.id
+      (p) => p.vehicleId === selectedCar.id,
     );
 
     return {
@@ -312,20 +245,20 @@ export const selectCarDetails = createSelector(
         upcomingBookings: 0,
       },
     };
-  }
+  },
 );
 
 // Get maintenance status from backend (if needed for filtering)
 export const selectCarsInMaintenance = createSelector([selectcars], (cars) =>
-  cars.filter((car) => car.status === "maintenance")
+  cars.filter((car) => car.status === "maintenance"),
 );
 
 export const selectRentedCars = createSelector([selectcars], (cars) =>
-  cars.filter((car) => car.status === "rented")
+  cars.filter((car) => car.status === "rented"),
 );
 
 export const selectRetiredCars = createSelector([selectcars], (cars) =>
-  cars.filter((car) => car.status === "retired")
+  cars.filter((car) => car.status === "retired"),
 );
 
 // Minimal frontend computation - just counting
@@ -345,7 +278,7 @@ export const selectCarsStats = createSelector(
       maintenance: maintenanceCars.length,
       retired: retiredCars.length,
     };
-  }
+  },
 );
 
 // Simple search filter - minimal computation
@@ -373,27 +306,38 @@ export const selectFilteredCars = createSelector(
 
       return matchesSearch && matchesStatus;
     });
-  }
+  },
 );
 
 export const selectAllBookingsWithDetails = createSelector(
   [selectBookings, selectcars, selectCustomers],
   (bookings, cars, customers) => {
+    console.log("Bookings in selector:", bookings);
+    console.log("Cars in selector:", cars);
+    console.log("Customers in selector:", customers);
     return bookings
       .map((booking) => {
-        const car = cars.find((c) => c.id === booking.carId);
-        const customer = customers.find((c) => c.id === booking.customerId);
+        const carId = booking.CarId;
+        const customerId = booking.customerId;
+        const car = cars.find((c) => c.id === carId);
+        const customer = customers.find((c) => c.id === customerId);
+        console.log("cars", car);
+        console.log("customer", customer);
 
         // Calculate duration
         const startDate = new Date(booking.startDate);
         const endDate = new Date(booking.endDate);
         const durationDays = Math.ceil(
-          (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+          (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
         );
+        console.log("outside", car);
+        console.log("inner bookings", bookings);
+        console.log("customerId", customerId);
+        console.log("customer ids", customer);
 
         return {
           ...booking,
-          // Customer details
+          carId,
           customerName: customer
             ? `${customer.firstName} ${customer.lastName}`
             : "Unknown Customer",
@@ -418,17 +362,17 @@ export const selectAllBookingsWithDetails = createSelector(
             booking.status === "completed"
               ? "green"
               : booking.status === "confirmed"
-              ? "blue"
-              : booking.status === "pending"
-              ? "yellow"
-              : "red",
+                ? "blue"
+                : booking.status === "pending"
+                  ? "yellow"
+                  : "red",
         };
       })
       .sort(
         (a, b) =>
-          new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+          new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
       );
-  }
+  },
 );
 
 export const selectBookingStats = createSelector(
@@ -444,5 +388,5 @@ export const selectBookingStats = createSelector(
         .filter((b) => b.status === "completed")
         .reduce((sum, b) => sum + b.totalAmount, 0),
     };
-  }
+  },
 );

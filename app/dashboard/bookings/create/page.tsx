@@ -14,7 +14,6 @@ import {
   selectAvailablecars,
   selectDrivers,
   selectCustomers,
-  selectActiveCustomers,
 } from "../../../lib/slices/selectors";
 
 import CustomerSelectionSection from "../../../components/booking/CustomerSelectionSection";
@@ -22,7 +21,6 @@ import VehicleSelectionSection from "../../../components/booking/VehicleSelectio
 import BookingDetailsSection from "../../../components/booking/BookingDetailsSection";
 import PaymentSummarySection from "../../../components/booking/PaymentSummarySection";
 import ConfirmationModal from "../../../components/booking/ConfirmationModal";
-// import PaystackPop from "@paystack/inline-js";
 
 // Helper function to generate unique IDs
 const generateId = (prefix: string): string => {
@@ -37,7 +35,6 @@ export default function CreateBookingPage() {
   const availableCars = useAppSelector(selectAvailablecars) as Car[];
   const drivers = useAppSelector(selectDrivers) as Driver[];
   const allCustomers = useAppSelector(selectCustomers);
-  const activeCustomers = useAppSelector(selectActiveCustomers);
   // Confirmation modal state
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [bookingSummary, setBookingSummary] = useState<BookingSummary | null>(
@@ -185,10 +182,7 @@ export default function CreateBookingPage() {
 
     const query = customerSearch.trim().toLowerCase();
     if (!query) return [];
-    console.log("query", query);
-    console.log("cust", activeCustomers);
-
-    return activeCustomers.filter((customer: Customer) => {
+    return allCustomers.filter((customer: Customer) => {
       return (
         `${customer.firstName} ${customer.lastName}`
           .toLowerCase()
@@ -199,7 +193,7 @@ export default function CreateBookingPage() {
         customer.gpsAddress?.toLowerCase().includes(query)
       );
     });
-  }, [activeCustomers, customerSearch, customerMode]);
+  }, [allCustomers, customerSearch, customerMode]);
 
   // Calculate total amount based on dates and car daily rate
   useEffect(() => {
@@ -330,7 +324,6 @@ export default function CreateBookingPage() {
 
         // Check if the second part is "guarantor"
         if (fieldParts[1] === "guarantor") {
-          console.log("field", value);
           if (fieldParts.length === 3) {
             updated.guarantor = {
               ...updated.guarantor,
@@ -619,6 +612,53 @@ export default function CreateBookingPage() {
     mobileMoneyDetails,
   ]);
 
+  // Check car availability
+  const checkCarAvailability = useCallback(
+    async (carId: string, startDate: string, endDate: string) => {
+      if (!carId || !startDate || !endDate) return true;
+
+      try {
+        const response = await fetch(
+          `/api/bookings/check_availability?car_id=${carId}&start_date=${startDate}&end_date=${endDate}`
+        );
+        const data = await response.json();
+
+        if (!data.available) {
+          alert(`Car is not available for selected dates. ${data.message}`);
+
+          if (
+            data.conflicting_bookings &&
+            data.conflicting_bookings.length > 0
+          ) {
+            const conflictMessage = data.conflicting_bookings
+              .map(
+                (b: any) =>
+                  `• ${b.customer__first_name} ${b.customer__last_name}: ${b.start_date} to ${b.end_date}`
+              )
+              .join("\n");
+
+            const proceed = confirm(
+              `This car is already booked for:\n${conflictMessage}\n\nDo you want to proceed anyway?`
+            );
+
+            if (!proceed) {
+              // Clear the car selection
+              setFormData((prev) => ({ ...prev, carId: "" }));
+              return false;
+            }
+          } else {
+            return false;
+          }
+        }
+
+        return true;
+      } catch (error) {
+        console.error("Failed to check availability:", error);
+        return true; // Proceed anyway if check fails
+      }
+    },
+    []
+  );
   // Handle form submission (opens confirmation modal)
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -628,11 +668,22 @@ export default function CreateBookingPage() {
         return;
       }
 
+      // Check car availability before proceeding
+      const isAvailable = await checkCarAvailability(
+        formData.carId,
+        formData.startDate,
+        formData.endDate
+      );
+
+      if (!isAvailable) {
+        return;
+      }
+
       const summary = prepareBookingSummary();
       setBookingSummary(summary);
       setShowConfirmationModal(true);
     },
-    [prepareBookingSummary, validateForm]
+    [validateForm, prepareBookingSummary, formData, checkCarAvailability]
   );
 
   // Function to send booking confirmation via SMS and Email
