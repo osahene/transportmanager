@@ -312,28 +312,18 @@ export const selectFilteredCars = createSelector(
 export const selectAllBookingsWithDetails = createSelector(
   [selectBookings, selectcars, selectCustomers],
   (bookings, cars, customers) => {
-    console.log("Bookings in selector:", bookings);
-    console.log("Cars in selector:", cars);
-    console.log("Customers in selector:", customers);
     return bookings
       .map((booking) => {
         const carId = booking.CarId;
         const customerId = booking.customerId;
         const car = cars.find((c) => c.id === carId);
         const customer = customers.find((c) => c.id === customerId);
-        console.log("cars", car);
-        console.log("customer", customer);
-
-        // Calculate duration
+              // Calculate duration
         const startDate = new Date(booking.startDate);
         const endDate = new Date(booking.endDate);
         const durationDays = Math.ceil(
           (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
         );
-        console.log("outside", car);
-        console.log("inner bookings", bookings);
-        console.log("customerId", customerId);
-        console.log("customer ids", customer);
 
         return {
           ...booking,

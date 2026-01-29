@@ -248,8 +248,6 @@ export default function BookingsPage() {
     if (!receiptData) return;
 
     setSelectedBooking(receiptData);
-
-    console.log("here i am");
     setTimeout(async () => {
       if (receiptRef.current) {
         const canvas = await html2canvas(receiptRef.current, {
@@ -681,10 +679,10 @@ export default function BookingsPage() {
                 </h1>
                 <span>
                   <p className="text-gray-600 mt-2">
-                    Location: 123 Main Street, City, Country
+                    Location: Opposite Shell filling station, Mango Down, Patasi, Kumasi, Ghana
                   </p>
                   <p className="text-gray-600">
-                    Phone: +1 (555) 123-4567 | Email: info@yoscarrentals.com
+                    Phone: +233 54 621 3027 | Email: info@yoscarrentals.com
                   </p>
                 </span>
                 <h4 className="text-xl font-bold text-gray-900">
@@ -713,6 +711,25 @@ export default function BookingsPage() {
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2">
                       Customer Details
+                    </h3>
+                    <p className="text-gray-800">
+                      {selectedBooking.customerName}
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      Vehicle Details
+                    </h3>
+                    <p className="text-gray-800">
+                      {selectedBooking.carDetails}
+                    </p>
+                  </div>
+                </div>
+                {/* Guarantor details */}
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      Guarantor Details
                     </h3>
                     <p className="text-gray-800">
                       {selectedBooking.customerName}
@@ -778,13 +795,80 @@ export default function BookingsPage() {
                   </div>
                 </div>
 
+                {/* Terms and conditions */}
+                <div className="mt-6">
+                  <h3 className="font-semibold text-center text-gray-900 mb-2">
+                    Terms and Conditions
+                  </h3>
+                  <ol className="">
+
+                  <li className="list-decimal list-inside space-y-2">
+
+                  <p className="text-gray-800">
+                    <span className="font-bold mr-2">1.</span>
+                     Minimum rental period: 24 hours
+                  </p>
+                  <p className="text-gray-800">
+                    <span className="font-bold mr-2">2.</span>
+                     Car(s) is to be returned to the garage by 8:00 AM on the due date that the car is to be returned. When the time exceeds by an hour, the recipient would pay an extra fee of full day rent.
+                  </p>
+                  <p className="text-gray-800">
+                    <span className="font-bold mr-2">3.</span>
+                     Car recipient must provide a valid Ghana Card or Passport, Ghana Driver's License and a guarantor. The guarantor must provide details of their Ghana Card or Passport and other relevant information to the company.
+                  </p>
+                  <p className="text-gray-800">
+                    <span className="font-bold mr-2">4.</span>
+                         In case the recipient would need a driver from the company, they would pay an additional fee of two hundred Ghana Cedis (¢ 200.00) as service fee.
+                  </p>
+                  <p className="text-gray-800">
+                    <span className="font-bold mr-2">5.</span>
+    The recipient would be responsible for the upkeep and accommodation of the driver.
+                    </p>
+                  <p className="text-gray-800">
+                    <span className="font-bold mr-2">6.</span>
+    In case of any accident, the recipient would bear the full cost of the damages. In such a situation, the recipient would have not more than a month to put the car in its original shape.
+                    </p>
+                    <p className="text-gray-800"> 
+                      <span className="font-bold mr-2">7.</span>   
+                      In case of very serious damage, the recipient would have to replace the car with a new one.
+                      </p>
+                <p className="text-gray-800">
+                  <span className="font-bold mr-2">8.</span>
+                      No smoking, eating or drinking of alcohol in vehicle. The recipient must ensure that the vehicle is well cleaned when returning it.
+                  </p>
+                  <p className="text-gray-800">
+                    <span className="font-bold mr-2">9.</span>
+                    Fuel policy: The recipient must return the vehicle with a full tank of fuel; specifically, SHELL V-POWER.
+                  </p>
+                  </li>
+                    </ol>
+                </div>
+                {/* Signature */}
+                <div className="flex justify-between items-center mt-8">
+                  <div className="text-center">
+                    <div className="border-t w-48 mx-auto border-gray-400"></div>
+                    <p className="text-gray-600 mt-2">Customer Sign</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="border-t w-48 mx-auto border-gray-400"></div>
+                    <p className="text-gray-600 mt-2">Guarantor Sign</p>
+                  </div>
+                </div>
+                <div className="flex justify-center items-center mt-8">
+                  <div className="text-center">
+                    <div className="border-t w-48 mx-auto border-gray-400"></div>
+                    <p className="text-gray-600 mt-2">Transport Manager Sign</p>
+                  </div>
+                  
+                </div>
+
                 {/* Footer */}
                 <div className="text-center pt-6 border-t">
                   <p className="text-gray-600 text-sm">
                     Thank you for choosing YOS Car Rentals!
                   </p>
                   <p className="text-gray-500 text-xs mt-2">
-                    For inquiries: support@yoscarrentals.com | +233 20 123 4567
+                    For inquiries: support@yoscarrentals.com | +233 54 621 3027
                   </p>
                 </div>
               </div>

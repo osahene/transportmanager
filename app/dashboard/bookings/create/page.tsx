@@ -829,7 +829,7 @@ export default function CreateBookingPage() {
       ...(formData.paymentMethod === "mobile_money" && {
         mobileMoneyDetails: {
           ...mobileMoneyDetails,
-          transactionId: `PS_${Date.now()}`, // Generate a mock transaction ID
+          transactionId: `PS_${Date.now()}`,
         },
       }),
     };
