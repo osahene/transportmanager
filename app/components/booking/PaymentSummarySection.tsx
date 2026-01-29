@@ -83,7 +83,7 @@ export default function PaymentSummarySection({
             Total Amount:
           </span>
           <span className="text-3xl font-bold text-gray-900 dark:text-white">
-            ${totalAmount.toLocaleString()}
+            ¢{totalAmount.toLocaleString()}
           </span>
         </div>
 
@@ -98,7 +98,7 @@ export default function PaymentSummarySection({
                   Daily Rate:
                 </span>
                 <span className="text-gray-900 dark:text-white">
-                  ${selectedCar.dailyRate}/day
+                  ¢{selectedCar.dailyRate}/day
                 </span>
               </div>
               <div className="flex justify-between text-sm">
@@ -114,7 +114,7 @@ export default function PaymentSummarySection({
                   Subtotal:
                 </span>
                 <span className="text-gray-900 dark:text-white">
-                  ${(selectedCar.dailyRate * days).toLocaleString()}
+                  ¢{(selectedCar.dailyRate * days).toLocaleString()}
                 </span>
               </div>
             </div>

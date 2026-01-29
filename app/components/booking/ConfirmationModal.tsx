@@ -129,7 +129,7 @@ export default function ConfirmationModal({
                     Daily Rate
                   </p>
                   <p className="font-medium text-gray-900 dark:text-white">
-                    ${summary.car.dailyRate}/day
+                    ¢{summary.car.dailyRate}/day
                   </p>
                 </div>
               </div>
@@ -271,7 +271,7 @@ export default function ConfirmationModal({
                   Subtotal
                 </span>
                 <span className="font-medium text-gray-900 dark:text-white">
-                  ${summary.totalAmount.toLocaleString()}
+                  ¢{summary.totalAmount.toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200 dark:border-gray-700">
@@ -279,7 +279,7 @@ export default function ConfirmationModal({
                   Total Amount
                 </span>
                 <span className="text-gray-900 dark:text-white">
-                  ${summary.totalAmount.toLocaleString()}
+                  ¢{summary.totalAmount.toLocaleString()}
                 </span>
               </div>
               <div className="mt-2">
@@ -353,8 +353,7 @@ export default function ConfirmationModal({
                         Amount Paid
                       </p>
                       <p className="font-medium text-gray-900 dark:text-white">
-                        $
-                        {summary.paymentData.payInSlipDetails.amount.toLocaleString()}
+                        ¢{summary.paymentData.payInSlipDetails.amount.toLocaleString()}                        {summary.paymentData.payInSlipDetails.amount.toLocaleString()}
                       </p>
                     </div>
                     <div>

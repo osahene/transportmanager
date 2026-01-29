@@ -213,7 +213,7 @@ export default function CustomersPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
-                      <button
+                      {/* <button
                         onClick={() =>
                           alert("SMS functionality would be implemented here")
                         }
@@ -221,7 +221,7 @@ export default function CustomersPage() {
                       >
                         <FaSms />
                         SMS
-                      </button>
+                      </button> */}
                       <button className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-sm text-gray-700 dark:text-gray-300">
                         View Details
                       </button>

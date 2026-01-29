@@ -118,7 +118,7 @@ export default function DashboardPage() {
           },
           callback: function (value: number | string) {
             if (typeof value === "number") {
-              return value >= 1000 ? `$${value / 1000}k` : `$${value}`;
+              return value >= 1000 ? `¢${value / 1000}k` : `¢${value}`;
             }
             return value;
           },
@@ -347,14 +347,14 @@ export default function DashboardPage() {
             >
               New Booking
             </button>
-            <button
+            {/* <button
               className="px-6 py-3 border-2 border-white text-white font-semibold rounded-lg hover:bg-white hover:text-blue-600 dark:hover:text-blue-700 transition"
               onClick={() =>
                 alert("Schedule maintenance functionality to be implemented")
               }
             >
               Schedule Maintenance
-            </button>
+            </button> */}
           </div>
         </div>
       </motion.div>

@@ -4,7 +4,7 @@ import { useState, useRef, useMemo } from "react";
 import {
   FaCalendarAlt,
   FaCar,
-  FaUser,
+  FaUser, 
   FaPrint,
   FaPlus,
   FaSearch,
@@ -220,41 +220,12 @@ export default function BookingsPage() {
     return buttons;
   };
 
-  // const generateReceiptData = (bookingId: string): ReceiptData | null => {
-  //   const booking = allDetailedBookings.find((b) => b.carId === bookingId);
-  //   console.log("Allbookings", allDetailedBookings);
-  //   console.log("bookings", booking);
-  //   if (!booking) return null;
-
-  //   const customer = booking.customerName;
-  //   const car = booking.car;
-
-  //   return {
-  //     bookingId: booking.id,
-  //     customerName: customer || "Unknown",
-  //     carDetails: car
-  //       ? `${car.make} ${car.model} (${car.licensePlate})`
-  //       : "Unknown",
-  //     bookingDates: `${format(
-  //       new Date(booking.startDate),
-  //       "MMM d, yyyy",
-  //     )} - ${format(new Date(booking.endDate), "MMM d, yyyy")}`,
-  //     totalAmount: booking.totalAmount,
-  //     paymentMethod: "Credit Card",
-  //     transactionId: `TXN-${booking.id.slice(0, 8).toUpperCase()}`,
-  //     date: new Date(),
-  //   };
-  // };
-
   const generateReceiptData = (bookingId: string): ReceiptData | null => {
     // Search by booking.id, not carId
     const booking = allDetailedBookings.find((b) => b.payload.id === bookingId);
-    console.log("genAllBook", allDetailedBookings);
-    console.log("genBook", booking);
-
+ 
     if (!booking) return null;
     const { payload } = booking;
-    // The selector already provides car details
     const carDetails = `${booking.carMake} ${booking.carModel} (${booking.carLicensePlate})`;
 
     return {
@@ -273,9 +244,7 @@ export default function BookingsPage() {
   };
 
   const generatePDF = async (bookingId: string) => {
-    console.log("console.log", bookingId);
     const receiptData = generateReceiptData(bookingId);
-    console.log("here i am", receiptData);
     if (!receiptData) return;
 
     setSelectedBooking(receiptData);
@@ -291,11 +260,7 @@ export default function BookingsPage() {
         });
 
         const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF({
-          orientation: "portrait",
-          unit: "mm",
-          format: "a4",
-        });
+        const pdf = new jsPDF();
 
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
@@ -613,10 +578,10 @@ export default function BookingsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-lg font-bold text-gray-900 dark:text-white">
-                        ${booking.totalAmount.toLocaleString()}
+                        ¢{booking.totalAmount.toLocaleString()}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        Daily: ${booking.carDailyRate}
+                        Daily: ¢{booking.carDailyRate}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -777,19 +742,19 @@ export default function BookingsPage() {
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-gray-600">Subtotal</span>
                     <span className="font-bold text-gray-900">
-                      ${selectedBooking.totalAmount}
+                      ¢{selectedBooking.totalAmount}
                     </span>
                   </div>
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-gray-600">Tax (10%)</span>
                     <span className="font-bold text-gray-900">
-                      ${(selectedBooking.totalAmount * 0.1).toFixed(2)}
+                      ¢{(selectedBooking.totalAmount * 0.1).toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-lg font-bold pt-2 border-t">
                     <span className="text-gray-900">Total Amount</span>
                     <span className="text-gray-900">
-                      ${(selectedBooking.totalAmount * 1.1).toFixed(2)}
+                      ¢{(selectedBooking.totalAmount * 1.1).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -819,7 +784,7 @@ export default function BookingsPage() {
                     Thank you for choosing YOS Car Rentals!
                   </p>
                   <p className="text-gray-500 text-xs mt-2">
-                    For inquiries: support@yoscarrentals.com | +1 (555) 123-4567
+                    For inquiries: support@yoscarrentals.com | +233 20 123 4567
                   </p>
                 </div>
               </div>

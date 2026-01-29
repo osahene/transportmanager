@@ -325,7 +325,7 @@ const BookingsTable: React.FC<BookingsTableProps> = ({
                       Total Amount:
                     </span>
                     <span className="font-bold text-gray-900 dark:text-white">
-                      ${selectedBooking.totalAmount.toLocaleString()}
+                      ¢{selectedBooking.totalAmount.toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -340,7 +340,7 @@ const BookingsTable: React.FC<BookingsTableProps> = ({
                           : "text-yellow-600"
                       }`}
                     >
-                      ${selectedBooking.amountPaid.toLocaleString()}
+                      ¢{selectedBooking.amountPaid.toLocaleString()}
                     </span>
                   </div>
                   {selectedBooking.paymentMethod && (
@@ -362,7 +362,7 @@ const BookingsTable: React.FC<BookingsTableProps> = ({
                           Refund Amount:
                         </span>
                         <span className="font-medium text-red-600">
-                          ${selectedBooking.refundAmount.toLocaleString()}
+                          ¢{selectedBooking.refundAmount.toLocaleString()}
                         </span>
                       </div>
                     )}

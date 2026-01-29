@@ -278,7 +278,7 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ transactions }) => {
             Total Revenue
           </div>
           <div className="text-2xl font-bold text-green-600">
-            ${totalRevenue.toLocaleString()}
+            ¢{totalRevenue.toLocaleString()}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             {revenueTransactions.length} transactions
@@ -290,7 +290,7 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ transactions }) => {
             Total Expenses
           </div>
           <div className="text-2xl font-bold text-red-600">
-            ${totalExpenses.toLocaleString()}
+            ¢{totalExpenses.toLocaleString()}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             {expenseTransactions.length} transactions
@@ -306,7 +306,7 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ transactions }) => {
               netProfit >= 0 ? "text-blue-600" : "text-red-600"
             }`}
           >
-            ${Math.abs(netProfit).toLocaleString()}
+            ¢{Math.abs(netProfit).toLocaleString()}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             {netProfit >= 0 ? "Profit" : "Loss"}
@@ -318,7 +318,7 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ transactions }) => {
             Total Refunds
           </div>
           <div className="text-2xl font-bold text-purple-600">
-            ${totalRefunds.toLocaleString()}
+            ¢{totalRefunds.toLocaleString()}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             {refundTransactions.length} refunds
@@ -334,7 +334,7 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ transactions }) => {
               Avg. Revenue per Transaction
             </span>
             <span className="font-bold text-green-600">
-              ${avgRevenue.toLocaleString()}
+              ¢{avgRevenue.toLocaleString()}
             </span>
           </div>
         </div>
@@ -345,7 +345,7 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ transactions }) => {
               Avg. Expense per Transaction
             </span>
             <span className="font-bold text-red-600">
-              ${avgExpense.toLocaleString()}
+              ¢{avgExpense.toLocaleString()}
             </span>
           </div>
         </div>

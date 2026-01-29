@@ -275,7 +275,7 @@ export default function AddEventPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Amount ($)
+                    Amount (¢)
                   </label>
                   <input
                     type="number"
@@ -576,7 +576,7 @@ export default function AddEventPage() {
                       Amount:
                     </span>
                     <span className="font-medium">
-                      ${eventData.amount.toLocaleString()}
+                      ¢{eventData.amount.toLocaleString()}
                     </span>
                   </div>
                 )}

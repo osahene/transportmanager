@@ -123,10 +123,10 @@ export default function StaffPage() {
     y += 10;
 
     const earnings = [
-      ["Basic Salary", `$${payslipData.basicSalary.toFixed(2)}`],
-      ["Overtime", `$${payslipData.overtime.toFixed(2)}`],
-      ["Bonuses", `$${payslipData.bonuses.toFixed(2)}`],
-      ["Deductions", `-$${payslipData.deductions.toFixed(2)}`],
+      ["Basic Salary", `¢${payslipData.basicSalary.toFixed(2)}`],
+      ["Overtime", `¢${payslipData.overtime.toFixed(2)}`],
+      ["Bonuses", `¢${payslipData.bonuses.toFixed(2)}`],
+      ["Deductions", `¢-${payslipData.deductions.toFixed(2)}`],
     ];
 
     earnings.forEach(([label, amount]) => {
@@ -142,7 +142,7 @@ export default function StaffPage() {
     pdf.setFontSize(14);
     pdf.setFont("helvetica", "bold");
     pdf.text("NET SALARY:", 20, y);
-    pdf.text(`$${payslipData.netSalary.toFixed(2)}`, 150, y, {
+    pdf.text(`¢${payslipData.netSalary.toFixed(2)}`, 150, y, {
       align: "right",
     });
 
@@ -227,7 +227,7 @@ export default function StaffPage() {
                 Monthly Payroll
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                ${staff.reduce((sum, s) => sum + s.salary, 0).toLocaleString()}
+                ¢{staff.reduce((sum, s) => sum + s.salary, 0).toLocaleString()}
               </p>
             </div>
             <FaMoneyBillWave className="text-green-600 dark:text-green-400 text-2xl" />
@@ -334,7 +334,7 @@ export default function StaffPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-lg font-bold text-gray-900 dark:text-white">
-                          ${staffMember.salary.toLocaleString()}
+                          ¢{staffMember.salary.toLocaleString()}
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">
                           {staffMember.employmentType.replace("_", " ")}
@@ -367,7 +367,7 @@ export default function StaffPage() {
                             onClick={() => generatePayslip(staffMember)}
                             className="px-4 py-2 bg-green-600 dark:bg-green-700 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-800 transition text-sm"
                           >
-                            Pay ${payment.netSalary}
+                            Pay ¢{payment.netSalary}
                           </button>
                           <button
                             onClick={() => generatePayslip(staffMember)}
@@ -486,7 +486,7 @@ export default function StaffPage() {
                         Basic Salary
                       </span>
                       <span className="font-bold text-gray-900 dark:text-white">
-                        ${payslipData.basicSalary.toFixed(2)}
+                        ¢{payslipData.basicSalary.toFixed(2)}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -494,7 +494,7 @@ export default function StaffPage() {
                         Overtime
                       </span>
                       <span className="font-bold text-gray-900 dark:text-white">
-                        ${payslipData.overtime.toFixed(2)}
+                        ¢{payslipData.overtime.toFixed(2)}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -502,13 +502,13 @@ export default function StaffPage() {
                         Bonuses
                       </span>
                       <span className="font-bold text-gray-900 dark:text-white">
-                        ${payslipData.bonuses.toFixed(2)}
+                        ¢{payslipData.bonuses.toFixed(2)}
                       </span>
                     </div>
                     <div className="flex justify-between text-red-600 dark:text-red-400">
                       <span>Deductions</span>
                       <span className="font-bold">
-                        -${payslipData.deductions.toFixed(2)}
+                        -¢{payslipData.deductions.toFixed(2)}
                       </span>
                     </div>
                     <div className="flex justify-between text-lg font-bold pt-3 border-t border-gray-200 dark:border-gray-700">
@@ -516,7 +516,7 @@ export default function StaffPage() {
                         NET SALARY
                       </span>
                       <span className="text-gray-900 dark:text-white">
-                        ${payslipData.netSalary.toFixed(2)}
+                        ¢{payslipData.netSalary.toFixed(2)}
                       </span>
                     </div>
                   </div>

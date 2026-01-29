@@ -65,7 +65,7 @@ export default function VehicleSelectionSection({
                   </p>
                   <div className="mt-2">
                     <span className="text-lg font-bold text-gray-900 dark:text-white">
-                      ${car.dailyRate}
+                      ¢{car.dailyRate}
                     </span>
                     <span className="text-sm text-gray-600 dark:text-gray-400 ml-1">
                       /day
@@ -101,7 +101,7 @@ export default function VehicleSelectionSection({
                 Daily Rate
               </p>
               <p className="font-medium text-gray-900 dark:text-white">
-                ${selectedCar.dailyRate}/day
+                ¢{selectedCar.dailyRate}/day
               </p>
             </div>
             <div>

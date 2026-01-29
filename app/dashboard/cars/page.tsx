@@ -274,7 +274,7 @@ export default function CarsPage() {
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-lg text-gray-900 dark:text-white">
-                    ${car.dailyRate}
+                    ¢{car.dailyRate}
                     <span className="text-sm font-normal text-gray-500">
                       /day
                     </span>
@@ -314,8 +314,8 @@ export default function CarsPage() {
                       </p>
                       <p className="font-bold text-green-600">
                         {car.stats.totalRevenue
-                          ? `$${car.stats.totalRevenue.toLocaleString()}`
-                          : "$0"}
+                          ? `¢${car.stats.totalRevenue.toLocaleString()}`
+                          : "¢0"}
                       </p>
                     </div>
                   </div>

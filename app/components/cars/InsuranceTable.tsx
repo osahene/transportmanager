@@ -223,12 +223,12 @@ const InsuranceTable: React.FC<InsuranceTableProps> = ({
                           <div className="flex items-center gap-2">
                             <FaMoneyBillWave className="w-4 h-4 text-green-500" />
                             <div className="font-bold text-gray-900 dark:text-white">
-                              ${policy.premium.toLocaleString()}
+                              ¢{policy.premium.toLocaleString()}
                             </div>
                           </div>
                           {policy.deductible && (
                             <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                              Deductible: ${policy.deductible.toLocaleString()}
+                              Deductible: ¢<span className="font-mono">{policy.deductible.toLocaleString()}</span>
                             </div>
                           )}
                         </td>
@@ -345,7 +345,7 @@ const InsuranceTable: React.FC<InsuranceTableProps> = ({
                       Annual Premium
                     </label>
                     <p className="text-xl font-bold text-green-600">
-                      ${selectedPolicy.premium.toLocaleString()}
+                      ¢{selectedPolicy.premium.toLocaleString()}
                     </p>
                   </div>
                   {selectedPolicy.deductible && (
@@ -354,7 +354,7 @@ const InsuranceTable: React.FC<InsuranceTableProps> = ({
                         Deductible
                       </label>
                       <p className="text-lg font-medium text-gray-800 dark:text-white">
-                        ${selectedPolicy.deductible.toLocaleString()}
+                        ¢{selectedPolicy.deductible.toLocaleString()}
                       </p>
                     </div>
                   )}

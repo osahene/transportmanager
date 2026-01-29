@@ -239,7 +239,7 @@ const OthersTable: React.FC<OthersTableProps> = ({
                               transaction.amount
                             )}`}
                           >
-                            ${Math.abs(transaction.amount).toLocaleString()}
+                            ¢{Math.abs(transaction.amount).toLocaleString()}
                           </div>
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -415,7 +415,7 @@ const OthersTable: React.FC<OthersTableProps> = ({
                       selectedTransaction.amount
                     )}`}
                   >
-                    ${Math.abs(selectedTransaction.amount).toLocaleString()}
+                    ¢{Math.abs(selectedTransaction.amount).toLocaleString()}
                   </div>
                 </div>
               </div>

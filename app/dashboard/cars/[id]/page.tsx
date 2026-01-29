@@ -26,10 +26,10 @@ import {
   FaCar,
   FaWrench,
   FaCalendarAlt,
-  FaDollarSign,
   FaGasPump,
   FaCogs,
 } from "react-icons/fa";
+import { FaCentSign } from "react-icons/fa6";
 
 export default function CarDetailPage() {
   const router = useRouter();
@@ -237,11 +237,11 @@ export default function CarDetailPage() {
                 Total Revenue
               </p>
               <p className="text-2xl font-bold text-green-600 mt-1">
-                ${getTotalRevenue().toLocaleString()}
+                ¢{getTotalRevenue().toLocaleString()}
               </p>
             </div>
             <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-              <FaDollarSign className="w-6 h-6 text-green-600 dark:text-green-400" />
+              <FaCentSign className="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
           </div>
         </div>
@@ -253,7 +253,7 @@ export default function CarDetailPage() {
                 Maintenance Costs
               </p>
               <p className="text-2xl font-bold text-yellow-600 mt-1">
-                ${getMaintenanceCosts().toLocaleString()}
+                ¢{getMaintenanceCosts().toLocaleString()}
               </p>
             </div>
             <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
@@ -365,7 +365,7 @@ export default function CarDetailPage() {
                             </p>
                           </div>
                           <span className="font-bold text-gray-900 dark:text-white">
-                            ${record.cost.toLocaleString()}
+                            ¢{record.cost.toLocaleString()}
                           </span>
                         </li>
                       ))}
@@ -437,7 +437,7 @@ export default function CarDetailPage() {
                   Daily Rate
                 </span>
                 <span className="font-bold text-gray-900 dark:text-white">
-                  ${selectedCar.dailyRate}/day
+                  ¢{selectedCar.dailyRate}/day
                 </span>
               </div>
               <div className="flex items-center justify-between">
