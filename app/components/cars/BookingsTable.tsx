@@ -69,7 +69,7 @@ const BookingsTable: React.FC<BookingsTableProps> = ({
 
   // Filter bookings for this specific vehicle
   const vehicleBookings = bookings.filter(
-    (booking) => booking.carId === vehicleId
+    (booking) => booking.CarId === vehicleId
   );
 
   return (
