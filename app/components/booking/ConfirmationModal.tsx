@@ -54,8 +54,8 @@ export default function ConfirmationModal({
         <div className="space-y-6">
           {/* Customer Information */}
           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
-              Customer Details
+            <h3 className="text-center font-semibold text-gray-900 dark:text-white mb-3">
+              CUSTOMER DETAILS
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
@@ -92,12 +92,50 @@ export default function ConfirmationModal({
               </div>
             </div>
           </div>
+          {/* Customer Information */}
+          <div className="bg-blue-50 dark:bg-red-300/50 rounded-lg p-4">
+            <h3 className="text-center font-semibold text-gray-900 dark:text-white mb-3">
+              GUARANTOR DETAILS
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Name</p>
+                <p className="font-medium text-gray-900 dark:text-white">
+                  {summary.customer?.guarantor.firstName} {summary.customer?.guarantor.lastName}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Phone
+                </p>
+                <p className="font-medium text-gray-900 dark:text-white">
+                  {summary.customer?.guarantor.phone}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Email
+                </p>
+                <p className="font-medium text-gray-900 dark:text-white">
+                  {summary.customer?.guarantor.email || "N/A"}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                Relationship
+                </p>
+                <p className="font-medium text-gray-900 dark:text-white">
+                 {summary.customer?.guarantor.relationship}
+                </p>
+              </div>
+            </div>
+          </div>
 
           {/* Vehicle Information */}
           {summary.car && (
             <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
-                Vehicle Details
+              <h3 className="text-center font-semibold text-gray-900 dark:text-white mb-3">
+                VEHICLE DETAILS
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
@@ -138,8 +176,8 @@ export default function ConfirmationModal({
 
           {/* Booking Details */}
           <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
-              Booking Details
+            <h3 className="text-center font-semibold text-gray-900 dark:text-white mb-3">
+              BOOKING DETAILS
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
@@ -262,8 +300,8 @@ export default function ConfirmationModal({
 
           {/* Payment Summary */}
           <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
-              Payment Summary
+            <h3 className="text-center font-semibold text-gray-900 dark:text-white mb-3">
+              PAYMENT SUMMARY
             </h3>
             <div className="space-y-2">
               <div className="flex justify-between">

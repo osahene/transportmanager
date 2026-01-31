@@ -23,8 +23,6 @@ interface CustomerSelectionSectionProps {
     occupation: string;
     gpsAddress: string;
     address: {
-      locality: string;
-      town: string;
       city: string;
       region: string;
       country: string;
@@ -52,8 +50,6 @@ interface CustomerSelectionSectionProps {
       gpsAddress: string;
       relationship: string;
       address: {
-        locality: string;
-        town: string;
         city: string;
         region: string;
         country: string;
@@ -299,23 +295,7 @@ export default function CustomerSelectionSection({
                     <p className="font-medium text-gray-900 dark:text-white">
                       {selectedCustomer.gpsAddress}
                     </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Locality
-                    </p>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      {selectedCustomer.address.locality}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Town
-                    </p>
-                    <p className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                      {selectedCustomer.address.town}
-                    </p>
-                  </div>
+                  </div>                  
                   <div>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       City
@@ -500,42 +480,7 @@ export default function CustomerSelectionSection({
                         required
                       />
                     </div>
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Locality
-                      </p>
-                      <input
-                        type="text"
-                        name="selectedCustomer_guarantor_address_locality"
-                        value={selectedCustomer.guarantor.address.locality}
-                        onChange={(e) =>
-                          onExistingCustomerGuarantorChange(
-                            "selectedCustomer_guarantor_address_locality",
-                            e.target.value
-                          )
-                        }
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Town
-                      </p>
-                      <input
-                        type="text"
-                        name="selectedCustomer_guarantor_address_town"
-                        value={selectedCustomer.guarantor.address.town}
-                        onChange={(e) =>
-                          onExistingCustomerGuarantorChange(
-                            "selectedCustomer_guarantor_address_town",
-                            e.target.value
-                          )
-                        }
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        required
-                      />
-                    </div>
+                    
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         City
@@ -714,32 +659,6 @@ export default function CustomerSelectionSection({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Locality
-                </label>
-                <input
-                  type="text"
-                  name="locality"
-                  value={newCustomer.address.locality}
-                  onChange={(e) =>
-                    onNewCustomerChange("locality", e.target.value)
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Town
-                </label>
-                <input
-                  type="text"
-                  name="town"
-                  value={newCustomer.address.town}
-                  onChange={(e) => onNewCustomerChange("town", e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   City
                 </label>
                 <input
@@ -904,34 +823,6 @@ export default function CustomerSelectionSection({
                       "guarantor_relationship",
                       e.target.value
                     )
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Locality
-                </label>
-                <input
-                  type="text"
-                  name="guarantor_locality"
-                  value={newCustomer.guarantor.address.locality}
-                  onChange={(e) =>
-                    onNewCustomerChange("guarantor_locality", e.target.value)
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Town
-                </label>
-                <input
-                  type="text"
-                  name="guarantor_town"
-                  value={newCustomer.guarantor.address.town}
-                  onChange={(e) =>
-                    onNewCustomerChange("guarantor_town", e.target.value)
                   }
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />

@@ -122,8 +122,6 @@ export default function CreateBookingPage() {
     occupation: "",
     gpsAddress: "",
     address: {
-      locality: "",
-      town: "",
       city: "",
       region: "",
       country: "",
@@ -152,8 +150,6 @@ export default function CreateBookingPage() {
       gpsAddress: "",
       relationship: "",
       address: {
-        locality: "",
-        town: "",
         city: "",
         region: "",
         country: "",
@@ -225,7 +221,7 @@ export default function CreateBookingPage() {
   // Handle new customer form changes
   const handleNewCustomerChange = useCallback((name: string, value: string) => {
     setNewCustomer((prev) => {
-      const addressFields = ["locality", "town", "city", "region", "country"];
+      const addressFields = ["city", "region", "country"];
       if (addressFields.includes(name)) {
         return {
           ...prev,
@@ -378,14 +374,6 @@ export default function CreateBookingPage() {
         alert("Please enter customer GPS address");
         return false;
       }
-      if (!newCustomer.address.locality.trim()) {
-        alert("Please enter customer locality");
-        return false;
-      }
-      if (!newCustomer.address.town.trim()) {
-        alert("Please enter customer town");
-        return false;
-      }
       if (!newCustomer.address.city.trim()) {
         alert("Please enter customer city");
         return false;
@@ -424,14 +412,6 @@ export default function CreateBookingPage() {
       }
       if (!newCustomer.guarantor.relationship.trim()) {
         alert("Please enter guarantor relationship with customer");
-        return false;
-      }
-      if (!newCustomer.guarantor.address.locality.trim()) {
-        alert("Please enter guarantor locality");
-        return false;
-      }
-      if (!newCustomer.guarantor.address.town.trim()) {
-        alert("Please enter guarantor town");
         return false;
       }
       if (!newCustomer.guarantor.address.city.trim()) {
@@ -805,8 +785,32 @@ export default function CreateBookingPage() {
     const booking = {
       id: bookingId,
       carId: formData.carId,
-      customerId: customerId,
-      customerName: customerName,
+      customerId: formData.customerId,
+      customerName: customerMode === "new" ? `${newCustomer.firstName} ${newCustomer.lastName}` : `${selectedCustomer?.firstName} ${selectedCustomer?.lastName}`,
+      customerPhone: customerMode === "new" ? newCustomer.phone : selectedCustomer?.phone || "",
+      customerEmail: customerMode === "new" ? newCustomer.email : selectedCustomer?.email || "",
+      customerGPSAddress: customerMode === "new" ? newCustomer.gpsAddress : selectedCustomer?.gpsAddress || "",
+      guarantorId:
+        customerMode === "new"
+          ? newCustomer.guarantor.id
+          : selectedCustomer?.guarantor.id || "",
+      guarantorName:
+        customerMode === "new"
+          ? `${newCustomer.guarantor.firstName} ${newCustomer.guarantor.lastName}`
+          : `${selectedCustomer?.guarantor.firstName} ${selectedCustomer?.guarantor.lastName}`,
+      guarantorPhone:
+        customerMode === "new"
+          ? newCustomer.guarantor.phone
+          : selectedCustomer?.guarantor.phone || "",
+      guarantorEmail:
+        customerMode === "new"
+          ? newCustomer.guarantor.email
+          : selectedCustomer?.guarantor.email || "",
+      guarantorGPSAddress:
+        customerMode === "new"
+          ? newCustomer.guarantor.gpsAddress
+          : selectedCustomer?.guarantor.gpsAddress || "",
+      driverId: formData.selfDrive === "true" ? null : formData.driverId,
       startDate: formData.startDate,
       endDate: formData.endDate,
       createdAt: new Date().toISOString().split("T")[0],
@@ -1043,8 +1047,6 @@ export default function CreateBookingPage() {
                   !newCustomer.ghanaCardId ||
                   !newCustomer.occupation ||
                   !newCustomer.gpsAddress ||
-                  !newCustomer.address.locality ||
-                  !newCustomer.address.town ||
                   !newCustomer.address.city ||
                   !newCustomer.address.region ||
                   !newCustomer.address.country ||
@@ -1055,8 +1057,6 @@ export default function CreateBookingPage() {
                   !newCustomer.guarantor.relationship ||
                   !newCustomer.guarantor.occupation ||
                   !newCustomer.guarantor.gpsAddress ||
-                  !newCustomer.guarantor.address.locality ||
-                  !newCustomer.guarantor.address.town ||
                   !newCustomer.guarantor.address.region ||
                   !newCustomer.guarantor.address.country)) ||
               !formData.carId ||

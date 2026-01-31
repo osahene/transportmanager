@@ -4,7 +4,7 @@ import { useState, useRef, useMemo } from "react";
 import {
   FaCalendarAlt,
   FaCar,
-  FaUser, 
+  FaUser,
   FaPrint,
   FaPlus,
   FaSearch,
@@ -22,13 +22,24 @@ import { useAppSelector } from "../../lib/store";
 import { selectAllBookingsWithDetails } from "../../lib/slices/selectors";
 import BookingActions from "@/app/components/booking/bookingActions";
 import { format } from "date-fns";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+// import jsPDF from "jspdf";
+// import html2canvas from "html2canvas";
+import { useReactToPrint } from "react-to-print";
 import Link from "next/link";
 
 interface ReceiptData {
   bookingId: string;
   customerName: string;
+  customerPhone: string;
+  customerEmail: string;
+  customerGPSAddress: string;
+  guarantorName?: string;
+  guarantorPhone?: string;
+  guarantorEmail?: string;
+  guarantorGPSAddress?: string;
+  pickupLocation: string;
+  dropoffLocation: string;
+  numberOfDays: number;
   carDetails: string;
   bookingDates: string;
   totalAmount: number;
@@ -158,11 +169,10 @@ export default function BookingsPage() {
         <button
           key={1}
           onClick={() => goToPage(1)}
-          className={`px-3 py-1 rounded-lg font-medium transition ${
-            currentPage === 1
-              ? "bg-blue-600 dark:bg-blue-700 text-white"
-              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-          }`}
+          className={`px-3 py-1 rounded-lg font-medium transition ${currentPage === 1
+            ? "bg-blue-600 dark:bg-blue-700 text-white"
+            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+            }`}
         >
           1
         </button>,
@@ -182,11 +192,10 @@ export default function BookingsPage() {
         <button
           key={i}
           onClick={() => goToPage(i)}
-          className={`px-3 py-1 rounded-lg font-medium transition ${
-            currentPage === i
-              ? "bg-blue-600 dark:bg-blue-700 text-white"
-              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-          }`}
+          className={`px-3 py-1 rounded-lg font-medium transition ${currentPage === i
+            ? "bg-blue-600 dark:bg-blue-700 text-white"
+            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+            }`}
         >
           {i}
         </button>,
@@ -206,11 +215,10 @@ export default function BookingsPage() {
         <button
           key={totalPages}
           onClick={() => goToPage(totalPages)}
-          className={`px-3 py-1 rounded-lg font-medium transition ${
-            currentPage === totalPages
-              ? "bg-blue-600 dark:bg-blue-700 text-white"
-              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-          }`}
+          className={`px-3 py-1 rounded-lg font-medium transition ${currentPage === totalPages
+            ? "bg-blue-600 dark:bg-blue-700 text-white"
+            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+            }`}
         >
           {totalPages}
         </button>,
@@ -223,7 +231,7 @@ export default function BookingsPage() {
   const generateReceiptData = (bookingId: string): ReceiptData | null => {
     // Search by booking.id, not carId
     const booking = allDetailedBookings.find((b) => b.payload.id === bookingId);
- 
+
     if (!booking) return null;
     const { payload } = booking;
     const carDetails = `${booking.carMake} ${booking.carModel} (${booking.carLicensePlate})`;
@@ -231,7 +239,21 @@ export default function BookingsPage() {
     return {
       bookingId: payload.id,
       customerName: payload.customerName || "Unknown",
+      customerPhone: payload.customerPhone || "Unknown",
+      customerEmail: payload.customerEmail || "Unknown",
+      customerGPSAddress: payload.customerGPSAddress || "Unknown",
+      guarantorName: payload.guarantorName || "Unknown",
+      guarantorPhone: payload.guarantorPhone || "Unknown",
+      guarantorEmail: payload.guarantorEmail || "Unknown",
+      guarantorGPSAddress: payload.guarantorGPSAddress || "Unknown",
+      pickupLocation: payload.pickupLocation || "Unknown",
+      dropoffLocation: payload.dropoffLocation || "Unknown",
+      numberOfDays: Math.ceil(
+        (new Date(payload.endDate).getTime() - new Date(payload.startDate).getTime()) /
+        (1000 * 60 * 60 * 24)
+      ) || 0,
       carDetails: carDetails || "Unknown",
+
       bookingDates: `${format(
         new Date(payload.startDate),
         "MMM d, yyyy",
@@ -243,33 +265,90 @@ export default function BookingsPage() {
     };
   };
 
-  const generatePDF = async (bookingId: string) => {
-    const receiptData = generateReceiptData(bookingId);
-    if (!receiptData) return;
+  // const generatePDF = async (bookingId: string) => {
+  //   const receiptData = generateReceiptData(bookingId);
+  //   if (!receiptData) return;
 
-    setSelectedBooking(receiptData);
-    setTimeout(async () => {
-      if (receiptRef.current) {
-        const canvas = await html2canvas(receiptRef.current, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: "#ffffff",
-        });
+  //   setSelectedBooking(receiptData);
+  //   setTimeout(async () => {
+  //     if (receiptRef.current) {
+  //       const canvas = await html2canvas(receiptRef.current, {
+  //         scale: 2,
+  //         useCORS: true,
+  //         logging: false,
+  //         backgroundColor: "#ffffff",
+  //         onclone: (clonedDoc) => {
+  //           // Ensure proper styling for PDF
+  //           const clonedReceipt = clonedDoc.getElementById('receipt-container');
+  //           if (clonedReceipt) {
+  //             clonedReceipt.style.width = '210mm'; // A4 width
+  //             clonedReceipt.style.minHeight = 'auto';
+  //             clonedReceipt.style.display = 'block';
+  //           }
+  //         }
+  //       });
 
-        const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF();
+  //       const imgData = canvas.toDataURL("image/png");
+  //       const pdf = new jsPDF({
+  //         orientation: 'portrait',
+  //         unit: 'mm',
+  //         format: 'a4'
+  //       });
 
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+  //       const pdfWidth = pdf.internal.pageSize.getWidth();
+  //       const pdfHeight = pdf.internal.pageSize.getHeight();
 
-        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-        pdf.save(`receipt-${receiptData.bookingId}.pdf`);
+  //       // Calculate image dimensions to fit A4 page
+  //       const imgWidth = pdfWidth - 20; // 10mm margins on each side
+  //       const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-        setSelectedBooking(null);
-      }
-    }, 100);
+  //       let heightLeft = imgHeight;
+  //       let position = 10; // Start 10mm from top
+
+  //       // Add first page
+  //       pdf.addImage(
+  //         canvas,
+  //         'PNG',
+  //         10, // x position (10mm margin)
+  //         position,
+  //         imgWidth,
+  //         imgHeight
+  //       );
+
+  //       heightLeft -= pdfHeight - 30;
+
+  //       while (heightLeft > 0) {
+  //         position = heightLeft - imgHeight;
+  //         pdf.addPage();
+  //         pdf.addImage(
+  //           canvas,
+  //           'PNG',
+  //           10,
+  //           position,
+  //           imgWidth,
+  //           imgHeight
+  //         );
+  //         heightLeft -= pdfHeight - 30;
+  //       }
+  //       pdf.save(`receipt-${receiptData.bookingId}.pdf`);
+
+  //       setSelectedBooking(null);
+  //     }
+  //   }, 100);
+  // };
+
+  const openReceiptModal = (bookingId: string) => {
+    const data = generateReceiptData(bookingId);
+    if (data) setSelectedBooking(data);
   };
+
+
+  const handlePrint = useReactToPrint({
+    contentRef: receiptRef,
+    documentTitle: `Receipt-${selectedBooking?.bookingId}`,
+    onAfterPrint: () => setSelectedBooking(null),
+  });
+
 
   const sendEmailReceipt = async (bookingId: string) => {
     const receiptData = generateReceiptData(bookingId);
@@ -426,11 +505,10 @@ export default function BookingsPage() {
                     setStatusFilter(status);
                     setCurrentPage(1); // Reset to first page when filtering
                   }}
-                  className={`px-4 py-2 rounded-lg font-medium transition ${
-                    statusFilter === status
-                      ? "bg-blue-600 dark:bg-blue-700 text-white"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
+                  className={`px-4 py-2 rounded-lg font-medium transition ${statusFilter === status
+                    ? "bg-blue-600 dark:bg-blue-700 text-white"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                    }`}
                 >
                   {status.charAt(0).toUpperCase() + status.slice(1)}
                 </button>
@@ -569,7 +647,7 @@ export default function BookingsPage() {
                         {Math.ceil(
                           (new Date(booking.endDate).getTime() -
                             new Date(booking.startDate).getTime()) /
-                            (1000 * 60 * 60 * 24),
+                          (1000 * 60 * 60 * 24),
                         )}{" "}
                         days
                       </div>
@@ -595,7 +673,7 @@ export default function BookingsPage() {
                       <div className="flex flex-col gap-2">
                         <div className="flex gap-2">
                           <button
-                            onClick={() => generatePDF(booking.id)}
+                            onClick={() => openReceiptModal(booking.id)}
                             className="p-2 bg-red-600 dark:bg-red-700 text-white rounded-lg hover:bg-red-700 dark:hover:bg-red-800 transition"
                             title="Generate PDF"
                           >
@@ -670,8 +748,23 @@ export default function BookingsPage() {
       {/* Hidden Receipt Template for PDF */}
       {selectedBooking && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4">
-            <div ref={receiptRef} className="p-8 bg-white">
+          <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div
+              ref={receiptRef}
+              id="receipt-container"
+              className="p-8 bg-white"
+              style={{
+                minHeight: 'auto',
+                boxSizing: 'border-box'
+              }}
+            >
+              <style type="text/css" media="print">
+                {`
+                  @page { size: auto; margin: 20mm; }
+                  html, body { height: auto; overflow: visible; }
+                  #receipt-container { width: 100%; }
+                `}
+              </style>
               {/* Receipt Header */}
               <div className="text-center mb-8 border-b pb-6">
                 <h1 className="text-3xl font-bold text-gray-900">
@@ -707,13 +800,21 @@ export default function BookingsPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-2 gap-1">
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2">
                       Customer Details
                     </h3>
                     <p className="text-gray-800">
                       {selectedBooking.customerName}
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      Customer Contact
+                    </h3>
+                    <p className="text-gray-800">
+                      {selectedBooking.customerPhone} | {selectedBooking.customerEmail} | {selectedBooking.customerGPSAddress}
                     </p>
                   </div>
                   <div>
@@ -732,26 +833,53 @@ export default function BookingsPage() {
                       Guarantor Details
                     </h3>
                     <p className="text-gray-800">
-                      {selectedBooking.customerName}
+                      {selectedBooking.guarantorName}
                     </p>
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2">
-                      Vehicle Details
+                      Guarantor Contact
                     </h3>
                     <p className="text-gray-800">
-                      {selectedBooking.carDetails}
+                      {selectedBooking.guarantorPhone} | {selectedBooking.guarantorEmail} | {selectedBooking.guarantorGPSAddress}
                     </p>
                   </div>
                 </div>
 
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">
-                    Booking Period
-                  </h3>
-                  <p className="text-gray-800">
-                    {selectedBooking.bookingDates}
-                  </p>
+                <div className="grid grid-cols-2 gap-6">
+
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      Booking Period
+                    </h3>
+                    <p className="text-gray-800">
+                      {selectedBooking.bookingDates}
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      Number of Days
+                    </h3>
+                    <p className="text-gray-800">
+                      {selectedBooking.numberOfDays} days
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      Pickup Location
+                    </h3>
+                    <p className="text-gray-800">
+                      {selectedBooking.pickupLocation}
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      Dropoff Location
+                    </h3>
+                    <p className="text-gray-800">
+                      {selectedBooking.dropoffLocation}
+                    </p>
+                  </div>
                 </div>
 
                 {/* Amount Breakdown */}
@@ -800,48 +928,42 @@ export default function BookingsPage() {
                   <h3 className="font-semibold text-center text-gray-900 mb-2">
                     Terms and Conditions
                   </h3>
-                  <ol className="">
-
-                  <li className="list-decimal list-inside space-y-2">
-
                   <p className="text-gray-800">
                     <span className="font-bold mr-2">1.</span>
-                     Minimum rental period: 24 hours
+                    Minimum rental period: 24 hours
                   </p>
                   <p className="text-gray-800">
                     <span className="font-bold mr-2">2.</span>
-                     Car(s) is to be returned to the garage by 8:00 AM on the due date that the car is to be returned. When the time exceeds by an hour, the recipient would pay an extra fee of full day rent.
+                    Car(s) is to be returned to the garage by 8:00 AM on the due date that the car is to be returned. When the time exceeds by an hour, the recipient would pay an extra fee of full day rent.
                   </p>
                   <p className="text-gray-800">
                     <span className="font-bold mr-2">3.</span>
-                     Car recipient must provide a valid Ghana Card or Passport, Ghana Driver's License and a guarantor. The guarantor must provide details of their Ghana Card or Passport and other relevant information to the company.
+                    Car recipient must provide a valid Ghana Card or Passport, Ghana Driver's License and a guarantor. The guarantor must provide details of their Ghana Card or Passport and other relevant information to the company.
                   </p>
                   <p className="text-gray-800">
                     <span className="font-bold mr-2">4.</span>
-                         In case the recipient would need a driver from the company, they would pay an additional fee of two hundred Ghana Cedis (¢ 200.00) as service fee.
+                    In case the recipient would need a driver from the company, they would pay an additional fee of two hundred Ghana Cedis (¢ 200.00) as service fee.
                   </p>
                   <p className="text-gray-800">
                     <span className="font-bold mr-2">5.</span>
-    The recipient would be responsible for the upkeep and accommodation of the driver.
-                    </p>
+                    The recipient would be responsible for the upkeep and accommodation of the driver.
+                  </p>
                   <p className="text-gray-800">
                     <span className="font-bold mr-2">6.</span>
-    In case of any accident, the recipient would bear the full cost of the damages. In such a situation, the recipient would have not more than a month to put the car in its original shape.
-                    </p>
-                    <p className="text-gray-800"> 
-                      <span className="font-bold mr-2">7.</span>   
-                      In case of very serious damage, the recipient would have to replace the car with a new one.
-                      </p>
-                <p className="text-gray-800">
-                  <span className="font-bold mr-2">8.</span>
-                      No smoking, eating or drinking of alcohol in vehicle. The recipient must ensure that the vehicle is well cleaned when returning it.
+                    In case of any accident, the recipient would bear the full cost of the damages. In such a situation, the recipient would have not more than a month to put the car in its original shape.
+                  </p>
+                  <p className="text-gray-800">
+                    <span className="font-bold mr-2">7.</span>
+                    In case of very serious damage, the recipient would have to replace the car with a new one.
+                  </p>
+                  <p className="text-gray-800">
+                    <span className="font-bold mr-2">8.</span>
+                    No smoking, eating or drinking of alcohol in vehicle. The recipient must ensure that the vehicle is well cleaned when returning it.
                   </p>
                   <p className="text-gray-800">
                     <span className="font-bold mr-2">9.</span>
                     Fuel policy: The recipient must return the vehicle with a full tank of fuel; specifically, SHELL V-POWER.
                   </p>
-                  </li>
-                    </ol>
                 </div>
                 {/* Signature */}
                 <div className="flex justify-between items-center mt-8">
@@ -859,7 +981,7 @@ export default function BookingsPage() {
                     <div className="border-t w-48 mx-auto border-gray-400"></div>
                     <p className="text-gray-600 mt-2">Transport Manager Sign</p>
                   </div>
-                  
+
                 </div>
 
                 {/* Footer */}
@@ -882,7 +1004,8 @@ export default function BookingsPage() {
                 Cancel
               </button>
               <button
-                onClick={() => window.print()}
+                onClick={() => handlePrint()}
+                // onClick={() => window.print()}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
               >
                 <FaPrint />

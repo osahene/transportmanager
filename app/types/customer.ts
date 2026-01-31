@@ -35,8 +35,6 @@ export interface Customer {
   };
 }
 export interface CustomerAddress {
-  locality: string;
-  town: string;
   city: string;
   region: string;
   country: string;

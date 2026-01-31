@@ -41,7 +41,17 @@ export interface Driver {
 export interface Booking {
   id: string;
   carId: string;
-  customerId: string;
+  customerId: Customer["id"];
+  customerName: string;
+  customerPhone: string;
+  customerEmail: string;
+  customerGPSAddress: string;
+  guarantorName?: string;
+  guarantorPhone?: string;
+  guarantorEmail?: string;
+  guarantorGPSAddress?: string;
+  driverName?: string;
+  selfDrive: boolean;
   startDate: string;
   endDate: string;
   currentMileage: string;

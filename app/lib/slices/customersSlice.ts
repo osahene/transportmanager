@@ -36,8 +36,6 @@ const initialState: CustomersState = {
       occupation: "Software Engineer",
       gpsAddress: "GA-492-8831",
       address: {
-        locality: "East Legon",
-        town: "East Legon",
         city: "Accra",
         region: "Greater Accra",
         country: "Ghana",
@@ -67,8 +65,6 @@ const initialState: CustomersState = {
         gpsAddress: "GA-112-3321",
         relationship: "Brother",
         address: {
-          locality: "Madina",
-          town: "Madina",
           city: "Accra",
           region: "Greater Accra",
           country: "Ghana",
@@ -91,8 +87,6 @@ const initialState: CustomersState = {
       occupation: "Entrepreneur",
       gpsAddress: "AS-224-9902",
       address: {
-        locality: "Adum",
-        town: "Adum",
         city: "Kumasi",
         region: "Ashanti",
         country: "Ghana",
@@ -121,8 +115,6 @@ const initialState: CustomersState = {
         gpsAddress: "AS-889-1133",
         relationship: "Husband",
         address: {
-          locality: "Asokwa",
-          town: "Asokwa",
           city: "Kumasi",
           region: "Ashanti",
           country: "Ghana",
@@ -144,9 +136,7 @@ const initialState: CustomersState = {
       ghanaCardId: "GHA-998877665-4",
       occupation: "University Lecturer",
       gpsAddress: "CP-331-4410",
-      address: {
-        locality: "Cape Coast",
-        town: "Cape Coast",
+      address: {       
         city: "Cape Coast",
         region: "Central",
         country: "Ghana",
@@ -168,8 +158,6 @@ const initialState: CustomersState = {
         gpsAddress: "CP-220-5511",
         relationship: "Father",
         address: {
-          locality: "Abura",
-          town: "Abura",
           city: "Cape Coast",
           region: "Central",
           country: "Ghana",
