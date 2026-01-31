@@ -151,7 +151,7 @@ export default function CarDetailPage() {
 
   // Calculate utilization rate from bookings
   const getUtilizationRate = () => {
-    const vehicleBookings = bookings.filter((b) => b.carId === selectedCar.id);
+    const vehicleBookings = bookings.filter((b) => b.CarId === selectedCar.id);
     if (vehicleBookings.length === 0) return 0;
 
     const completedBookings = vehicleBookings.filter(
@@ -164,7 +164,7 @@ export default function CarDetailPage() {
   // Calculate total revenue from completed bookings
   const getTotalRevenue = () => {
     // FIXED: Using carId instead of vehicleId
-    const vehicleBookings = bookings.filter((b) => b.carId === selectedCar.id);
+    const vehicleBookings = bookings.filter((b) => b.CarId === selectedCar.id);
     return vehicleBookings
       .filter((b) => b.status === "completed")
       .reduce((sum, booking) => sum + booking.totalAmount, 0);
@@ -221,7 +221,7 @@ export default function CarDetailPage() {
                 Total Bookings
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                {bookings.filter((b) => b.carId === selectedCar.id).length}
+                {bookings.filter((b) => b.CarId === selectedCar.id).length}
               </p>
             </div>
             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
@@ -334,7 +334,7 @@ export default function CarDetailPage() {
                 </h3>
                 <BookingsTable
                   bookings={bookings
-                    .filter((b) => b.carId === selectedCar.id)
+                    .filter((b) => b.CarId === selectedCar.id)
                     .slice(0, 5)}
                   vehicleId={selectedCar.id}
                 />
@@ -455,7 +455,7 @@ export default function CarDetailPage() {
                 <span className="font-medium text-gray-800 dark:text-white">
                   {(() => {
                     const vehicleBookings = bookings.filter(
-                      (b) => b.carId === selectedCar.id
+                      (b) => b.CarId === selectedCar.id
                     );
                     if (vehicleBookings.length === 0) return "None";
                     const lastBooking = vehicleBookings.sort(

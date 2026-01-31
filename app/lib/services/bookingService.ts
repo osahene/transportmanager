@@ -54,7 +54,7 @@ export class BookingService {
   } {
     const errors: string[] = [];
 
-    if (!booking.carId) errors.push("Car is required");
+    if (!booking.CarId) errors.push("Car is required");
     if (!booking.customerId) errors.push("Customer is required");
     if (!booking.startDate) errors.push("Start date is required");
     if (!booking.endDate) errors.push("End date is required");
