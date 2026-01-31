@@ -22,8 +22,6 @@ import { useAppSelector } from "../../lib/store";
 import { selectAllBookingsWithDetails } from "../../lib/slices/selectors";
 import BookingActions from "@/app/components/booking/bookingActions";
 import { format } from "date-fns";
-// import jsPDF from "jspdf";
-// import html2canvas from "html2canvas";
 import { useReactToPrint } from "react-to-print";
 import Link from "next/link";
 
@@ -230,10 +228,10 @@ export default function BookingsPage() {
 
   const generateReceiptData = (bookingId: string): ReceiptData | null => {
     // Search by booking.id, not carId
-    const booking = allDetailedBookings.find((b) => b.payload.id === bookingId);
+    const booking = allDetailedBookings.find((b: any) => b.payload.id === bookingId);
 
     if (!booking) return null;
-    const { payload } = booking;
+    const { payload } = booking as any;
     const carDetails = `${booking.carMake} ${booking.carModel} (${booking.carLicensePlate})`;
 
     return {
@@ -264,78 +262,6 @@ export default function BookingsPage() {
       date: new Date(),
     };
   };
-
-  // const generatePDF = async (bookingId: string) => {
-  //   const receiptData = generateReceiptData(bookingId);
-  //   if (!receiptData) return;
-
-  //   setSelectedBooking(receiptData);
-  //   setTimeout(async () => {
-  //     if (receiptRef.current) {
-  //       const canvas = await html2canvas(receiptRef.current, {
-  //         scale: 2,
-  //         useCORS: true,
-  //         logging: false,
-  //         backgroundColor: "#ffffff",
-  //         onclone: (clonedDoc) => {
-  //           // Ensure proper styling for PDF
-  //           const clonedReceipt = clonedDoc.getElementById('receipt-container');
-  //           if (clonedReceipt) {
-  //             clonedReceipt.style.width = '210mm'; // A4 width
-  //             clonedReceipt.style.minHeight = 'auto';
-  //             clonedReceipt.style.display = 'block';
-  //           }
-  //         }
-  //       });
-
-  //       const imgData = canvas.toDataURL("image/png");
-  //       const pdf = new jsPDF({
-  //         orientation: 'portrait',
-  //         unit: 'mm',
-  //         format: 'a4'
-  //       });
-
-  //       const pdfWidth = pdf.internal.pageSize.getWidth();
-  //       const pdfHeight = pdf.internal.pageSize.getHeight();
-
-  //       // Calculate image dimensions to fit A4 page
-  //       const imgWidth = pdfWidth - 20; // 10mm margins on each side
-  //       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-  //       let heightLeft = imgHeight;
-  //       let position = 10; // Start 10mm from top
-
-  //       // Add first page
-  //       pdf.addImage(
-  //         canvas,
-  //         'PNG',
-  //         10, // x position (10mm margin)
-  //         position,
-  //         imgWidth,
-  //         imgHeight
-  //       );
-
-  //       heightLeft -= pdfHeight - 30;
-
-  //       while (heightLeft > 0) {
-  //         position = heightLeft - imgHeight;
-  //         pdf.addPage();
-  //         pdf.addImage(
-  //           canvas,
-  //           'PNG',
-  //           10,
-  //           position,
-  //           imgWidth,
-  //           imgHeight
-  //         );
-  //         heightLeft -= pdfHeight - 30;
-  //       }
-  //       pdf.save(`receipt-${receiptData.bookingId}.pdf`);
-
-  //       setSelectedBooking(null);
-  //     }
-  //   }, 100);
-  // };
 
   const openReceiptModal = (bookingId: string) => {
     const data = generateReceiptData(bookingId);
