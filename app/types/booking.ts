@@ -40,7 +40,7 @@ export interface Driver {
 // Main Booking interface for database/state
 export interface Booking {
   id: string;
-  carId: string;
+  CarId: string;
   customerId: Customer["id"];
   customerName: string;
   customerPhone: string;

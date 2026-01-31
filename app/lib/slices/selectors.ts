@@ -28,19 +28,19 @@ export const selectCarById = (carId: string) => (state: RootState) =>
   state.car.Cars.find((car) => car.id === carId);
 
 export const selectBookingsByCarId = (carId: string) => (state: RootState) =>
-  state.bookings.bookings.filter((booking) => booking.carId === carId);
+  state.bookings.bookings.filter((booking) => booking.CarId === carId);
 
 export const selectCompletedBookingsByCarId =
   (carId: string) => (state: RootState) =>
     state.bookings.bookings.filter(
-      (booking) => booking.carId === carId && booking.status === "completed",
+      (booking) => booking.CarId === carId && booking.status === "completed",
     );
 
 export const selectActiveBookingsByCarId =
   (carId: string) => (state: RootState) =>
     state.bookings.bookings.filter(
       (booking) =>
-        booking.carId === carId &&
+        booking.CarId === carId &&
         ["pending", "confirmed"].includes(booking.status),
     );
 
@@ -178,7 +178,7 @@ export const selectCarStats = createSelector(
   (selectedCar, bookings) => {
     if (!selectedCar) return null;
 
-    const carBookings = bookings.filter((b) => b.carId === selectedCar.id);
+    const carBookings = bookings.filter((b) => b.CarId === selectedCar.id);
     const completedBookings = carBookings.filter(
       (b) => b.status === "completed",
     );
@@ -220,7 +220,7 @@ export const selectCarDetails = createSelector(
   ) => {
     if (!selectedCar) return null;
 
-    const carBookings = bookings.filter((b) => b.carId === selectedCar.id);
+    const carBookings = bookings.filter((b) => b.CarId === selectedCar.id);
     const carMaintenance = maintenanceRecords.filter(
       (r) => r.vehicleId === selectedCar.id,
     );
