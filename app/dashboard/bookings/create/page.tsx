@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FaSave, FaTimes } from "react-icons/fa";
 import { useAppSelector, useAppDispatch } from "../../../lib/store";
 import { updateCarStatus } from "../../../lib/slices/carsSlice";
-import { createBooking } from "../../../lib/slices/bookingsSlice";
+import { createBooking, checkCarAvailability } from "../../../lib/slices/bookingsSlice";
 import { addCustomer } from "../../../lib/slices/customersSlice";
 import { Customer, Note } from "../../../types/customer";
 import { Car } from "@/app/types/cars";
@@ -31,27 +31,22 @@ export default function CreateBookingPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
-  // Get data from Redux - cast to proper types
+  // Redux selectors
   const availableCars = useAppSelector(selectAvailablecars) as Car[];
   const drivers = useAppSelector(selectDrivers) as Driver[];
-  const allCustomers = useAppSelector(selectCustomers);
-  // Confirmation modal state
+  const allCustomers = useAppSelector(selectCustomers) as Customer[];
+
+  // Local UI state
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
-  const [bookingSummary, setBookingSummary] = useState<BookingSummary | null>(
-    null
-  );
+  const [bookingSummary, setBookingSummary] = useState<BookingSummary | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Local states
+  // Customer selection/search
   const [customerSearch, setCustomerSearch] = useState("");
-  const [customerMode, setCustomerMode] = useState<"existing" | "new">(
-    "existing"
-  );
+  const [customerMode, setCustomerMode] = useState<"existing" | "new">("existing");
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
-    null
-  );
-
+  // Payment details
   const [payInSlipDetails, setPayInSlipDetails] = useState({
     bankName: "",
     branch: "",
@@ -62,21 +57,20 @@ export default function CreateBookingPage() {
     slipNumber: "",
   });
 
-  // Mobile money details
   const [mobileMoneyDetails, setMobileMoneyDetails] = useState({
     transactionId: "",
     provider: "MTN",
     phoneNumber: "",
   });
 
-  // Form state
+  // Form state (selfDrive is boolean now)
   const [formData, setFormData] = useState({
     customerId: "",
     carId: "",
     driverId: "",
     startDate: "",
     endDate: "",
-    selfDrive: "",
+    selfDrive: false,
     driverLicenseId: "",
     driverLicenseClass: "",
     driverLicenseIssueDate: "",
@@ -90,30 +84,8 @@ export default function CreateBookingPage() {
     paymentStatus: "pending" as "pending" | "paid" | "failed",
   });
 
-  // Handle pay-in-slip details changes
-  const handlePayInSlipChange = useCallback(
-    (field: string, value: string | number) => {
-      setPayInSlipDetails((prev) => ({
-        ...prev,
-        [field]: value,
-      }));
-    },
-    []
-  );
-
-  // Handle mobile money details changes
-  const handleMobileMoneyChange = useCallback(
-    (field: string, value: string) => {
-      setMobileMoneyDetails((prev) => ({
-        ...prev,
-        [field]: value,
-      }));
-    },
-    []
-  );
-
-  // New customer form state
-  const [newCustomer, setNewCustomer] = useState({
+  // New customer structure
+  const [newCustomer, setNewCustomer] = useState<any>({
     firstName: "",
     lastName: "",
     email: "",
@@ -121,24 +93,16 @@ export default function CreateBookingPage() {
     ghanaCardId: "",
     occupation: "",
     gpsAddress: "",
-    address: {
-      city: "",
-      region: "",
-      country: "",
-    },
+    address: { city: "", region: "", country: "" },
     joinDate: new Date().toISOString().split("T")[0],
-    status: "active" as const,
+    status: "active",
     totalBookings: 0,
     totalSpent: 0,
     averageRating: 0,
     preferredVehicleType: "",
     notes: "",
     tags: [] as string[],
-    communicationPreferences: {
-      email: true,
-      sms: true,
-      phone: false,
-    },
+    communicationPreferences: { email: true, sms: true, phone: false },
     guarantor: {
       id: generateId("GUAR"),
       firstName: "",
@@ -149,200 +113,142 @@ export default function CreateBookingPage() {
       occupation: "",
       gpsAddress: "",
       relationship: "",
-      address: {
-        city: "",
-        region: "",
-        country: "",
-      },
+      address: { city: "", region: "", country: "" },
     },
-    loyaltyTier: "bronze" as const,
+    loyaltyTier: "bronze",
   });
 
-  // Calculate total amount based on dates and car daily rate
-  useEffect(() => {
-    if (formData.carId && formData.startDate && formData.endDate) {
-      const car = availableCars.find((c) => c.id === formData.carId);
-      if (car) {
-        const start = new Date(formData.startDate);
-        const end = new Date(formData.endDate);
-        const diffTime = Math.max(0, end.getTime() - start.getTime());
-        const days = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-        const total = days * car.dailyRate;
-        setFormData((prev) => ({ ...prev, totalAmount: total }));
-      }
-    }
+  // -----------------------------------------
+  // Utility: calculate total amount (single source)
+  // -----------------------------------------
+  const calculateTotalAmount = useCallback(() => {
+    if (!formData.carId || !formData.startDate || !formData.endDate) return;
+    const car = availableCars.find((c) => c.id === formData.carId);
+    if (!car) return;
+
+    const start = new Date(formData.startDate);
+    const end = new Date(formData.endDate);
+    const diffTime = Math.max(0, end.getTime() - start.getTime());
+    const days = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+    const total = days * car.dailyRate;
+
+    setFormData((prev) => ({ ...prev, totalAmount: total }));
+    // Keep pay-in-slip amount in sync when payment method is pay_in_slip
+    setPayInSlipDetails((prev) => ({ ...prev, amount: total }));
   }, [formData.carId, formData.startDate, formData.endDate, availableCars]);
 
+  useEffect(() => {
+    calculateTotalAmount();
+  }, [calculateTotalAmount]);
+
+  // -----------------------------------------
+  // Filtered customers (search)
+  // -----------------------------------------
   const filteredCustomers = useMemo(() => {
     if (customerMode !== "existing") return [];
-
     const query = customerSearch.trim().toLowerCase();
     if (!query) return [];
     return allCustomers.filter((customer: Customer) => {
       return (
-        `${customer.firstName} ${customer.lastName}`
-          .toLowerCase()
-          .includes(query) ||
-        customer.email.toLowerCase().includes(query) ||
-        customer.phone.includes(customerSearch) ||
-        customer.ghanaCardId?.toLowerCase().includes(query) ||
-        customer.gpsAddress?.toLowerCase().includes(query)
+        `${customer.firstName} ${customer.lastName}`.toLowerCase().includes(query) ||
+        (customer.email || "").toLowerCase().includes(query) ||
+        (customer.phone || "").includes(customerSearch) ||
+        (customer.ghanaCardId || "").toLowerCase().includes(query) ||
+        (customer.gpsAddress || "").toLowerCase().includes(query)
       );
     });
   }, [allCustomers, customerSearch, customerMode]);
 
-  // Calculate total amount based on dates and car daily rate
-  useEffect(() => {
-    if (formData.carId && formData.startDate && formData.endDate) {
-      const car = availableCars.find((c) => c.id === formData.carId);
-      if (car) {
-        const start = new Date(formData.startDate);
-        const end = new Date(formData.endDate);
-        const diffTime = Math.max(0, end.getTime() - start.getTime());
-        const days = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-        const total = days * car.dailyRate;
-        setFormData((prev) => ({ ...prev, totalAmount: total }));
-      }
-    }
-  }, [formData.carId, formData.startDate, formData.endDate, availableCars]);
+  // -----------------------------------------
+  // Handlers
+  // -----------------------------------------
+  const handlePayInSlipChange = useCallback((field: string, value: string | number) => {
+    setPayInSlipDetails((prev) => ({ ...prev, [field]: value }));
+  }, []);
 
-  // Handle customer selection
+  const handleMobileMoneyChange = useCallback((field: string, value: string) => {
+    setMobileMoneyDetails((prev) => ({ ...prev, [field]: value }));
+  }, []);
+
   const handleCustomerSelect = useCallback((customer: Customer) => {
     setSelectedCustomer(customer);
     setFormData((prev) => ({ ...prev, customerId: customer.id }));
     setCustomerSearch(`${customer.firstName} ${customer.lastName}`);
   }, []);
 
-  // Handle car selection
   const handleCarSelect = useCallback((carId: string) => {
     setFormData((prev) => ({ ...prev, carId }));
   }, []);
 
-  // Handle new customer form changes
   const handleNewCustomerChange = useCallback((name: string, value: string) => {
-    setNewCustomer((prev) => {
+    setNewCustomer((prev: any) => {
       const addressFields = ["city", "region", "country"];
+      // direct address fields
       if (addressFields.includes(name)) {
-        return {
-          ...prev,
-          address: {
-            ...prev.address,
-            [name]: value,
-          },
-        };
+        return { ...prev, address: { ...prev.address, [name]: value } };
       }
 
+      // guarantor fields prefixed with guarantor_
       if (name.startsWith("guarantor_")) {
         const fieldName = name.replace("guarantor_", "");
-
         if (addressFields.includes(fieldName)) {
           return {
             ...prev,
-            guarantor: {
-              ...prev.guarantor,
-              address: {
-                ...prev.guarantor.address,
-                [fieldName]: value,
-              },
-            },
+            guarantor: { ...prev.guarantor, address: { ...prev.guarantor.address, [fieldName]: value } },
           };
         }
-      }
-      if (name.includes("_")) {
-        const [parent, child] = name.split("_");
-        return {
-          ...prev,
-          [parent]: {
-            ...(prev[parent as keyof typeof prev] as object),
-            [child]: value,
-          },
-        };
+        return { ...prev, guarantor: { ...prev.guarantor, [fieldName]: value } };
       }
 
-      return {
-        ...prev,
-        [name]: value,
-      };
+      // nested parent_child
+      if (name.includes("_")) {
+        const [parent, child] = name.split("_");
+        return { ...prev, [parent]: { ...(prev[parent] || {}), [child]: value } };
+      }
+
+      return { ...prev, [name]: value };
     });
   }, []);
 
-  // Handle communication preferences changes
-  const handleCommunicationPrefChange = useCallback(
-    (
-      field: keyof { email: boolean; sms: boolean; phone: boolean },
-      value: boolean
-    ) => {
-      setNewCustomer((prev) => ({
-        ...prev,
-        communicationPreferences: {
-          ...prev.communicationPreferences,
-          [field]: value,
-        },
-      }));
-    },
-    []
-  );
+  const handleCommunicationPrefChange = useCallback((field: "email" | "sms" | "phone", value: boolean) => {
+    setNewCustomer((prev: any) => ({ ...prev, communicationPreferences: { ...prev.communicationPreferences, [field]: value } }));
+  }, []);
 
-  // Handle form field changes
-  const handleFieldChange = useCallback(
-    (field: string, value: string) => {
-      setFormData((prev) => ({
-        ...prev,
-        [field]: value,
-      }));
+  const handleFieldChange = useCallback((field: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
 
-      // If payment method changes to pay_in_slip and total amount > 0, set pay-in-slip amount
-      if (
-        field === "paymentMethod" &&
-        value === "pay_in_slip" &&
-        formData.totalAmount > 0
-      ) {
-        setPayInSlipDetails((prev) => ({
-          ...prev,
-          amount: formData.totalAmount,
-        }));
+    // If payment method becomes pay_in_slip keep amount in sync
+    if (field === "paymentMethod" && value === "pay_in_slip") {
+      setPayInSlipDetails((prev) => ({ ...prev, amount: formData.totalAmount }));
+    }
+  }, [formData.totalAmount]);
+
+  // Handle existing customer's guarantor updates safely
+  const handleExistingCustomerGuarantorChange = useCallback((field: string, value: string) => {
+    if (!selectedCustomer) return;
+    const parts = field.split("_"); // e.g. selectedCustomer_guarantor_firstName or guarantor_address_city
+
+    setSelectedCustomer((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev } as any;
+      if (!updated.guarantor) {
+        updated.guarantor = { id: generateId("GUAR"), address: { city: "", region: "", country: "" } };
       }
-    },
-    [formData.totalAmount]
-  );
 
-  // Add this handler after your other handlers
-  const handleExistingCustomerGuarantorChange = useCallback(
-    (field: string, value: string) => {
-      if (!selectedCustomer) return;
+      // support: guarantor_firstName or guarantor_address_city
+      if (parts[0] === "guarantor" && parts.length === 2) {
+        updated.guarantor[parts[1]] = value;
+      } else if (parts[0] === "guarantor" && parts[1] === "address" && parts.length === 3) {
+        updated.guarantor.address = { ...updated.guarantor.address, [parts[2]]: value };
+      }
 
-      // Split: ["selectedCustomer", "guarantor", "firstName"]
-      const fieldParts = field.split("_");
+      return updated;
+    });
+  }, [selectedCustomer]);
 
-      setSelectedCustomer((prev) => {
-        if (!prev) return prev;
-        const updated = { ...prev };
-
-        // Check if the second part is "guarantor"
-        if (fieldParts[1] === "guarantor") {
-          if (fieldParts.length === 3) {
-            updated.guarantor = {
-              ...updated.guarantor,
-              [fieldParts[2]]: value,
-            };
-          } else if (fieldParts.length === 4 && fieldParts[2] === "address") {
-            updated.guarantor = {
-              ...updated.guarantor,
-              address: {
-                ...updated.guarantor.address,
-                [fieldParts[3]]: value,
-              },
-            };
-          }
-        }
-
-        return updated;
-      });
-    },
-    [selectedCustomer]
-  );
-
-  // Validate form
+  // -----------------------------------------
+  // Validation (keeps previous alerts for UI parity)
+  // -----------------------------------------
   const validateForm = useCallback((): boolean => {
     if (customerMode === "existing" && !selectedCustomer) {
       alert("Please select an existing customer");
@@ -350,210 +256,183 @@ export default function CreateBookingPage() {
     }
 
     if (customerMode === "new") {
-      if (!newCustomer.firstName.trim()) {
-        alert("Please enter customer name");
-        return false;
-      }
-      if (!newCustomer.lastName.trim()) {
-        alert("Please enter customer name");
-        return false;
-      }
-      if (!newCustomer.phone.trim()) {
-        alert("Please enter customer phone number");
-        return false;
-      }
-      if (!newCustomer.ghanaCardId.trim()) {
-        alert("Please enter customer Ghana Card ID");
-        return false;
-      }
-      if (!newCustomer.occupation.trim()) {
-        alert("Please enter customer occupation");
-        return false;
-      }
-      if (!newCustomer.gpsAddress.trim()) {
-        alert("Please enter customer GPS address");
-        return false;
-      }
-      if (!newCustomer.address.city.trim()) {
-        alert("Please enter customer city");
-        return false;
-      }
-      if (!newCustomer.address.region.trim()) {
-        alert("Please enter customer region");
-        return false;
-      }
-      if (!newCustomer.address.country.trim()) {
-        alert("Please enter customer country");
-        return false;
-      }
-      if (!newCustomer.guarantor.firstName.trim()) {
-        alert("Please enter guarantor first name");
-        return false;
-      }
-      if (!newCustomer.guarantor.lastName.trim()) {
-        alert("Please enter guarantor last name");
-        return false;
-      }
-      if (!newCustomer.guarantor.phone.trim()) {
-        alert("Please enter guarantor phone number");
-        return false;
-      }
-      if (!newCustomer.guarantor.ghanaCardId.trim()) {
-        alert("Please enter guarantor Ghana Card ID");
-        return false;
-      }
-      if (!newCustomer.guarantor.occupation.trim()) {
-        alert("Please enter guarantor occupation");
-        return false;
-      }
-      if (!newCustomer.guarantor.gpsAddress.trim()) {
-        alert("Please enter guarantor GPS address");
-        return false;
-      }
-      if (!newCustomer.guarantor.relationship.trim()) {
-        alert("Please enter guarantor relationship with customer");
-        return false;
-      }
-      if (!newCustomer.guarantor.address.city.trim()) {
-        alert("Please enter guarantor city");
-        return false;
-      }
-      if (!newCustomer.guarantor.address.region.trim()) {
-        alert("Please enter guarantor region");
-        return false;
-      }
-      if (!newCustomer.guarantor.address.country.trim()) {
-        alert("Please enter guarantor country");
-        return false;
-      }
+      if (!newCustomer.firstName.trim()) { alert("Please enter customer name"); return false; }
+      if (!newCustomer.lastName.trim()) { alert("Please enter customer name"); return false; }
+      if (!newCustomer.phone.trim()) { alert("Please enter customer phone number"); return false; }
+      if (!newCustomer.ghanaCardId.trim()) { alert("Please enter customer Ghana Card ID"); return false; }
+      if (!newCustomer.occupation.trim()) { alert("Please enter customer occupation"); return false; }
+      if (!newCustomer.gpsAddress.trim()) { alert("Please enter customer GPS address"); return false; }
+      if (!newCustomer.address.city.trim()) { alert("Please enter customer city"); return false; }
+      if (!newCustomer.address.region.trim()) { alert("Please enter customer region"); return false; }
+      if (!newCustomer.address.country.trim()) { alert("Please enter customer country"); return false; }
+      if (!newCustomer.guarantor.firstName.trim()) { alert("Please enter guarantor first name"); return false; }
+      if (!newCustomer.guarantor.lastName.trim()) { alert("Please enter guarantor last name"); return false; }
+      if (!newCustomer.guarantor.phone.trim()) { alert("Please enter guarantor phone number"); return false; }
+      if (!newCustomer.guarantor.ghanaCardId.trim()) { alert("Please enter guarantor Ghana Card ID"); return false; }
+      if (!newCustomer.guarantor.occupation.trim()) { alert("Please enter guarantor occupation"); return false; }
+      if (!newCustomer.guarantor.gpsAddress.trim()) { alert("Please enter guarantor GPS address"); return false; }
+      if (!newCustomer.guarantor.relationship.trim()) { alert("Please enter guarantor relationship with customer"); return false; }
+      if (!newCustomer.guarantor.address.city.trim()) { alert("Please enter guarantor city"); return false; }
+      if (!newCustomer.guarantor.address.region.trim()) { alert("Please enter guarantor region"); return false; }
+      if (!newCustomer.guarantor.address.country.trim()) { alert("Please enter guarantor country"); return false; }
     }
 
-    if (!formData.carId) {
-      alert("Please select a vehicle");
-      return false;
-    }
-
-    if (!formData.startDate || !formData.endDate) {
-      alert("Please select pickup and return dates");
-      return false;
-    }
+    if (!formData.carId) { alert("Please select a vehicle"); return false; }
+    if (!formData.startDate || !formData.endDate) { alert("Please select pickup and return dates"); return false; }
 
     const start = new Date(formData.startDate);
     const end = new Date(formData.endDate);
-    if (end <= start) {
-      alert("Return date must be after pickup date");
-      return false;
-    }
+    if (end <= start) { alert("Return date must be after pickup date"); return false; }
 
-    if (formData.selfDrive === "true") {
-      if (!formData.driverLicenseId.trim()) {
-        alert("Please enter driver's license number");
-        return false;
-      }
-      if (!formData.driverLicenseClass.trim()) {
-        alert("Please enter license class");
-        return false;
-      }
-      if (!formData.driverLicenseIssueDate) {
-        alert("Please select license issue date");
-        return false;
-      }
-      if (!formData.driverLicenseExpiryDate) {
-        alert("Please select license expiry date");
-        return false;
-      }
+    if (formData.selfDrive) {
+      if (!formData.driverLicenseId.trim()) { alert("Please enter driver's license number"); return false; }
+      if (!formData.driverLicenseClass.trim()) { alert("Please enter license class"); return false; }
+      if (!formData.driverLicenseIssueDate) { alert("Please select license issue date"); return false; }
+      if (!formData.driverLicenseExpiryDate) { alert("Please select license expiry date"); return false; }
 
-      // Check if license is expired
       const expiryDate = new Date(formData.driverLicenseExpiryDate);
       const today = new Date();
-      if (expiryDate < today) {
-        alert("Driver's license has expired. Please provide a valid license.");
-        return false;
-      }
+      if (expiryDate < today) { alert("Driver's license has expired. Please provide a valid license."); return false; }
     } else {
-      // Validate driver selection if not self-drive
-      if (!formData.driverId) {
-        alert("Please select a driver");
-        return false;
-      }
+      if (!formData.driverId) { alert("Please select a driver"); return false; }
     }
 
-    // Payment method specific validations
     if (formData.paymentMethod === "pay_in_slip") {
-      if (!payInSlipDetails.bankName.trim()) {
-        alert("Please enter bank name for pay-in-slip");
-        return false;
-      }
-      if (!payInSlipDetails.branch.trim()) {
-        alert("Please enter bank branch");
-        return false;
-      }
-      if (!payInSlipDetails.payeeName.trim()) {
-        alert("Please enter payee name");
-        return false;
-      }
-      if (!payInSlipDetails.referenceNumber.trim()) {
-        alert("Please enter reference number");
-        return false;
-      }
-      if (!payInSlipDetails.slipNumber.trim()) {
-        alert("Please enter slip number");
-        return false;
-      }
+      if (!payInSlipDetails.bankName.trim()) { alert("Please enter bank name for pay-in-slip"); return false; }
+      if (!payInSlipDetails.branch.trim()) { alert("Please enter bank branch"); return false; }
+      if (!payInSlipDetails.payeeName.trim()) { alert("Please enter payee name"); return false; }
+      if (!payInSlipDetails.referenceNumber.trim()) { alert("Please enter reference number"); return false; }
+      if (!payInSlipDetails.slipNumber.trim()) { alert("Please enter slip number"); return false; }
     }
 
     if (formData.paymentMethod === "mobile_money") {
-      if (!mobileMoneyDetails.phoneNumber.trim()) {
-        alert("Please enter phone number for mobile money payment");
-        return false;
-      }
-      // Validate Ghana phone number format
+      if (!mobileMoneyDetails.phoneNumber.trim()) { alert("Please enter phone number for mobile money payment"); return false; }
       const phoneRegex = /^(?:(?:\+?233|0)(?:\d{9}|\d{8}))$/;
-      if (!phoneRegex.test(mobileMoneyDetails.phoneNumber)) {
-        alert("Please enter a valid Ghanaian phone number");
-        return false;
-      }
+      if (!phoneRegex.test(mobileMoneyDetails.phoneNumber)) { alert("Please enter a valid Ghanaian phone number"); return false; }
     }
 
     return true;
-  }, [
-    customerMode,
-    payInSlipDetails,
-    mobileMoneyDetails,
-    selectedCustomer,
-    newCustomer,
-    formData,
-  ]);
+  }, [customerMode, payInSlipDetails, mobileMoneyDetails, selectedCustomer, newCustomer, formData]);
 
-  // Prepare booking summary for confirmation
-  const prepareBookingSummary = useCallback((): BookingSummary => {
+  // -----------------------------------------
+  // Availability check - fail closed (if we can't verify, treat as unavailable)
+  // -----------------------------------------
+  const checkAvailability = useCallback(async () => {
+    if (!formData.carId || !formData.startDate || !formData.endDate) {
+      return { available: true };
+    }
+    try {
+      const result = await dispatch(checkCarAvailability({
+        carId: formData.carId,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+      })).unwrap();
+      return result;
+    } catch (error) {
+      console.error("Availability check failed:", error);
+      // Treat as unavailable to avoid double-booking
+      return { available: false, message: "Unable to verify availability. Please try again." };
+    }
+  }, [dispatch, formData.carId, formData.startDate, formData.endDate]);
+
+  // -----------------------------------------
+  // Prepare backend payload (snake_case) and local booking object
+  // -----------------------------------------
+  const prepareBackendPayload = useCallback((customerIdForBackend?: string) => {
+    const payload: any = {
+      car: formData.carId,
+      start_date: formData.startDate,
+      end_date: formData.endDate,
+      pickup_location: formData.pickupLocation,
+      dropoff_location: formData.dropoffLocation,
+      special_requests: formData.specialRequests,
+      payment_method: formData.paymentMethod,
+      is_self_drive: formData.selfDrive,
+    };
+
+    if (customerMode === "existing") {
+      payload.customer = customerIdForBackend || selectedCustomer?.id;
+    } else {
+      payload.customer_data = {
+        first_name: newCustomer.firstName,
+        last_name: newCustomer.lastName,
+        email: newCustomer.email,
+        phone: newCustomer.phone,
+        ghana_card_id: newCustomer.ghanaCardId,
+        occupation: newCustomer.occupation,
+        gps_address: newCustomer.gpsAddress,
+        address_city: newCustomer.address.city,
+        address_region: newCustomer.address.region,
+        address_country: newCustomer.address.country,
+        communication_preferences: newCustomer.communicationPreferences,
+      };
+
+      payload.guarantor_data = {
+        first_name: newCustomer.guarantor.firstName,
+        last_name: newCustomer.guarantor.lastName,
+        phone: newCustomer.guarantor.phone,
+        email: newCustomer.guarantor.email,
+        ghana_card_id: newCustomer.guarantor.ghanaCardId,
+        occupation: newCustomer.guarantor.occupation,
+        gps_address: newCustomer.guarantor.gpsAddress,
+        relationship: newCustomer.guarantor.relationship,
+        address_city: newCustomer.guarantor.address.city,
+        address_region: newCustomer.guarantor.address.region,
+        address_country: newCustomer.guarantor.address.country,
+      };
+    }
+
+    if (formData.selfDrive) {
+      payload.driver_license_id = formData.driverLicenseId;
+      payload.driver_license_class = formData.driverLicenseClass;
+    } else {
+      payload.driver = formData.driverId;
+    }
+
+    if (formData.paymentMethod === "mobile_money") {
+      payload.mobile_money_provider = mobileMoneyDetails.provider;
+      payload.mobile_money_number = mobileMoneyDetails.phoneNumber;
+      payload.mobile_money_transaction_id = mobileMoneyDetails.transactionId || `MM_${Date.now()}`;
+    } else if (formData.paymentMethod === "pay_in_slip") {
+      payload.pay_in_slip_bank = payInSlipDetails.bankName;
+      payload.pay_in_slip_branch = payInSlipDetails.branch;
+      payload.pay_in_slip_payee = payInSlipDetails.payeeName;
+      payload.pay_in_slip_reference = payInSlipDetails.referenceNumber;
+      payload.pay_in_slip_number = payInSlipDetails.slipNumber;
+      payload.pay_in_slip_date = payInSlipDetails.paymentDate;
+    }
+
+    return payload;
+  }, [formData, customerMode, selectedCustomer, newCustomer, mobileMoneyDetails, payInSlipDetails]);
+
+  // -----------------------------------------
+  // Prepare booking summary for confirmation (single source)
+  // -----------------------------------------
+  const buildBookingSummary = useCallback((): BookingSummary | null => {
+    if (!formData.carId || !formData.startDate || !formData.endDate) return null;
+
     const car = availableCars.find((c) => c.id === formData.carId) || null;
     const driver = drivers.find((d) => d.id === formData.driverId) || null;
 
     const start = new Date(formData.startDate);
     const end = new Date(formData.endDate);
-    const duration = Math.max(
-      1,
-      Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
-    );
+    const duration = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
 
-    const summary: BookingSummary = {
-      customer:
-        customerMode === "existing"
-          ? selectedCustomer
-          : {
-              ...newCustomer,
-              id: generateId("CUST"),
-              createdAt: new Date().toISOString(),
-              notes: [] as Note[],
-            },
+    const customerObj = customerMode === "existing"
+      ? selectedCustomer
+      : ({
+          ...newCustomer,
+          id: generateId("CUST"),
+          createdAt: new Date().toISOString(),
+          notes: [] as Note[],
+        } as Customer);
+
+    return {
+      customer: customerObj,
       car,
       driver,
-      selfDrive: formData.selfDrive === "true",
-      dates: {
-        start: formData.startDate,
-        end: formData.endDate,
-      },
+      selfDrive: formData.selfDrive ? "true" : "false",
+      dates: { start: formData.startDate, end: formData.endDate },
       duration,
       totalAmount: formData.totalAmount,
       pickupLocation: formData.pickupLocation,
@@ -561,401 +440,166 @@ export default function CreateBookingPage() {
       paymentMethod: formData.paymentMethod,
       specialRequests: formData.specialRequests,
       paymentData: {
-        ...(formData.paymentMethod === "pay_in_slip" && {
-          payInSlipDetails,
-        }),
-        ...(formData.paymentMethod === "mobile_money" && {
-          mobileMoneyDetails: {
-            ...mobileMoneyDetails,
-            transactionId: `MM_${Date.now()}`,
-          },
-        }),
+        ...(formData.paymentMethod === "pay_in_slip" && { payInSlipDetails }),
+        ...(formData.paymentMethod === "mobile_money" && { mobileMoneyDetails: { ...mobileMoneyDetails, transactionId: mobileMoneyDetails.transactionId || `MM_${Date.now()}` } }),
       },
-      // Add self-drive details if applicable
-      ...(formData.selfDrive === "true" && {
+      ...(formData.selfDrive && {
         driverLicenseId: formData.driverLicenseId,
         driverLicenseClass: formData.driverLicenseClass,
         driverLicenseIssueDate: formData.driverLicenseIssueDate,
         driverLicenseExpiryDate: formData.driverLicenseExpiryDate,
       }),
+    } as BookingSummary;
+  }, [availableCars, drivers, formData, customerMode, selectedCustomer, newCustomer, payInSlipDetails, mobileMoneyDetails]);
+
+  // -----------------------------------------
+  // Send confirmation (stubbed - logs only)
+  // -----------------------------------------
+  const sendBookingConfirmation = useCallback(async (summary: BookingSummary) => {
+    if (!summary || !summary.customer) return;
+    const { customer, car, driver, dates, totalAmount, paymentMethod } = summary;
+
+    const smsMessage = `Dear ${customer.firstName} ${customer.lastName}, your booking has been confirmed. Pickup: ${dates.start} at ${formData.pickupLocation || "our main office"}. Return: ${dates.end}. Total: $${totalAmount}. Thank you!`;
+
+    const emailContent = {
+      to: customer.email,
+      subject: `Booking Confirmation`,
+      body: `...`,
     };
 
-    return summary;
-  }, [
-    availableCars,
-    drivers,
-    formData,
-    customerMode,
-    selectedCustomer,
-    newCustomer,
-    payInSlipDetails,
-    mobileMoneyDetails,
-  ]);
+    console.log("SMS Message:", smsMessage);
+    console.log("Email Content:", emailContent);
 
-  // Check car availability
-  const checkCarAvailability = useCallback(
-    async (carId: string, startDate: string, endDate: string) => {
-      if (!carId || !startDate || !endDate) return true;
+    return Promise.resolve();
+  }, [formData.pickupLocation]);
 
-      try {
-        const response = await fetch(
-          `/api/bookings/check_availability?car_id=${carId}&start_date=${startDate}&end_date=${endDate}`
-        );
-        const data = await response.json();
+  // -----------------------------------------
+  // Final booking creation flow (single source of truth, no duplicates)
+  // -----------------------------------------
+  const createBookingFlow = useCallback(async (summary: BookingSummary) => {
+    setIsProcessing(true);
+    try {
+      // Ensure customer exists in local store if new
+      let backendCustomerId: string | undefined = undefined;
 
-        if (!data.available) {
-          alert(`Car is not available for selected dates. ${data.message}`);
+      if (customerMode === "new") {
+        const customerToAdd: Customer = {
+          ...newCustomer,
+          id: generateId("CUST"),
+          createdAt: new Date().toISOString(),
+          lastBookingDate: new Date().toISOString(),
+          notes: [] as Note[],
+          status: "active",
+          totalBookings: 0,
+          totalSpent: 0,
+          communicationPreferences: newCustomer.communicationPreferences,
+          loyaltyTier: newCustomer.loyaltyTier,
+        } as Customer;
 
-          if (
-            data.conflicting_bookings &&
-            data.conflicting_bookings.length > 0
-          ) {
-            const conflictMessage = data.conflicting_bookings
-              .map(
-                (b: any) =>
-                  `• ${b.customer__first_name} ${b.customer__last_name}: ${b.start_date} to ${b.end_date}`
-              )
-              .join("\n");
-
-            const proceed = confirm(
-              `This car is already booked for:\n${conflictMessage}\n\nDo you want to proceed anyway?`
-            );
-
-            if (!proceed) {
-              // Clear the car selection
-              setFormData((prev) => ({ ...prev, carId: "" }));
-              return false;
-            }
-          } else {
-            return false;
-          }
-        }
-
-        return true;
-      } catch (error) {
-        console.error("Failed to check availability:", error);
-        return true; // Proceed anyway if check fails
-      }
-    },
-    []
-  );
-  // Handle form submission (opens confirmation modal)
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-
-      if (!validateForm()) {
-        return;
+        // Add to redux (local store)
+        dispatch(addCustomer(customerToAdd));
+        backendCustomerId = customerToAdd.id; // let backend know this was a newly created customer
+      } else {
+        backendCustomerId = selectedCustomer?.id;
       }
 
-      // Check car availability before proceeding
-      const isAvailable = await checkCarAvailability(
-        formData.carId,
-        formData.startDate,
-        formData.endDate
-      );
+      const payload = prepareBackendPayload(backendCustomerId);
 
-      if (!isAvailable) {
-        return;
+      // If payment method is mobile_money, handle payment before creating booking
+      if (formData.paymentMethod === "mobile_money") {
+        const PaystackPop = (await import("@paystack/inline-js")).default;
+        const paystack = new PaystackPop();
+
+        paystack.newTransaction({
+          key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "",
+          email: customerMode === "existing" ? selectedCustomer?.email || newCustomer.email : newCustomer.email,
+          amount: Math.round(formData.totalAmount * 100), // amount in pesewas
+          currency: "GHS",
+          reference: `BOOK_${Date.now()}`,
+          onSuccess: async (transaction: any) => {
+            // update transaction details
+            setMobileMoneyDetails((prev) => ({ ...prev, transactionId: transaction.reference }));
+            payload.mobile_money_transaction_id = transaction.reference;
+
+            // Create booking once after successful payment
+            await dispatch(createBooking(payload)).unwrap();
+            dispatch(updateCarStatus({ CarId: formData.carId, status: "rented" }));
+            await sendBookingConfirmation(summary);
+
+            setIsProcessing(false);
+            setShowConfirmationModal(false);
+            alert("Booking created successfully!");
+            router.push("/dashboard/bookings");
+          },
+          onCancel: () => {
+            setIsProcessing(false);
+            alert("Payment cancelled by user.");
+          },
+        });
+      } else {
+        // cash or pay_in_slip: create booking immediately
+        await dispatch(createBooking(payload)).unwrap();
+        dispatch(updateCarStatus({ CarId: formData.carId, status: "rented" }));
+        await sendBookingConfirmation(summary);
+
+        setIsProcessing(false);
+        setShowConfirmationModal(false);
+        alert("Booking created successfully!");
+        router.push("/dashboard/bookings");
       }
+    } catch (error: any) {
+      console.error("Error creating booking:", error);
+      setIsProcessing(false);
+      alert(`Failed to create booking: ${error?.message || "Unknown error"}`);
+    }
+  }, [customerMode, newCustomer, selectedCustomer, formData, dispatch, prepareBackendPayload, router, sendBookingConfirmation]);
 
-      const summary = prepareBookingSummary();
-      setBookingSummary(summary);
-      setShowConfirmationModal(true);
-    },
-    [validateForm, prepareBookingSummary, formData, checkCarAvailability]
-  );
+  // -----------------------------------------
+  // Form submit -> validate, check availability, build summary, show modal
+  // -----------------------------------------
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
 
-  // Function to send booking confirmation via SMS and Email
-  const sendBookingConfirmation = useCallback(
-    async (summary: BookingSummary): Promise<void> => {
-      const { customer, car, driver, dates, totalAmount, paymentMethod } =
-        summary;
-
-      if (!customer) return;
-
-      // SMS message
-      const smsMessage = `Dear ${customer.firstName} ${
-        customer.lastName
-      }, your booking has been confirmed. Pickup: ${dates.start} at ${
-        formData.pickupLocation || "our main office"
-      }. Return: ${dates.end}. Total: $${totalAmount}. Thank you!`;
-
-      // Email content - FIXED (paymentMethod is not optional)
-      const emailContent = {
-        to: customer.email,
-        subject: `Booking Confirmation`,
-        body: `
-        <h2>Booking Confirmation</h2>
-        <p>Dear ${customer.firstName} ${customer.lastName},</p>
-        <p>Your booking has been confirmed with the following details:</p>
-        <ul>
-          <li><strong>Vehicle:</strong> ${car?.make} ${car?.model} (${
-          car?.licensePlate || "N/A"
-        })</li>
-          <li><strong>Pickup Date:</strong> ${dates.start}</li>
-          <li><strong>Return Date:</strong> ${dates.end}</li>
-          <li><strong>Pickup Location:</strong> ${
-            formData.pickupLocation || "Main Office"
-          }</li>
-          <li><strong>Return Location:</strong> ${
-            formData.dropoffLocation || formData.pickupLocation || "Main Office"
-          }</li>
-          <li><strong>Total Amount:</strong> $${totalAmount}</li>
-          <li><strong>Payment Method:</strong> ${paymentMethod
-            .replace("_", " ")
-            .toUpperCase()}</li>
-          ${
-            driver
-              ? `<li><strong>Driver:</strong> ${driver.name} (${driver.phone})</li>`
-              : ""
-          }
-          ${
-            formData.specialRequests
-              ? `<li><strong>Special Requests:</strong> ${formData.specialRequests}</li>`
-              : ""
-          }
-        </ul>
-        <p>Please bring your driver's license and payment for any additional charges upon pickup.</p>
-        <p>Thank you for choosing our service!</p>
-        <br>
-        <p>Best regards,<br>Transport Manager Team</p>
-      `,
-      };
-
-      console.log("SMS Message:", smsMessage);
-      console.log("Email Content:", emailContent);
-      return Promise.resolve();
-    },
-    [
-      formData.pickupLocation,
-      formData.dropoffLocation,
-      formData.specialRequests,
-    ]
-  );
-
-  // Handle final booking confirmation
-  const createBookingAfterPayment = useCallback(async () => {
-    let customerId = "";
-    let customerName = "";
-
-    // Handle customer creation or selection
-    if (customerMode === "new") {
-      const newCustomerData: Customer = {
-        ...newCustomer,
-        id: generateId("CUST"),
-        firstName: newCustomer.firstName,
-        lastName: newCustomer.lastName,
-        email: newCustomer.email,
-        phone: newCustomer.phone,
-        address: newCustomer.address,
-        status: "active" as const,
-        totalBookings: 0,
-        totalSpent: 0,
-        notes: [] as Note[],
-        createdAt: new Date().toISOString(),
-        lastBookingDate: new Date().toISOString(),
-        communicationPreferences: {
-          email: true,
-          sms: true,
-          phone: false,
-        },
-        loyaltyTier: "bronze" as const,
-      };
-
-      dispatch(addCustomer(newCustomerData));
-      customerId = newCustomerData.id;
-      customerName = newCustomerData.firstName + " " + newCustomerData.lastName;
-    } else {
-      customerId = selectedCustomer!.id;
-      customerName =
-        selectedCustomer!.firstName + " " + selectedCustomer!.lastName;
+    const availability = await checkAvailability();
+    if (!availability.available) {
+      alert(`Car is not available: ${availability.message || "Unavailable"}`);
+      return;
     }
 
-    // Determine payment status based on method
-    const finalPaymentStatus =
-      formData.paymentMethod === "cash"
-        ? "pending" // Cash is pending until collected
-        : formData.paymentMethod === "pay_in_slip"
-        ? "pending" // Pay-in-slip needs verification
-        : formData.paymentStatus; // For mobile money, use the actual status
-
-    // Create booking
-    const bookingId = generateId("BOOK");
-    const booking = {
-      id: bookingId,
-      carId: formData.carId,
-      customerId: formData.customerId,
-      customerName: customerMode === "new" ? `${newCustomer.firstName} ${newCustomer.lastName}` : `${selectedCustomer?.firstName} ${selectedCustomer?.lastName}`,
-      customerPhone: customerMode === "new" ? newCustomer.phone : selectedCustomer?.phone || "",
-      customerEmail: customerMode === "new" ? newCustomer.email : selectedCustomer?.email || "",
-      customerGPSAddress: customerMode === "new" ? newCustomer.gpsAddress : selectedCustomer?.gpsAddress || "",
-      guarantorId:
-        customerMode === "new"
-          ? newCustomer.guarantor.id
-          : selectedCustomer?.guarantor.id || "",
-      guarantorName:
-        customerMode === "new"
-          ? `${newCustomer.guarantor.firstName} ${newCustomer.guarantor.lastName}`
-          : `${selectedCustomer?.guarantor.firstName} ${selectedCustomer?.guarantor.lastName}`,
-      guarantorPhone:
-        customerMode === "new"
-          ? newCustomer.guarantor.phone
-          : selectedCustomer?.guarantor.phone || "",
-      guarantorEmail:
-        customerMode === "new"
-          ? newCustomer.guarantor.email
-          : selectedCustomer?.guarantor.email || "",
-      guarantorGPSAddress:
-        customerMode === "new"
-          ? newCustomer.guarantor.gpsAddress
-          : selectedCustomer?.guarantor.gpsAddress || "",
-      driverId: formData.selfDrive === "true" ? null : formData.driverId,
-      startDate: formData.startDate,
-      endDate: formData.endDate,
-      createdAt: new Date().toISOString().split("T")[0],
-      status: "confirmed" as const,
-      pickupLocation: formData.pickupLocation,
-      dropoffLocation: formData.dropoffLocation,
-
-      totalAmount: formData.totalAmount,
-      receiptGenerated: false,
-      paymentMethod: formData.paymentMethod,
-      paymentStatus: finalPaymentStatus,
-      hasDriver: formData.selfDrive,
-      amountPaid: formData.totalAmount,
-      currentMileage: formData.currentMileage,
-
-      // Include payment details
-      ...(formData.paymentMethod === "pay_in_slip" && {
-        payInSlipDetails,
-      }),
-      ...(formData.paymentMethod === "mobile_money" && {
-        mobileMoneyDetails: {
-          ...mobileMoneyDetails,
-          transactionId: `PS_${Date.now()}`,
-        },
-      }),
-    };
-
-    // Dispatch booking action
-    dispatch(createBooking({ CarId: formData.carId, payload: booking }));
-    dispatch(updateCarStatus({ CarId: formData.carId, status: "rented" }));
-
-    // Send confirmation messages
-    if (bookingSummary) {
-      await sendBookingConfirmation(bookingSummary);
+    const summary = buildBookingSummary();
+    if (!summary) {
+      alert("Unable to build booking summary. Please check the inputs.");
+      return;
     }
 
-    setIsProcessing(false);
-    setShowConfirmationModal(false);
-
-    alert("Booking created successfully! Confirmation sent to customer.");
-    router.push("/dashboard/bookings");
-  }, [
-    customerMode,
-    newCustomer,
-    selectedCustomer,
-    formData,
-    payInSlipDetails,
-    mobileMoneyDetails,
-    bookingSummary,
-    dispatch,
-    router,
-    sendBookingConfirmation,
-  ]);
+    setBookingSummary(summary);
+    setShowConfirmationModal(true);
+  }, [validateForm, checkAvailability, buildBookingSummary]);
 
   const handleConfirmBooking = useCallback(async () => {
     if (!bookingSummary) return;
+    await createBookingFlow(bookingSummary);
+  }, [bookingSummary, createBookingFlow]);
 
-    setIsProcessing(true);
-
-    try {
-      // Handle different payment methods
-      switch (formData.paymentMethod) {
-        case "mobile_money":
-          // Initialize Paystack payment
-          const PaystackPop = (await import("@paystack/inline-js")).default;
-          const paystack = new PaystackPop();
-
-          paystack.newTransaction({
-            key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "",
-            email: selectedCustomer?.email || newCustomer.email,
-            amount: formData.totalAmount * 100, // GHS in pesewas
-            currency: "GHS",
-            reference: `BOOK_${Date.now()}`,
-            onSuccess: (transaction: { reference: string }) => {
-              console.log("Payment Successful", transaction);
-              // Update status locally before saving
-              setFormData((prev) => ({ ...prev, paymentStatus: "paid" }));
-              createBookingAfterPayment();
-            },
-            onCancel: () => {
-              setIsProcessing(false);
-              alert("Payment cancelled by user.");
-            },
-            metadata: {
-              custom_fields: [
-                {
-                  display_name: "Customer Name",
-                  variable_name: "customer_name",
-                  value: bookingSummary.customer?.firstName,
-                },
-                {
-                  display_name: "Car ID",
-                  variable_name: "car_id",
-                  value: formData.carId,
-                },
-              ],
-            },
-          }); // Don't proceed with booking creation yet
-
-        case "pay_in_slip":
-        case "cash":
-          // For cash and pay-in-slip, create booking immediately
-          await createBookingAfterPayment();
-          break;
-
-        default:
-          throw new Error("Invalid payment method");
-      }
-    } catch (error) {
-      console.error("Error creating booking:", error);
-      setIsProcessing(false);
-      alert("Failed to create booking. Please try again.");
-    }
-  }, [
-    bookingSummary,
-    newCustomer,
-    selectedCustomer,
-    formData,
-    createBookingAfterPayment,
-  ]);
-
-  // Calculate minimum date (today)
-  const getMinDate = useCallback(() => {
-    const today = new Date();
-    return today.toISOString().split("T")[0];
-  }, []);
-
-  // Calculate maximum date (1 year from now)
+  // Date helpers
+  const getMinDate = useCallback(() => new Date().toISOString().split("T")[0], []);
   const getMaxDate = useCallback(() => {
-    const oneYearLater = new Date();
-    oneYearLater.setFullYear(oneYearLater.getFullYear() + 1);
-    return oneYearLater.toISOString().split("T")[0];
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + 1);
+    return d.toISOString().split("T")[0];
   }, []);
 
+  // -----------------------------------------
+  // UI (kept same design & props)
+  // -----------------------------------------
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Create New Booking
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-2">
-            Fill in the details below to create a new booking
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Create New Booking</h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-2">Fill in the details below to create a new booking</p>
         </div>
         <button
           onClick={() => router.back()}
@@ -977,18 +621,12 @@ export default function CreateBookingPage() {
           onCustomerSelect={handleCustomerSelect}
           newCustomer={newCustomer}
           onNewCustomerChange={handleNewCustomerChange}
-          onExistingCustomerGuarantorChange={
-            handleExistingCustomerGuarantorChange
-          } // Add this
+          onExistingCustomerGuarantorChange={handleExistingCustomerGuarantorChange}
           onCommunicationPrefChange={handleCommunicationPrefChange}
           customers={allCustomers}
         />
 
-        <VehicleSelectionSection
-          availableCars={availableCars}
-          selectedCarId={formData.carId}
-          onCarSelect={handleCarSelect}
-        />
+        <VehicleSelectionSection availableCars={availableCars} selectedCarId={formData.carId} onCarSelect={handleCarSelect} />
 
         <BookingDetailsSection
           startDate={formData.startDate}
@@ -1001,7 +639,7 @@ export default function CreateBookingPage() {
           onFieldChange={handleFieldChange}
           getMinDate={getMinDate}
           getMaxDate={getMaxDate}
-          selfDrive={formData.selfDrive}
+          selfDrive={formData.selfDrive ? "true" : "false"}
           driverLicenseId={formData.driverLicenseId}
           driverLicenseClass={formData.driverLicenseClass}
           driverLicenseIssueDate={formData.driverLicenseIssueDate}
@@ -1015,18 +653,13 @@ export default function CreateBookingPage() {
           startDate={formData.startDate}
           endDate={formData.endDate}
           availableCars={availableCars}
-          onPaymentMethodChange={(method) =>
-            handleFieldChange("paymentMethod", method)
-          }
-          // Pass pay-in-slip props
+          onPaymentMethodChange={(method) => handleFieldChange("paymentMethod", method)}
           payInSlipDetails={payInSlipDetails}
           onPayInSlipChange={handlePayInSlipChange}
-          // Pass mobile money props
           mobileMoneyDetails={mobileMoneyDetails}
           onMobileMoneyChange={handleMobileMoneyChange}
         />
 
-        {/* Submit Button */}
         <div className="flex justify-end gap-4">
           <button
             type="button"
@@ -1040,25 +673,7 @@ export default function CreateBookingPage() {
             className="px-8 py-3 bg-blue-600 dark:bg-blue-700 text-white font-semibold rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition flex items-center gap-2"
             disabled={
               (customerMode === "existing" && !selectedCustomer) ||
-              (customerMode === "new" &&
-                (!newCustomer.firstName ||
-                  !newCustomer.lastName ||
-                  !newCustomer.phone ||
-                  !newCustomer.ghanaCardId ||
-                  !newCustomer.occupation ||
-                  !newCustomer.gpsAddress ||
-                  !newCustomer.address.city ||
-                  !newCustomer.address.region ||
-                  !newCustomer.address.country ||
-                  !newCustomer.guarantor.firstName ||
-                  !newCustomer.guarantor.lastName ||
-                  !newCustomer.guarantor.phone ||
-                  !newCustomer.guarantor.ghanaCardId ||
-                  !newCustomer.guarantor.relationship ||
-                  !newCustomer.guarantor.occupation ||
-                  !newCustomer.guarantor.gpsAddress ||
-                  !newCustomer.guarantor.address.region ||
-                  !newCustomer.guarantor.address.country)) ||
+              (customerMode === "new" && (!newCustomer.firstName || !newCustomer.lastName || !newCustomer.phone || !newCustomer.ghanaCardId || !newCustomer.occupation || !newCustomer.gpsAddress || !newCustomer.address.city || !newCustomer.address.region || !newCustomer.address.country || !newCustomer.guarantor.firstName || !newCustomer.guarantor.lastName || !newCustomer.guarantor.phone || !newCustomer.guarantor.ghanaCardId || !newCustomer.guarantor.relationship || !newCustomer.guarantor.occupation || !newCustomer.guarantor.gpsAddress || !newCustomer.guarantor.address.region || !newCustomer.guarantor.address.country)) ||
               !formData.carId ||
               !formData.startDate ||
               !formData.endDate

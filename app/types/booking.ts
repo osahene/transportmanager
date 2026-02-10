@@ -101,7 +101,7 @@ export interface BookingSummary {
     start: string;
     end: string;
   };
-  selfDrive: boolean;
+  selfDrive: string;
   duration: number;
   totalAmount: number;
   pickupLocation: string;

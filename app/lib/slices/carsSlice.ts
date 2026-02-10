@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { Car, CarStatus, EventPayload } from "../../types/cars";
-import { api } from "../services/api";
+import apiService from "../services/APIPath";
 
 export interface CarsState {
   Cars: Car[];
@@ -64,14 +64,14 @@ const initialState: CarsState = {
 
 // Async thunks for API calls
 export const fetchCars = createAsyncThunk("Cars/fetchAll", async () => {
-  const response = await api.get("/Cars");
+  const response = await apiService.getCars();
   return response.data;
 });
 
 export const fetchCarById = createAsyncThunk(
   "cars/fetchById",
   async (carId: string) => {
-    const response = await api.get(`/cars/${carId}`);
+    const response = await apiService.getCarById(carId);
     return response.data;
   }
 );
@@ -79,14 +79,14 @@ export const fetchCarById = createAsyncThunk(
 export const updateCarStatus = createAsyncThunk(
   "Cars/updateStatus",
   async ({ CarId, status }: { CarId: string; status: CarStatus }) => {
-    const response = await api.patch(`/Cars/${CarId}/status`, { status });
+    const response = await apiService.updateCarStatus(CarId, status);
     return response.data;
   }
 );
 export const updateCarStatusWithEventPayload = createAsyncThunk(
   "Cars/updateStatus",
   async ({ CarId, payload }: { CarId: string; payload: EventPayload }) => {
-    const response = await api.patch(`/Cars/${CarId}/payload`, { payload });
+    const response = await apiService.updateCarStatusWithEventPayload(CarId, payload);
     return response.data;
   }
 );
