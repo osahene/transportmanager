@@ -236,18 +236,6 @@ const bookingsSlice = createSlice({
         if (state.selectedBooking?.id === updatedBooking.id) {
           state.selectedBooking = updatedBooking;
         }
-      })
-      .addCase(cancelBooking.fulfilled, (state, action) => {
-        const updatedBooking = action.payload.booking;
-        const index = state.bookings.findIndex(
-          (b) => b.id === updatedBooking.id
-        );
-        if (index !== -1) {
-          state.bookings[index] = updatedBooking;
-        }
-        if (state.selectedBooking?.id === updatedBooking.id) {
-          state.selectedBooking = updatedBooking;
-        }
       });
   },
 });
