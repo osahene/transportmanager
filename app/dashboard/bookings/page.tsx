@@ -336,7 +336,7 @@ export default function BookingsPage() {
    dispatch(sendSMS(bookingId))
   };
 
-  
+
   const getStatusBadge = (status: string) => {
     const colors = {
       pending:
@@ -730,7 +730,7 @@ export default function BookingsPage() {
                     Location: Opposite Shell filling station, Mango Down, Patasi, Kumasi, Ghana
                   </p>
                   <p className="text-gray-600">
-                    Phone: +233 54 621 3027 | Email: info@yoscarrentals.com
+                    Phone: +233 54 621 3027 | +233 24 445 5757 | Email: info@yoscarrentals.com
                   </p>
                 </span>
                 <h4 className="text-xl font-bold text-gray-900">
@@ -951,7 +951,7 @@ export default function BookingsPage() {
                     Thank you for choosing YOS Car Rentals!
                   </p>
                   <p className="text-gray-500 text-xs mt-2">
-                    For inquiries: support@yoscarrentals.com | +233 54 621 3027
+                    For inquiries: support@yoscarrentals.com | +233 54 621 3027 |  +233 24 445 5757 
                   </p>
                 </div>
               </div>

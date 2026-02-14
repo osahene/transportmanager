@@ -1,45 +1,11 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-
-export interface Staff {
-  id: string;
-  employeeId: string;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  department: string;
-  role:
-    | "Driver"
-    | "Finance Officer"
-    | "Transport Manager"
-    | "CEO"
-    | "Maintenance Technician";
-  joinDate: string;
-  status: "active" | "inactive" | "on_leave" | "terminated";
-  salary: number;
-  employmentType: "full_time" | "part_time" | "contract" | "intern";
-  shift: "morning" | "evening" | "night" | "flexible";
-  permissions: string[];
-  emergencyContact: {
-    name: string;
-    phone: string;
-    relationship: string;
-  };
-  documents: {
-    idProof: string;
-    addressProof: string;
-    contract: string;
-  };
-  performance: {
-    rating: number;
-    lastReview: string;
-    notes: string;
-  };
-}
-
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import { Staff, SalaryPayment } from "../../types/staff"; // define types separately or inline
+import apiService from "../services/APIPath";
+import { snakeToCamel } from "../snakeToCamel";
 interface StaffState {
   staff: Staff[];
   selectedStaff: Staff | null;
+  salaryHistory: SalaryPayment[];
   loading: boolean;
   error: string | null;
   filters: {
@@ -50,138 +16,9 @@ interface StaffState {
 }
 
 const initialState: StaffState = {
-  staff: [
-    {
-      id: "1",
-      employeeId: "EMP001",
-      name: "John Manager",
-      email: "john.manager@yosrentals.com",
-      phone: "+1 234 567 8901",
-      address: "123 Admin St, City",
-      department: "Operations",
-      role: "Transport Manager",
-      joinDate: "2022-03-15",
-      status: "active",
-      salary: 55000,
-      employmentType: "full_time",
-      shift: "morning",
-      permissions: [
-        "manage_bookings",
-        "manage_cars",
-        "view_reports",
-        "manage_staff",
-      ],
-      emergencyContact: {
-        name: "Jane Manager",
-        phone: "+1 234 567 8999",
-        relationship: "Spouse",
-      },
-      documents: {
-        idProof: "uploaded",
-        addressProof: "uploaded",
-        contract: "uploaded",
-      },
-      performance: {
-        rating: 4.7,
-        lastReview: "2023-09-15",
-        notes: "Excellent leadership skills",
-      },
-    },
-    {
-      id: "2",
-      employeeId: "EMP002",
-      name: "Sarah Driver",
-      email: "sarah.driver@yosrentals.com",
-      phone: "+1 234 567 8902",
-      address: "456 Driver Ave, Town",
-      department: "Operations",
-      role: "Driver",
-      joinDate: "2023-01-20",
-      status: "active",
-      salary: 35000,
-      employmentType: "full_time",
-      shift: "flexible",
-      permissions: ["drive_cars", "view_schedule", "report_issues"],
-      emergencyContact: {
-        name: "Mike Driver",
-        phone: "+1 234 567 8998",
-        relationship: "Spouse",
-      },
-      documents: {
-        idProof: "uploaded",
-        addressProof: "uploaded",
-        contract: "uploaded",
-      },
-      performance: {
-        rating: 4.5,
-        lastReview: "2023-10-01",
-        notes: "Safe driver, excellent customer service",
-      },
-    },
-    {
-      id: "3",
-      employeeId: "EMP003",
-      name: "Mark Finance",
-      email: "mark.finance@yosrentals.com",
-      phone: "+1 234 567 8903",
-      address: "789 Finance Rd, Village",
-      department: "Finance",
-      role: "Finance Officer",
-      joinDate: "2022-08-10",
-      status: "active",
-      salary: 48000,
-      employmentType: "full_time",
-      shift: "morning",
-      permissions: ["manage_payments", "view_reports", "generate_invoices"],
-      emergencyContact: {
-        name: "Lisa Finance",
-        phone: "+1 234 567 8997",
-        relationship: "Sibling",
-      },
-      documents: {
-        idProof: "uploaded",
-        addressProof: "uploaded",
-        contract: "uploaded",
-      },
-      performance: {
-        rating: 4.6,
-        lastReview: "2023-08-20",
-        notes: "Accurate financial reporting",
-      },
-    },
-    {
-      id: "4",
-      employeeId: "EMP004",
-      name: "David Mechanic",
-      email: "david.mechanic@yosrentals.com",
-      phone: "+1 234 567 8904",
-      address: "101 Mechanic Blvd, City",
-      department: "Maintenance",
-      role: "Maintenance Technician",
-      joinDate: "2023-05-15",
-      status: "active",
-      salary: 42000,
-      employmentType: "full_time",
-      shift: "flexible",
-      permissions: ["manage_maintenance", "view_cars", "order_parts"],
-      emergencyContact: {
-        name: "Anna Mechanic",
-        phone: "+1 234 567 8996",
-        relationship: "Spouse",
-      },
-      documents: {
-        idProof: "uploaded",
-        addressProof: "uploaded",
-        contract: "uploaded",
-      },
-      performance: {
-        rating: 4.8,
-        lastReview: "2023-10-10",
-        notes: "Highly skilled in vehicle maintenance",
-      },
-    },
-  ],
+  staff: [],
   selectedStaff: null,
+  salaryHistory: [],
   loading: false,
   error: null,
   filters: {
@@ -191,97 +28,157 @@ const initialState: StaffState = {
   },
 };
 
-export const staffSlice = createSlice({
+// Async thunks
+export const createStaff = createAsyncThunk(
+  "staff/create",
+  async (data: any, { rejectWithValue }) => {
+    try {
+      const response = await apiService.createStaff(data);
+      return snakeToCamel(response.data) as Staff;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || "Failed to create staff");
+    }
+  }
+);
+
+
+export const fetchStaff = createAsyncThunk(
+  "staff/fetchAll",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await apiService.getStaff();
+      return snakeToCamel(response.data) as Staff[];
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || "Failed to fetch staff");
+    }
+  }
+);
+
+export const fetchStaffById = createAsyncThunk(
+  "staff/fetchById",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const response = await apiService.getStaffById(id);
+      return snakeToCamel(response.data) as Staff;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || "Failed to fetch staff details");
+    }
+  }
+);
+
+export const fetchSalaryHistory = createAsyncThunk(
+  "staff/fetchSalaryHistory",
+  async (staffId: string, { rejectWithValue }) => {
+    try {
+      const response = await apiService.getSalaryHistory(staffId);
+      return snakeToCamel(response.data) as SalaryPayment[];
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || "Failed to fetch salary history");
+    }
+  }
+);
+
+export const createSalaryPayment = createAsyncThunk(
+  "staff/createSalaryPayment",
+  async (data: any, { rejectWithValue }) => {
+    try {
+      const response = await apiService.createSalaryPayment(data);
+      return snakeToCamel(response.data) as SalaryPayment;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || "Failed to create salary payment");
+    }
+  }
+);
+
+export const updateStaffStatus = createAsyncThunk(
+  "staff/updateStatus",
+  async ({ id, action, data }: { id: string; action: string; data?: any }, { rejectWithValue }) => {
+    try {
+      const response = await apiService.updateStaffStatus(id, action, data);
+      return snakeToCamel(response.data) as Staff;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || "Failed to update staff status");
+    }
+  }
+);
+
+export const fetchDriverBookings = createAsyncThunk(
+  "staff/fetchDriverBookings",
+  async (driverId: string, { rejectWithValue }) => {
+    try {
+      const response = await apiService.getDriverBookings(driverId);
+      return snakeToCamel(response.data) as any[];
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || "Failed to fetch driver bookings");
+    }
+  }
+);
+
+const staffSlice = createSlice({
   name: "staff",
   initialState,
   reducers: {
-    setStaff: (state, action: PayloadAction<Staff[]>) => {
-      state.staff = action.payload;
-    },
     setSelectedStaff: (state, action: PayloadAction<Staff | null>) => {
       state.selectedStaff = action.payload;
     },
-    addStaff: (state, action: PayloadAction<Staff>) => {
-      state.staff.push(action.payload);
+    clearSalaryHistory: (state) => {
+      state.salaryHistory = [];
     },
-    updateStaff: (state, action: PayloadAction<Staff>) => {
-      const index = state.staff.findIndex(
-        (staff) => staff.id === action.payload.id
-      );
-      if (index !== -1) {
-        state.staff[index] = action.payload;
-      }
-    },
-    deleteStaff: (state, action: PayloadAction<string>) => {
-      state.staff = state.staff.filter((staff) => staff.id !== action.payload);
-    },
-    setStaffFilter: (
-      state,
-      action: PayloadAction<{ key: keyof StaffState["filters"]; value: string }>
-    ) => {
+    setStaffFilter: (state, action: PayloadAction<{ key: keyof StaffState["filters"]; value: string }>) => {
       state.filters[action.payload.key] = action.payload.value;
     },
     resetStaffFilters: (state) => {
       state.filters = initialState.filters;
     },
-    updateStaffStatus: (
-      state,
-      action: PayloadAction<{ id: string; status: Staff["status"] }>
-    ) => {
-      const staff = state.staff.find((s) => s.id === action.payload.id);
-      if (staff) {
-        staff.status = action.payload.status;
-      }
-    },
-    updateStaffPermissions: (
-      state,
-      action: PayloadAction<{ id: string; permissions: string[] }>
-    ) => {
-      const staff = state.staff.find((s) => s.id === action.payload.id);
-      if (staff) {
-        staff.permissions = action.payload.permissions;
-      }
-    },
-    updateStaffPerformance: (
-      state,
-      action: PayloadAction<{ id: string; rating: number; notes: string }>
-    ) => {
-      const staff = state.staff.find((s) => s.id === action.payload.id);
-      if (staff) {
-        staff.performance.rating = action.payload.rating;
-        staff.performance.notes = action.payload.notes;
-        staff.performance.lastReview = new Date().toISOString().split("T")[0];
-      }
-    },
-    assignStaffToDepartment: (
-      state,
-      action: PayloadAction<{
-        id: string;
-        department: string;
-        role: Staff["role"];
-      }>
-    ) => {
-      const staff = state.staff.find((s) => s.id === action.payload.id);
-      if (staff) {
-        staff.department = action.payload.department;
-        staff.role = action.payload.role;
-      }
-    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(createStaff.fulfilled, (state, action) => {
+        state.staff.push(action.payload);
+        state.loading = false;
+      })
+      .addCase(createStaff.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(createStaff.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(fetchStaff.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchStaff.fulfilled, (state, action) => {
+        state.loading = false;
+        if (Array.isArray(action.payload)) {
+          state.staff = action.payload;
+        } else {
+          // Fallback if the API structure is different than expected
+          console.error("Payload is not an array:", action.payload);
+          state.staff = [];
+        }
+      })
+      .addCase(fetchStaff.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(fetchStaffById.fulfilled, (state, action) => {
+        state.selectedStaff = action.payload;
+      })
+      .addCase(fetchSalaryHistory.fulfilled, (state, action) => {
+        state.salaryHistory = action.payload;
+      })
+      .addCase(createSalaryPayment.fulfilled, (state, action) => {
+        state.salaryHistory.unshift(action.payload);
+      })
+      .addCase(updateStaffStatus.fulfilled, (state, action) => {
+        const updated = action.payload;
+        const index = state.staff.findIndex(s => s.id === updated.id);
+        if (index !== -1) state.staff[index] = updated;
+        if (state.selectedStaff?.id === updated.id) state.selectedStaff = updated;
+      });
   },
 });
 
-export const {
-  setStaff,
-  setSelectedStaff,
-  addStaff,
-  updateStaff,
-  deleteStaff,
-  setStaffFilter,
-  resetStaffFilters,
-  updateStaffStatus,
-  updateStaffPermissions,
-  updateStaffPerformance,
-  assignStaffToDepartment,
-} = staffSlice.actions;
-
+export const { setSelectedStaff, clearSalaryHistory, setStaffFilter, resetStaffFilters } = staffSlice.actions;
 export default staffSlice.reducer;
