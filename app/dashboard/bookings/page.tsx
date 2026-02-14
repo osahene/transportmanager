@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import {
   FaCalendarAlt,
   FaCar,
@@ -18,8 +18,11 @@ import {
   FaSortDown,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { useAppSelector } from "../../lib/store";
+import { useAppSelector, useAppDispatch } from "../../lib/store";
 import { selectAllBookingsWithDetails } from "../../lib/slices/selectors";
+import { fetchBookings, sendEmail, sendSMS } from "../../lib/slices/bookingsSlice";
+import { fetchCars } from "../../lib/slices/carsSlice";
+import { fetchCustomers } from "../../lib/slices/customersSlice";
 import BookingActions from "@/app/components/booking/bookingActions";
 import { format } from "date-fns";
 import { useReactToPrint } from "react-to-print";
@@ -52,6 +55,7 @@ type SortField = "startDate" | "endDate" | "totalAmount" | "customerName";
 type SortDirection = "asc" | "desc";
 
 export default function BookingsPage() {
+  const dispatch = useAppDispatch()
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -65,6 +69,16 @@ export default function BookingsPage() {
   );
 
   const receiptRef = useRef<HTMLDivElement>(null);
+  const params: any = {
+    page: currentPage,
+    page_size: 10
+  };
+
+  useEffect(() => {
+    dispatch(fetchBookings(params));
+    dispatch(fetchCars());
+    dispatch(fetchCustomers());
+  }, [dispatch]);
 
   // Client-side filtering
   const filteredBookings = useMemo(() => {
@@ -109,21 +123,26 @@ export default function BookingsPage() {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentBookings = allDetailedBookings
-    .slice(indexOfFirstItem, indexOfLastItem)
-    .map((booking: any) => {
-      if (booking.payload) {
-        console.log("booking", booking);
-        console.log("booking payload", booking.payload);
-        return {
-          ...booking,
-          ...booking.payload,
-        };
-      }
-      return booking;
-    });
+  // const currentBookings = allDetailedBookings
+  //   .slice(indexOfFirstItem, indexOfLastItem)
+  //   .map((booking: any) => {
+  //     if (booking.payload) {
+  //       console.log("booking", booking);
+  //       console.log("booking payload", booking.payload);
+  //       return {
+  //         ...booking,
+  //         ...booking.payload,
+  //       };
+  //     }
+  //     return booking;
+  //   });
+
+
 
   // Handle sort
+
+  const currentBookings = filteredBookings.slice(indexOfFirstItem, indexOfLastItem);
+
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       // Toggle direction if same field
@@ -228,41 +247,70 @@ export default function BookingsPage() {
     return buttons;
   };
 
-  const generateReceiptData = (bookingId: string): ReceiptData | null => {
-    // Search by booking.id, not carId
-    const booking = allDetailedBookings.find((b: any) => b.payload.id === bookingId);
+  // const generateReceiptData = (bookingId: string): ReceiptData | null => {
+  //   // Search by booking.id, not carId
+  //   const booking = allDetailedBookings.find((b: any) => b.payload.id === bookingId);
 
+  //   if (!booking) return null;
+  //   const { payload } = booking as any;
+  //   const carDetails = `${booking.carMake} ${booking.carModel} (${booking.carlicense_plate})`;
+
+  //   return {
+  //     bookingId: payload.id,
+  //     customerName: payload.customerName || "Unknown",
+  //     customerPhone: payload.customerPhone || "Unknown",
+  //     customerEmail: payload.customerEmail || "Unknown",
+  //     customerGPSAddress: payload.customerGPSAddress || "Unknown",
+  //     guarantorName: payload.guarantorName || "Unknown",
+  //     guarantorPhone: payload.guarantorPhone || "Unknown",
+  //     guarantorEmail: payload.guarantorEmail || "Unknown",
+  //     guarantorGPSAddress: payload.guarantorGPSAddress || "Unknown",
+  //     pickupLocation: payload.pickupLocation || "Unknown",
+  //     dropoffLocation: payload.dropoffLocation || "Unknown",
+  //     numberOfDays: Math.ceil(
+  //       (new Date(payload.endDate).getTime() - new Date(payload.startDate).getTime()) /
+  //       (1000 * 60 * 60 * 24)
+  //     ) || 0,
+  //     carDetails: carDetails || "Unknown",
+
+  //     bookingDates: `${format(
+  //       new Date(payload.startDate),
+  //       "MMM d, yyyy",
+  //     )} - ${format(new Date(payload.endDate), "MMM d, yyyy")}`,
+  //     dailyRate: payload.dailyRate || 0,
+  //     discount: payload.discount || 0,
+  //     totalAmount: payload.totalAmount,
+  //     paymentMethod: payload.paymentMethod || "Credit Card",
+  //     transactionId: `TXN-${payload.id.slice(0, 8).toUpperCase()}`,
+  //     date: new Date(),
+  //   };
+  // };
+
+
+  const generateReceiptData = (bookingId: string): ReceiptData | null => {
+    const booking = allDetailedBookings.find(b => b.id === bookingId);
     if (!booking) return null;
-    const { payload } = booking as any;
-    const carDetails = `${booking.carMake} ${booking.carModel} (${booking.carlicense_plate})`;
 
     return {
-      bookingId: payload.id,
-      customerName: payload.customerName || "Unknown",
-      customerPhone: payload.customerPhone || "Unknown",
-      customerEmail: payload.customerEmail || "Unknown",
-      customerGPSAddress: payload.customerGPSAddress || "Unknown",
-      guarantorName: payload.guarantorName || "Unknown",
-      guarantorPhone: payload.guarantorPhone || "Unknown",
-      guarantorEmail: payload.guarantorEmail || "Unknown",
-      guarantorGPSAddress: payload.guarantorGPSAddress || "Unknown",
-      pickupLocation: payload.pickupLocation || "Unknown",
-      dropoffLocation: payload.dropoffLocation || "Unknown",
-      numberOfDays: Math.ceil(
-        (new Date(payload.endDate).getTime() - new Date(payload.startDate).getTime()) /
-        (1000 * 60 * 60 * 24)
-      ) || 0,
-      carDetails: carDetails || "Unknown",
-
-      bookingDates: `${format(
-        new Date(payload.startDate),
-        "MMM d, yyyy",
-      )} - ${format(new Date(payload.endDate), "MMM d, yyyy")}`,
-      dailyRate: payload.dailyRate || 0,
-      discount: payload.discount || 0,
-      totalAmount: payload.totalAmount,
-      paymentMethod: payload.paymentMethod || "Credit Card",
-      transactionId: `TXN-${payload.id.slice(0, 8).toUpperCase()}`,
+      bookingId: booking.id,
+      customerName: booking.customerName,
+      customerPhone: booking.customerPhone,
+      customerEmail: booking.customerEmail,
+      customerGPSAddress: booking.customerGPSAddress || "N/A",
+      guarantorName: booking.guarantorName || "N/A",
+      guarantorPhone: booking.guarantorPhone || "N/A",
+      guarantorEmail: booking.guarantorEmail || "N/A",
+      guarantorGPSAddress: booking.guarantorGPSAddress || "N/A",
+      pickupLocation: booking.pickupLocation,
+      dropoffLocation: booking.dropoffLocation,
+      numberOfDays: booking.durationDays,
+      carDetails: `${booking.carMake} ${booking.carModel} (${booking.carlicense_plate})`,
+      bookingDates: `${format(new Date(booking.startDate), "MMM d, yyyy")} - ${format(new Date(booking.endDate), "MMM d, yyyy")}`,
+      dailyRate: booking.dailyRate || 0,
+      discount: booking.discount || 0,
+      totalAmount: booking.totalAmount,
+      paymentMethod: booking.paymentMethod,
+      transactionId: `TXN-${booking.id.slice(0, 8).toUpperCase()}`,
       date: new Date(),
     };
   };
@@ -281,37 +329,14 @@ export default function BookingsPage() {
 
 
   const sendEmailReceipt = async (bookingId: string) => {
-    const receiptData = generateReceiptData(bookingId);
-    if (!receiptData) return;
-
-    try {
-      const response = await fetch("/api/email/receipt", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          to: "customer@example.com",
-          subject: `Booking Receipt - ${receiptData.bookingId}`,
-          receiptData,
-        }),
-      });
-
-      if (response.ok) {
-        alert("Email sent successfully!");
-      }
-    } catch (error) {
-      console.error("Error sending email:", error);
-    }
+    dispatch(sendEmail(bookingId))
   };
 
   const sendSMSReceipt = async (bookingId: string) => {
-    const receiptData = generateReceiptData(bookingId);
-    if (!receiptData) return;
-
-    alert("SMS receipt functionality would be implemented here");
+   dispatch(sendSMS(bookingId))
   };
 
+  
   const getStatusBadge = (status: string) => {
     const colors = {
       pending:
@@ -587,7 +612,7 @@ export default function BookingsPage() {
                         ¢{booking.totalAmount.toLocaleString()}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        Daily: ¢{booking.carDailyRate}
+                        Daily: ¢{booking.dailyRate}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -634,7 +659,7 @@ export default function BookingsPage() {
                         customerName={booking.customerName}
                         carName={`${booking.carMake} ${booking.carModel}`}
                         amountPaid={booking.totalAmount}
-                        dailyRate={booking.dailyRate}
+                        dailyRate={booking.dailyRate || 0}
                         endDate={booking.endDate}
                       />
                     </td>

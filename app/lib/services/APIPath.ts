@@ -17,6 +17,9 @@ const apiService = {
         $axios.get("/bookings/check_availability/", { params }),
     getBookingById: (id: string) => $axios.get(`/bookings/${id}/`),
     cancelBooking: (id: string, data: any) => $axios.post(`/bookings/${id}/cancel/`, data),
+    markBookingAsReturned: (id: string, data: any) => $axios.post(`/bookings/${id}/mark_returned/`, data),
+    sendEmailReceipt: (id: string) => $axios.post(`/bookings/${id}/send_email_receipt/`),
+    sendSMSReceipt: (id: string) => $axios.post(`/bookings/${id}/send_sms_receipt/`),
 
     // Customers endpoints
     getCustomers: () => $axios.get("/customers/"),

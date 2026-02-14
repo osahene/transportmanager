@@ -1,7 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { snakeToCamel } from "../snakeToCamel";
 import { Booking, BookingStatus } from "../../types/booking";
 import apiService from "../services/APIPath";
 import axios from "axios";
+
+
+const getErrorMessage = (error: any) => {
+  return error.response?.data?.message || error.message || "An error occurred";
+};
 interface BookingsState {
   bookings: Booking[];
   selectedBooking: Booking | null;
@@ -34,9 +40,15 @@ const initialState: BookingsState = {
 // Async thunks
 export const fetchBookings = createAsyncThunk(
   "bookings/fetchAll",
-  async (params?: { carId?: string; customerId?: string }) => {
+  async (params?: any) => {
     const response = await apiService.fetchBookings(params);
-    return response.data;
+    const converted = snakeToCamel(response.data);
+    // Add CarId and customerId for selector compatibility
+    return converted.map((b: any) => ({
+      ...b,
+      CarId: b.car?.id,
+      customerId: b.customer,
+    }));
   }
 );
 
@@ -53,41 +65,11 @@ export const createBooking = createAsyncThunk(
           error.response?.data || { message: "Failed to create booking" }
         );
       }
-      return rejectWithValue("An unexpected error occurred");
+      return rejectWithValue(getErrorMessage(error));
     }
   }
 );
 
-export const cancelBooking = createAsyncThunk(
-  "bookings/cancel",
-  async (
-    {
-      bookingId,
-      reason,
-      refundAmount,
-    }: {
-      bookingId: string;
-      reason: string;
-      refundAmount?: number;
-    },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await apiService.cancelBooking(bookingId, {
-        reason,
-        refund_amount: refundAmount,
-      });
-      return response.data;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(
-          error.response?.data?.message || "Failed to cancel booking"
-        );
-      }
-      return rejectWithValue("An unexpected error occurred");
-    }
-  }
-);
 
 export const checkCarAvailability = createAsyncThunk(
   "bookings/checkAvailability",
@@ -131,86 +113,58 @@ export const checkCarAvailability = createAsyncThunk(
 
 
 
-// export const markBookingAsReturned = createAsyncThunk(
-//   "bookings/markReturned",
-//   async (
-//     {
-//       bookingId,
-//       actualReturnTime,
-//       penaltyAmount,
-//       penaltyPaid,
-//       penaltyPaymentMethod,
-//       receiptNumber,
-//     }: {
-//       bookingId: string;
-//       actualReturnTime: string;
-//       penaltyAmount: number;
-//       penaltyPaid: boolean;
-//       penaltyPaymentMethod: "cash" | "mobile_money";
-//       receiptNumber: string;
-//     },
-//     { rejectWithValue }
-//   ) => {
-//     try {
-//       const response = await apiService.post(
-//         `/bookings/${bookingId}/mark_as_returned/`,
-//         {
-//           actual_return_time: actualReturnTime,
-//           penalty_amount: penaltyAmount,
-//           penalty_paid: penaltyPaid,
-//           penalty_payment_method: penaltyPaymentMethod,
-//           receipt_number: receiptNumber,
-//         }
-//       );
-//       return response.data;
-//     } catch (error: unknown) {
-//       if (axios.isAxiosError(error)) {
-//         return rejectWithValue(
-//           error.response?.data?.message || "Failed to mark booking as returned"
-//         );
-//       }
-//       return rejectWithValue("An unexpected error occurred");
-//     }
-//   }
-// );
+export const markBookingAsReturned = createAsyncThunk(
+  'bookings/markReturned',
+  async (payload: { bookingId: string; actualReturnTime: string; returnMileage?: number }) => {
+    const response = await apiService.markBookingAsReturned(payload.bookingId, {
+      actual_return_time: payload.actualReturnTime,
+      return_mileage: payload.returnMileage,
+    });
+    return response.data;
+  }
+);
 
+export const cancelBooking = createAsyncThunk(
+  'bookings/cancelWithRefund',
+  async (payload: { bookingId: string; refundAmount: number; reason: string }) => {
+    const response = await apiService.cancelBooking(payload.bookingId, {
+      refund_amount: payload.refundAmount,
+      reason: payload.reason,
+    });
+    return response.data;
+  }
+);
 
-
-
-// export const cancelBookingWithRefund = createAsyncThunk(
-//   "bookings/cancelWithRefund",
-//   async (
-//     {
-//       bookingId,
-//       refundAmount,
-//       reason,
-//     }: {
-//       bookingId: string;
-//       refundAmount: number;
-//       reason: string;
-//     },
-//     { rejectWithValue }
-//   ) => {
-//     try {
-//       const response = await apiService.post(
-//         `/bookings/${bookingId}/cancel_with_refund/`,
-//         {
-//           refund_amount: refundAmount,
-//           reason,
-//         }
-//       );
-//       return response.data;
-//     } catch (error: unknown) {
-//       if (axios.isAxiosError(error)) {
-//         return rejectWithValue(
-//           error.response?.data?.message || "Failed to cancel booking"
-//         );
-//       }
-//       return rejectWithValue("An unexpected error occurred");
-//     }
-//   }
-// );
-
+export const sendSMS = createAsyncThunk(
+  'bookings/sendSMS',
+  async (bookingId: string, { rejectWithValue }) => {
+    try {
+      const response = await apiService.sendSMSReceipt(bookingId);
+      console.log('sms res', response)
+      if (response.status === 200) {
+        alert("SMS sent successfull")
+      }
+      return response.data
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error))
+    }
+  }
+)
+export const sendEmail = createAsyncThunk(
+  'bookings/sendSMS',
+  async (bookingId: string, { rejectWithValue }) => {
+    try {
+      const response = await apiService.sendEmailReceipt(bookingId);
+      console.log('sms res', response)
+      if (response.status === 200) {
+        alert("SMS sent successfull")
+      }
+      return response.data
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error))
+    }
+  }
+)
 
 const bookingsSlice = createSlice({
   name: "bookings",
@@ -235,6 +189,7 @@ const bookingsSlice = createSlice({
         state.loading = true;
       })
       .addCase(fetchBookings.fulfilled, (state, action) => {
+        console.log('fetch book', state)
         state.loading = false;
         state.bookings = action.payload;
       })
@@ -269,31 +224,31 @@ const bookingsSlice = createSlice({
         if (state.selectedBooking?.id === action.payload.id) {
           state.selectedBooking = action.payload;
         }
+      })
+      .addCase(markBookingAsReturned.fulfilled, (state, action) => {
+        const updatedBooking = action.payload.booking;
+        const index = state.bookings.findIndex(
+          (b) => b.id === updatedBooking.id
+        );
+        if (index !== -1) {
+          state.bookings[index] = updatedBooking;
+        }
+        if (state.selectedBooking?.id === updatedBooking.id) {
+          state.selectedBooking = updatedBooking;
+        }
+      })
+      .addCase(cancelBooking.fulfilled, (state, action) => {
+        const updatedBooking = action.payload.booking;
+        const index = state.bookings.findIndex(
+          (b) => b.id === updatedBooking.id
+        );
+        if (index !== -1) {
+          state.bookings[index] = updatedBooking;
+        }
+        if (state.selectedBooking?.id === updatedBooking.id) {
+          state.selectedBooking = updatedBooking;
+        }
       });
-      // .addCase(markBookingAsReturned.fulfilled, (state, action) => {
-      //   const updatedBooking = action.payload.booking;
-      //   const index = state.bookings.findIndex(
-      //     (b) => b.id === updatedBooking.id
-      //   );
-      //   if (index !== -1) {
-      //     state.bookings[index] = updatedBooking;
-      //   }
-      //   if (state.selectedBooking?.id === updatedBooking.id) {
-      //     state.selectedBooking = updatedBooking;
-      //   }
-      // })
-      // .addCase(cancelBookingWithRefund.fulfilled, (state, action) => {
-      //   const updatedBooking = action.payload.booking;
-      //   const index = state.bookings.findIndex(
-      //     (b) => b.id === updatedBooking.id
-      //   );
-      //   if (index !== -1) {
-      //     state.bookings[index] = updatedBooking;
-      //   }
-      //   if (state.selectedBooking?.id === updatedBooking.id) {
-      //     state.selectedBooking = updatedBooking;
-      //   }
-      // });
   },
 });
 

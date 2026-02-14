@@ -11,8 +11,8 @@ import {
 } from "react-icons/fa";
 import { useAppDispatch } from "../../lib/store";
 import {
-  // markBookingAsReturned,
-  // cancelBookingWithRefund,
+  markBookingAsReturned,
+  cancelBooking,
 } from "../../lib/slices/bookingsSlice";
 
 interface BookingActionsProps {
@@ -47,6 +47,7 @@ export default function BookingActions({
   const dispatch = useAppDispatch();
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [returnMileage, setReturnMileage] = useState("");
   const [refundAmount, setRefundAmount] = useState(0);
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
@@ -144,19 +145,14 @@ export default function BookingActions({
 
     setLoading(true);
     try {
-      const payload = {
-        bookingId,
-        actualReturnTime: new Date(actualReturnTime).toISOString(),
-        penaltyAmount: penaltyCalculation.totalAmount,
-        penaltyPaid,
-        penaltyPaymentMethod,
-        receiptNumber,
-      };
-
-      // await dispatch(markBookingAsReturned(payload)).unwrap();
+      await dispatch(
+        markBookingAsReturned({
+          bookingId,
+          actualReturnTime: new Date(actualReturnTime).toISOString(),
+          returnMileage: parseInt(returnMileage) || undefined,
+        })
+      ).unwrap();
       setShowReturnModal(false);
-      setPenaltyPaid(false);
-      setLateFeeReceived(false);
       alert("Car marked as returned successfully!");
     } catch (error) {
       console.error("Failed to mark as returned:", error);
@@ -166,6 +162,8 @@ export default function BookingActions({
     }
   };
 
+
+
   const handleCancelBooking = async () => {
     if (!reason.trim()) {
       alert("Please provide a reason for cancellation");
@@ -174,13 +172,13 @@ export default function BookingActions({
 
     setLoading(true);
     try {
-      // await dispatch(
-      //   cancelBookingWithRefund({
-      //     bookingId,
-      //     refundAmount,
-      //     reason,
-      //   })
-      // ).unwrap();
+      await dispatch(
+        cancelBooking({
+          bookingId,
+          refundAmount,
+          reason,
+        })
+      ).unwrap();
       setShowCancelModal(false);
       setReason("");
       setRefundAmount(0);
@@ -310,6 +308,18 @@ export default function BookingActions({
                       Current time is set as default
                     </p>
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Return Mileage (km)
+                    </label>
+                    <input
+                      type="number"
+                      value={returnMileage}
+                      onChange={(e) => setReturnMileage(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+                      required
+                    />
+                  </div>
                 </div>
 
                 {/* Penalty Calculation Section */}
@@ -365,11 +375,10 @@ export default function BookingActions({
                         <button
                           type="button"
                           onClick={() => setPenaltyPaymentMethod("cash")}
-                          className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition ${
-                            penaltyPaymentMethod === "cash"
+                          className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition ${penaltyPaymentMethod === "cash"
                               ? "bg-green-100 dark:bg-green-900 border-green-500 text-green-700 dark:text-green-300"
                               : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
-                          }`}
+                            }`}
                         >
                           <FaMoneyBillWave />
                           Cash Payment
@@ -379,11 +388,10 @@ export default function BookingActions({
                           onClick={() =>
                             setPenaltyPaymentMethod("mobile_money")
                           }
-                          className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition ${
-                            penaltyPaymentMethod === "mobile_money"
+                          className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition ${penaltyPaymentMethod === "mobile_money"
                               ? "bg-blue-100 dark:bg-blue-900 border-blue-500 text-blue-700 dark:text-blue-300"
                               : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
-                          }`}
+                            }`}
                         >
                           <FaMobileAlt />
                           Mobile Money
