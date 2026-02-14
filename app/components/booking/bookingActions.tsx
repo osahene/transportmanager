@@ -11,8 +11,8 @@ import {
 } from "react-icons/fa";
 import { useAppDispatch } from "../../lib/store";
 import {
-  markBookingAsReturned,
-  cancelBookingWithRefund,
+  // markBookingAsReturned,
+  // cancelBookingWithRefund,
 } from "../../lib/slices/bookingsSlice";
 
 interface BookingActionsProps {
@@ -153,7 +153,7 @@ export default function BookingActions({
         receiptNumber,
       };
 
-      await dispatch(markBookingAsReturned(payload)).unwrap();
+      // await dispatch(markBookingAsReturned(payload)).unwrap();
       setShowReturnModal(false);
       setPenaltyPaid(false);
       setLateFeeReceived(false);
@@ -174,13 +174,13 @@ export default function BookingActions({
 
     setLoading(true);
     try {
-      await dispatch(
-        cancelBookingWithRefund({
-          bookingId,
-          refundAmount,
-          reason,
-        })
-      ).unwrap();
+      // await dispatch(
+      //   cancelBookingWithRefund({
+      //     bookingId,
+      //     refundAmount,
+      //     reason,
+      //   })
+      // ).unwrap();
       setShowCancelModal(false);
       setReason("");
       setRefundAmount(0);

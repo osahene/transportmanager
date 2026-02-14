@@ -298,7 +298,7 @@ export const selectFilteredCars = createSelector(
         !searchTerm ||
         car.make.toLowerCase().includes(searchTerm.toLowerCase()) ||
         car.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        car.licensePlate?.toLowerCase().includes(searchTerm.toLowerCase());
+        car.license_plate?.toLowerCase().includes(searchTerm.toLowerCase());
 
       // Filter by status
       const matchesStatus =
@@ -339,8 +339,7 @@ export const selectAllBookingsWithDetails = createSelector(
           carMake: car?.make || "Unknown",
           carModel: car?.model || "Unknown",
           carYear: car?.year || "N/A",
-          carLicensePlate: car?.licensePlate || "N/A",
-          carDailyRate: car?.dailyRate || 0,
+          carLicensePlate: car?.license_plate || "N/A",
           carColor: car?.color || "N/A",
 
           // Computed fields

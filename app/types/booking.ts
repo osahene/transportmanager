@@ -58,6 +58,8 @@ export interface Booking {
   lastMileage?: string;
   status: BookingStatus;
   totalAmount: number;
+  dailyRate?: number;     
+  discount?: number; 
   amountPaid: number;
   paymentStatus: PaymentStatus;
   paymentMethod: PaymentMethod; // Made required
@@ -104,6 +106,8 @@ export interface BookingSummary {
   selfDrive: string;
   duration: number;
   totalAmount: number;
+  dailyRate: number;
+  discount: number;
   pickupLocation: string;
   dropoffLocation: string;
   paymentMethod: PaymentMethod;

@@ -45,53 +45,7 @@ export const createBooking = createAsyncThunk(
   "bookings/create",
   async (bookingData: any, { rejectWithValue }) => {
     try {
-      // Map frontend data to backend format
-      const backendPayload = {
-        car: bookingData.carId,
-        customer: bookingData.customerId,
-        start_date: bookingData.startDate,
-        end_date: bookingData.endDate,
-        pickup_location: bookingData.pickupLocation,
-        dropoff_location: bookingData.dropoffLocation,
-        special_requests: bookingData.specialRequests || "",
-        payment_method: bookingData.paymentMethod,
-        
-        // Self-drive or driver
-        is_self_drive: bookingData.selfDrive === true,
-        ...(bookingData.selfDrive === true && {
-          driver_license_id: bookingData.driverLicenseId,
-          driver_license_class: bookingData.driverLicenseClass,
-        }),
-        ...(bookingData.selfDrive === false && bookingData.driverId && {
-          driver: bookingData.driverId,
-        }),
-        
-        // Payment details
-        ...(bookingData.paymentMethod === "mobile_money" && {
-          mobile_money_provider: bookingData.mobileMoneyDetails?.provider,
-          mobile_money_number: bookingData.mobileMoneyDetails?.phoneNumber,
-          mobile_money_transaction_id: bookingData.mobileMoneyDetails?.transactionId,
-        }),
-        
-        ...(bookingData.paymentMethod === "pay_in_slip" && {
-          pay_in_slip_bank: bookingData.payInSlipDetails?.bankName,
-          pay_in_slip_branch: bookingData.payInSlipDetails?.branch,
-          pay_in_slip_payee: bookingData.payInSlipDetails?.payeeName,
-          pay_in_slip_reference: bookingData.payInSlipDetails?.referenceNumber,
-          pay_in_slip_number: bookingData.payInSlipDetails?.slipNumber,
-          pay_in_slip_date: bookingData.payInSlipDetails?.paymentDate,
-        }),
-        
-        // For new customers (if needed)
-        ...(bookingData.customer_data && {
-          customer_data: bookingData.customer_data,
-        }),
-        ...(bookingData.guarantor_data && {
-          guarantor_data: bookingData.guarantor_data,
-        }),
-      };
-      
-      const response = await apiService.createBooking(backendPayload);
+      const response = await apiService.createBooking(bookingData);
       return response.data;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {

@@ -5,14 +5,16 @@ export interface Car {
   make: string;
   model: string;
   year: number;
-  licensePlate: string;
+  license_plate?: string;
+  fuel_type: string;
   vin: string;
   color: string;
-  dailyRate: number;
   status: CarStatus;
   stats: Stats;
-  features: CarFeatures;
-  specifications: CarSpecifications;
+  features: string[];
+  transmission: string;
+  seats: number;
+  mileage: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -33,7 +35,6 @@ export interface CarFeatures {
 }
 
 export interface CarSpecifications {
-  fuelType: string;
   transmission: string;
   seatingCapacity: number;
   fuelCapacity: number;

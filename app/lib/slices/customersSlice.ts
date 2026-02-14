@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { Customer, CustomerAddress } from "../../types/customer";
-import { api } from "../services/api";
+import apiService from "../services/APIPath";
 import axios from "axios";
 interface CustomersState {
   customers: Customer[];
@@ -196,255 +196,255 @@ const initialState: CustomersState = {
 };
 
 // Async Thunks
-export const fetchCustomers = createAsyncThunk(
-  "customers/fetchAll",
-  async (params?: {
-    status?: Customer["status"];
-    loyaltyTier?: Customer["loyaltyTier"];
-    search?: string;
-    minBookings?: number;
-  }) => {
-    const response = await api.get("/customers", { params });
-    return response.data;
-  }
-);
+// export const fetchCustomers = createAsyncThunk(
+//   "customers/fetchAll",
+//   async (params?: {
+//     status?: Customer["status"];
+//     loyaltyTier?: Customer["loyaltyTier"];
+//     search?: string;
+//     minBookings?: number;
+//   }) => {
+//     const response = await api.get("/customers", { params });
+//     return response.data;
+//   }
+// );
 
-export const fetchCustomerById = createAsyncThunk(
-  "customers/fetchById",
-  async (customerId: string, { rejectWithValue }) => {
-    try {
-      const response = await api.get(`/customers/${customerId}`);
-      return response.data;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(
-          error.response?.data?.message || "Failed to create maintenance record"
-        );
-      }
-      return rejectWithValue("An unexpected error occurred");
-    }
-  }
-);
+// export const fetchCustomerById = createAsyncThunk(
+//   "customers/fetchById",
+//   async (customerId: string, { rejectWithValue }) => {
+//     try {
+//       const response = await api.get(`/customers/${customerId}`);
+//       return response.data;
+//     } catch (error: unknown) {
+//       if (axios.isAxiosError(error)) {
+//         return rejectWithValue(
+//           error.response?.data?.message || "Failed to create maintenance record"
+//         );
+//       }
+//       return rejectWithValue("An unexpected error occurred");
+//     }
+//   }
+// );
 
-export const createCustomer = createAsyncThunk(
-  "customers/create",
-  async (
-    customerData: Omit<
-      Customer,
-      "id" | "createdAt" | "totalSpent" | "totalBookings"
-    >,
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await api.post("/customers", customerData);
-      return response.data;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(
-          error.response?.data?.message || "Failed to create maintenance record"
-        );
-      }
-      return rejectWithValue("An unexpected error occurred");
-    }
-  }
-);
+// export const createCustomer = createAsyncThunk(
+//   "customers/create",
+//   async (
+//     customerData: Omit<
+//       Customer,
+//       "id" | "createdAt" | "totalSpent" | "totalBookings"
+//     >,
+//     { rejectWithValue }
+//   ) => {
+//     try {
+//       const response = await api.post("/customers", customerData);
+//       return response.data;
+//     } catch (error: unknown) {
+//       if (axios.isAxiosError(error)) {
+//         return rejectWithValue(
+//           error.response?.data?.message || "Failed to create maintenance record"
+//         );
+//       }
+//       return rejectWithValue("An unexpected error occurred");
+//     }
+//   }
+// );
 
-export const updateCustomer = createAsyncThunk(
-  "customers/update",
-  async (
-    { customerId, updates }: { customerId: string; updates: Partial<Customer> },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await api.patch(`/customers/${customerId}`, updates);
-      return response.data;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(
-          error.response?.data?.message || "Failed to create maintenance record"
-        );
-      }
-      return rejectWithValue("An unexpected error occurred");
-    }
-  }
-);
+// export const updateCustomer = createAsyncThunk(
+//   "customers/update",
+//   async (
+//     { customerId, updates }: { customerId: string; updates: Partial<Customer> },
+//     { rejectWithValue }
+//   ) => {
+//     try {
+//       const response = await api.patch(`/customers/${customerId}`, updates);
+//       return response.data;
+//     } catch (error: unknown) {
+//       if (axios.isAxiosError(error)) {
+//         return rejectWithValue(
+//           error.response?.data?.message || "Failed to create maintenance record"
+//         );
+//       }
+//       return rejectWithValue("An unexpected error occurred");
+//     }
+//   }
+// );
 
-export const suspendCustomer = createAsyncThunk(
-  "customers/suspend",
-  async (
-    { customerId, reason }: { customerId: string; reason: string },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await api.post(`/customers/${customerId}/suspend`, {
-        reason,
-      });
-      return response.data;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(
-          error.response?.data?.message || "Failed to create maintenance record"
-        );
-      }
-      return rejectWithValue("An unexpected error occurred");
-    }
-  }
-);
+// export const suspendCustomer = createAsyncThunk(
+//   "customers/suspend",
+//   async (
+//     { customerId, reason }: { customerId: string; reason: string },
+//     { rejectWithValue }
+//   ) => {
+//     try {
+//       const response = await api.post(`/customers/${customerId}/suspend`, {
+//         reason,
+//       });
+//       return response.data;
+//     } catch (error: unknown) {
+//       if (axios.isAxiosError(error)) {
+//         return rejectWithValue(
+//           error.response?.data?.message || "Failed to create maintenance record"
+//         );
+//       }
+//       return rejectWithValue("An unexpected error occurred");
+//     }
+//   }
+// );
 
-export const activateCustomer = createAsyncThunk(
-  "customers/activate",
-  async (customerId: string, { rejectWithValue }) => {
-    try {
-      const response = await api.post(`/customers/${customerId}/activate`);
-      return response.data;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(
-          error.response?.data?.message || "Failed to create maintenance record"
-        );
-      }
-      return rejectWithValue("An unexpected error occurred");
-    }
-  }
-);
+// export const activateCustomer = createAsyncThunk(
+//   "customers/activate",
+//   async (customerId: string, { rejectWithValue }) => {
+//     try {
+//       const response = await api.post(`/customers/${customerId}/activate`);
+//       return response.data;
+//     } catch (error: unknown) {
+//       if (axios.isAxiosError(error)) {
+//         return rejectWithValue(
+//           error.response?.data?.message || "Failed to create maintenance record"
+//         );
+//       }
+//       return rejectWithValue("An unexpected error occurred");
+//     }
+//   }
+// );
 
-export const checkCustomerEligibility = createAsyncThunk(
-  "customers/checkEligibility",
-  async (customerId: string, { rejectWithValue }) => {
-    try {
-      const response = await api.get(`/customers/${customerId}/eligibility`);
-      return response.data;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(
-          error.response?.data?.message || "Failed to create maintenance record"
-        );
-      }
-      return rejectWithValue("An unexpected error occurred");
-    }
-  }
-);
+// export const checkCustomerEligibility = createAsyncThunk(
+//   "customers/checkEligibility",
+//   async (customerId: string, { rejectWithValue }) => {
+//     try {
+//       const response = await api.get(`/customers/${customerId}/eligibility`);
+//       return response.data;
+//     } catch (error: unknown) {
+//       if (axios.isAxiosError(error)) {
+//         return rejectWithValue(
+//           error.response?.data?.message || "Failed to create maintenance record"
+//         );
+//       }
+//       return rejectWithValue("An unexpected error occurred");
+//     }
+//   }
+// );
 
-export const updateCustomerStats = createAsyncThunk(
-  "customers/updateStats",
-  async (customerId: string, { rejectWithValue }) => {
-    try {
-      const response = await api.get(`/customers/${customerId}/stats`);
-      return response.data;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(
-          error.response?.data?.message || "Failed to create maintenance record"
-        );
-      }
-      return rejectWithValue("An unexpected error occurred");
-    }
-  }
-);
+// export const updateCustomerStats = createAsyncThunk(
+//   "customers/updateStats",
+//   async (customerId: string, { rejectWithValue }) => {
+//     try {
+//       const response = await api.get(`/customers/${customerId}/stats`);
+//       return response.data;
+//     } catch (error: unknown) {
+//       if (axios.isAxiosError(error)) {
+//         return rejectWithValue(
+//           error.response?.data?.message || "Failed to create maintenance record"
+//         );
+//       }
+//       return rejectWithValue("An unexpected error occurred");
+//     }
+//   }
+// );
 
-export const fetchCustomerBookings = createAsyncThunk(
-  "customers/fetchBookings",
-  async (customerId: string, { rejectWithValue }) => {
-    try {
-      const response = await api.get(`/customers/${customerId}/bookings`);
-      return response.data;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(
-          error.response?.data?.message || "Failed to create maintenance record"
-        );
-      }
-      return rejectWithValue("An unexpected error occurred");
-    }
-  }
-);
+// export const fetchCustomerBookings = createAsyncThunk(
+//   "customers/fetchBookings",
+//   async (customerId: string, { rejectWithValue }) => {
+//     try {
+//       const response = await api.get(`/customers/${customerId}/bookings`);
+//       return response.data;
+//     } catch (error: unknown) {
+//       if (axios.isAxiosError(error)) {
+//         return rejectWithValue(
+//           error.response?.data?.message || "Failed to create maintenance record"
+//         );
+//       }
+//       return rejectWithValue("An unexpected error occurred");
+//     }
+//   }
+// );
 
-export const sendBulkCommunication = createAsyncThunk(
-  "customers/sendBulkCommunication",
-  async (
-    {
-      customerIds,
-      message,
-      type,
-      subject,
-    }: {
-      customerIds: string[];
-      message: string;
-      type: "email" | "sms";
-      subject?: string;
-    },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await api.post("/customers/communication/bulk", {
-        customerIds,
-        message,
-        type,
-        subject,
-      });
-      return response.data;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(
-          error.response?.data?.message || "Failed to create maintenance record"
-        );
-      }
-      return rejectWithValue("An unexpected error occurred");
-    }
-  }
-);
+// export const sendBulkCommunication = createAsyncThunk(
+//   "customers/sendBulkCommunication",
+//   async (
+//     {
+//       customerIds,
+//       message,
+//       type,
+//       subject,
+//     }: {
+//       customerIds: string[];
+//       message: string;
+//       type: "email" | "sms";
+//       subject?: string;
+//     },
+//     { rejectWithValue }
+//   ) => {
+//     try {
+//       const response = await api.post("/customers/communication/bulk", {
+//         customerIds,
+//         message,
+//         type,
+//         subject,
+//       });
+//       return response.data;
+//     } catch (error: unknown) {
+//       if (axios.isAxiosError(error)) {
+//         return rejectWithValue(
+//           error.response?.data?.message || "Failed to create maintenance record"
+//         );
+//       }
+//       return rejectWithValue("An unexpected error occurred");
+//     }
+//   }
+// );
 
-export const fetchCustomerFinancials = createAsyncThunk(
-  "customers/fetchFinancials",
-  async (customerId: string, { rejectWithValue }) => {
-    try {
-      const response = await api.get(`/customers/${customerId}/financials`);
-      return response.data;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(
-          error.response?.data?.message || "Failed to create maintenance record"
-        );
-      }
-      return rejectWithValue("An unexpected error occurred");
-    }
-  }
-);
+// export const fetchCustomerFinancials = createAsyncThunk(
+//   "customers/fetchFinancials",
+//   async (customerId: string, { rejectWithValue }) => {
+//     try {
+//       const response = await api.get(`/customers/${customerId}/financials`);
+//       return response.data;
+//     } catch (error: unknown) {
+//       if (axios.isAxiosError(error)) {
+//         return rejectWithValue(
+//           error.response?.data?.message || "Failed to create maintenance record"
+//         );
+//       }
+//       return rejectWithValue("An unexpected error occurred");
+//     }
+//   }
+// );
 
-export const generateCustomerReport = createAsyncThunk(
-  "customers/generateReport",
-  async (
-    {
-      customerId,
-      reportType,
-      startDate,
-      endDate,
-    }: {
-      customerId: string;
-      reportType: "bookings" | "payments" | "all";
-      startDate?: string;
-      endDate?: string;
-    },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await api.get(
-        `/customers/${customerId}/reports/${reportType}`,
-        {
-          params: { startDate, endDate },
-        }
-      );
-      return response.data;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(
-          error.response?.data?.message || "Failed to create maintenance record"
-        );
-      }
-      return rejectWithValue("An unexpected error occurred");
-    }
-  }
-);
+// export const generateCustomerReport = createAsyncThunk(
+//   "customers/generateReport",
+//   async (
+//     {
+//       customerId,
+//       reportType,
+//       startDate,
+//       endDate,
+//     }: {
+//       customerId: string;
+//       reportType: "bookings" | "payments" | "all";
+//       startDate?: string;
+//       endDate?: string;
+//     },
+//     { rejectWithValue }
+//   ) => {
+//     try {
+//       const response = await api.get(
+//         `/customers/${customerId}/reports/${reportType}`,
+//         {
+//           params: { startDate, endDate },
+//         }
+//       );
+//       return response.data;
+//     } catch (error: unknown) {
+//       if (axios.isAxiosError(error)) {
+//         return rejectWithValue(
+//           error.response?.data?.message || "Failed to create maintenance record"
+//         );
+//       }
+//       return rejectWithValue("An unexpected error occurred");
+//     }
+//   }
+// );
 
 const customersSlice = createSlice({
   name: "customers",
@@ -562,109 +562,109 @@ const customersSlice = createSlice({
   extraReducers: (builder) => {
     builder
       // Fetch customers
-      .addCase(fetchCustomers.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchCustomers.fulfilled, (state, action) => {
-        state.loading = false;
-        state.customers = action.payload.customers;
-        state.stats = action.payload.stats;
-      })
-      .addCase(fetchCustomers.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message || "Failed to fetch customers";
-      })
-      // Fetch customer by ID
-      .addCase(fetchCustomerById.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchCustomerById.fulfilled, (state, action) => {
-        state.loading = false;
-        state.selectedCustomer = action.payload;
+      // .addCase(fetchCustomers.pending, (state) => {
+      //   state.loading = true;
+      //   state.error = null;
+      // })
+      // .addCase(fetchCustomers.fulfilled, (state, action) => {
+      //   state.loading = false;
+      //   state.customers = action.payload.customers;
+      //   state.stats = action.payload.stats;
+      // })
+      // .addCase(fetchCustomers.rejected, (state, action) => {
+      //   state.loading = false;
+      //   state.error = action.error.message || "Failed to fetch customers";
+      // })
+      // // Fetch customer by ID
+      // .addCase(fetchCustomerById.pending, (state) => {
+      //   state.loading = true;
+      //   state.error = null;
+      // })
+      // .addCase(fetchCustomerById.fulfilled, (state, action) => {
+      //   state.loading = false;
+      //   state.selectedCustomer = action.payload;
 
-        // Update customer in list if exists
-        const index = state.customers.findIndex(
-          (c) => c.id === action.payload.id
-        );
-        if (index !== -1) {
-          state.customers[index] = action.payload;
-        }
-      })
-      .addCase(fetchCustomerById.rejected, (state, action) => {
-        state.loading = false;
-        state.error = (action.payload as string) || "Failed to fetch customer";
-      })
-      // Create customer
-      .addCase(createCustomer.fulfilled, (state, action) => {
-        state.customers.unshift(action.payload);
-        state.stats.totalCustomers += 1;
-        state.stats.activeCustomers += 1;
-      })
-      // Update customer
-      .addCase(updateCustomer.fulfilled, (state, action) => {
-        const index = state.customers.findIndex(
-          (c) => c.id === action.payload.id
-        );
-        if (index !== -1) {
-          state.customers[index] = action.payload;
-        }
-        if (state.selectedCustomer?.id === action.payload.id) {
-          state.selectedCustomer = action.payload;
-        }
-      })
-      // Suspend customer
-      .addCase(suspendCustomer.fulfilled, (state, action) => {
-        const customer = state.customers.find(
-          (c) => c.id === action.payload.id
-        );
-        if (customer) customer.status = "suspended";
-        if (
-          state.selectedCustomer &&
-          state.selectedCustomer.id === action.payload.id
-        ) {
-          state.selectedCustomer.status = "suspended";
-        }
-        state.stats.activeCustomers -= 1;
-        state.stats.suspendedCustomers += 1;
-      })
-      // Activate customer
-      .addCase(activateCustomer.fulfilled, (state, action) => {
-        const customer = state.customers.find(
-          (c) => c.id === action.payload.id
-        );
-        if (customer) {
-          customer.status = "active";
-        }
-        if (
-          state.selectedCustomer &&
-          state.selectedCustomer.id === action.payload.id
-        ) {
-          state.selectedCustomer.status = "active";
-        }
-        state.stats.activeCustomers += 1;
-        state.stats.suspendedCustomers -= 1;
-      })
-      // Update customer stats
-      .addCase(updateCustomerStats.fulfilled, (state, action) => {
-        const customer = state.customers.find(
-          (c) => c.id === action.payload.id
-        );
-        if (customer) {
-          customer.totalSpent = action.payload.totalSpent;
-          customer.totalBookings = action.payload.totalBookings;
-          customer.loyaltyTier = action.payload.loyaltyTier;
-        }
-        if (
-          state.selectedCustomer &&
-          state.selectedCustomer.id === action.payload.id
-        ) {
-          state.selectedCustomer.totalSpent = action.payload.totalSpent;
-          state.selectedCustomer.totalBookings = action.payload.totalBookings;
-          state.selectedCustomer.loyaltyTier = action.payload.loyaltyTier;
-        }
-      });
+      //   // Update customer in list if exists
+      //   const index = state.customers.findIndex(
+      //     (c) => c.id === action.payload.id
+      //   );
+      //   if (index !== -1) {
+      //     state.customers[index] = action.payload;
+      //   }
+      // })
+      // .addCase(fetchCustomerById.rejected, (state, action) => {
+      //   state.loading = false;
+      //   state.error = (action.payload as string) || "Failed to fetch customer";
+      // })
+      // // Create customer
+      // .addCase(createCustomer.fulfilled, (state, action) => {
+      //   state.customers.unshift(action.payload);
+      //   state.stats.totalCustomers += 1;
+      //   state.stats.activeCustomers += 1;
+      // })
+      // // Update customer
+      // .addCase(updateCustomer.fulfilled, (state, action) => {
+      //   const index = state.customers.findIndex(
+      //     (c) => c.id === action.payload.id
+      //   );
+      //   if (index !== -1) {
+      //     state.customers[index] = action.payload;
+      //   }
+      //   if (state.selectedCustomer?.id === action.payload.id) {
+      //     state.selectedCustomer = action.payload;
+      //   }
+      // })
+      // // Suspend customer
+      // .addCase(suspendCustomer.fulfilled, (state, action) => {
+      //   const customer = state.customers.find(
+      //     (c) => c.id === action.payload.id
+      //   );
+      //   if (customer) customer.status = "suspended";
+      //   if (
+      //     state.selectedCustomer &&
+      //     state.selectedCustomer.id === action.payload.id
+      //   ) {
+      //     state.selectedCustomer.status = "suspended";
+      //   }
+      //   state.stats.activeCustomers -= 1;
+      //   state.stats.suspendedCustomers += 1;
+      // })
+      // // Activate customer
+      // .addCase(activateCustomer.fulfilled, (state, action) => {
+      //   const customer = state.customers.find(
+      //     (c) => c.id === action.payload.id
+      //   );
+      //   if (customer) {
+      //     customer.status = "active";
+      //   }
+      //   if (
+      //     state.selectedCustomer &&
+      //     state.selectedCustomer.id === action.payload.id
+      //   ) {
+      //     state.selectedCustomer.status = "active";
+      //   }
+      //   state.stats.activeCustomers += 1;
+      //   state.stats.suspendedCustomers -= 1;
+      // })
+      // // Update customer stats
+      // .addCase(updateCustomerStats.fulfilled, (state, action) => {
+      //   const customer = state.customers.find(
+      //     (c) => c.id === action.payload.id
+      //   );
+      //   if (customer) {
+      //     customer.totalSpent = action.payload.totalSpent;
+      //     customer.totalBookings = action.payload.totalBookings;
+      //     customer.loyaltyTier = action.payload.loyaltyTier;
+      //   }
+      //   if (
+      //     state.selectedCustomer &&
+      //     state.selectedCustomer.id === action.payload.id
+      //   ) {
+      //     state.selectedCustomer.totalSpent = action.payload.totalSpent;
+      //     state.selectedCustomer.totalBookings = action.payload.totalBookings;
+      //     state.selectedCustomer.loyaltyTier = action.payload.loyaltyTier;
+      //   }
+      // });
   },
 });
 

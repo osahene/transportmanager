@@ -38,6 +38,8 @@ interface ReceiptData {
   pickupLocation: string;
   dropoffLocation: string;
   numberOfDays: number;
+  dailyRate: number;
+  discount: number;
   carDetails: string;
   bookingDates: string;
   totalAmount: number;
@@ -256,6 +258,8 @@ export default function BookingsPage() {
         new Date(payload.startDate),
         "MMM d, yyyy",
       )} - ${format(new Date(payload.endDate), "MMM d, yyyy")}`,
+      dailyRate: payload.dailyRate || 0,
+      discount: payload.discount || 0,
       totalAmount: payload.totalAmount,
       paymentMethod: payload.paymentMethod || "Credit Card",
       transactionId: `TXN-${payload.id.slice(0, 8).toUpperCase()}`,
@@ -630,7 +634,7 @@ export default function BookingsPage() {
                         customerName={booking.customerName}
                         carName={`${booking.carMake} ${booking.carModel}`}
                         amountPaid={booking.totalAmount}
-                        dailyRate={booking.carDailyRate}
+                        dailyRate={booking.dailyRate}
                         endDate={booking.endDate}
                       />
                     </td>
@@ -811,15 +815,21 @@ export default function BookingsPage() {
                 {/* Amount Breakdown */}
                 <div className="border-t border-b py-4">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-600">Subtotal</span>
+                    <span className="text-gray-600">Daily Rate</span>
                     <span className="font-bold text-gray-900">
-                      ¢{selectedBooking.totalAmount}
+                      ¢{selectedBooking.dailyRate}
                     </span>
                   </div>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-600">Tax (10%)</span>
+                    <span className="text-gray-600">VAT (12%)</span>
                     <span className="font-bold text-gray-900">
-                      ¢{(selectedBooking.totalAmount * 0.1).toFixed(2)}
+                      ¢{(selectedBooking.totalAmount * 0.12).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-gray-600">Discount</span>
+                    <span className="font-bold text-gray-900">
+                      ¢{selectedBooking.discount}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-lg font-bold pt-2 border-t">

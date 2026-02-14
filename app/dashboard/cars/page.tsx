@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+
 import {
   FaCar,
   FaGasPump,
@@ -13,14 +15,16 @@ import {
   FaSearch,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { fetchCars } from "../../lib/slices/carsSlice";
 import {
   selectCarsStats,
   selectFilteredCars,
 } from "../../lib/slices/selectors";
-import { useAppSelector } from "../../lib/store";
+import { AppDispatch, useAppSelector } from "../../lib/store";
 import { Car } from "@/app/types/cars";
 
 export default function CarsPage() {
+  const dispatch = useDispatch<AppDispatch>();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const router = useRouter();
@@ -93,7 +97,9 @@ export default function CarsPage() {
   //   if (!car.stats?.totalRevenue) return "No revenue yet";
   //   return `$${car.stats.totalRevenue.toLocaleString()} total`;
   // };
-
+  useEffect(() => {
+    dispatch(fetchCars());
+  }, [dispatch]);
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -202,17 +208,16 @@ export default function CarsPage() {
                 <button
                   key={status}
                   onClick={() => setStatusFilter(status)}
-                  className={`px-4 py-2 rounded-lg font-medium transition whitespace-nowrap ${
-                    statusFilter === status
+                  className={`px-4 py-2 rounded-lg font-medium transition whitespace-nowrap ${statusFilter === status
                       ? "bg-blue-600 dark:bg-blue-700 text-white"
                       : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
+                    }`}
                 >
                   {status === "all"
                     ? "All Vehicles"
                     : status === "retired"
-                    ? "Unavailable"
-                    : status.charAt(0).toUpperCase() + status.slice(1)}
+                      ? "Unavailable"
+                      : status.charAt(0).toUpperCase() + status.slice(1)}
                 </button>
               )
             )}
@@ -240,10 +245,10 @@ export default function CarsPage() {
                   car.status === "available"
                     ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
                     : car.status === "rented"
-                    ? "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)"
-                    : car.status === "maintenance"
-                    ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
-                    : "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+                      ? "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)"
+                      : car.status === "maintenance"
+                        ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
+                        : "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
               }}
             >
               <FaCar className="text-white text-6xl opacity-90 group-hover:scale-110 transition-transform" />
@@ -264,32 +269,35 @@ export default function CarsPage() {
             {/* Car Info */}
             <div className="p-4">
               <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-bold text-lg text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                    {car.make} {car.model}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300">
-                    Year: {car.year} • {car.color}
-                  </p>
+                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                  <span>Year: {car.year}</span>
+                  <span>•</span>
+                  <div className="flex items-center gap-1.5">
+                    <div
+                      className="w-4 h-4 rounded-full border border-gray-200 dark:border-gray-700"
+                      style={{ backgroundColor: `${car.color}` }}
+                      title={`Color: ${car.color}`}
+                    />
+                  </div>
                 </div>
-                <div className="text-right">
+                {/* <div className="text-right">
                   <p className="font-bold text-lg text-gray-900 dark:text-white">
                     ¢{car.dailyRate}
                     <span className="text-sm font-normal text-gray-500">
                       /day
                     </span>
                   </p>
-                </div>
+                </div> */}
               </div>
 
               {/* Details */}
               <div className="mt-4 space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                   <FaGasPump className="w-4 h-4" />
-                  <span>Plate: {car.licensePlate || "N/A"}</span>
+                  <span>Fuel: {car.fuel_type || "N/A"}</span>
                 </div>
                 <div className="text-gray-600 dark:text-gray-400">
-                  <span>Fuel: {car.specifications?.fuelType || "N/A"}</span>
+                  <span>Plate: {car.license_plate || "N/A"}</span>
                 </div>
                 <div className="text-gray-600 dark:text-gray-400">
                   <span>Available: {getNextAvailableDate(car)}</span>

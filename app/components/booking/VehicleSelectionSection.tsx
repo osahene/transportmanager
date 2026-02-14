@@ -63,14 +63,14 @@ export default function VehicleSelectionSection({
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Plate: {car.licensePlate}
                   </p>
-                  <div className="mt-2">
+                  {/* <div className="mt-2">
                     <span className="text-lg font-bold text-gray-900 dark:text-white">
                       ¢{car.dailyRate}
                     </span>
                     <span className="text-sm text-gray-600 dark:text-gray-400 ml-1">
                       /day
                     </span>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </button>
@@ -96,14 +96,7 @@ export default function VehicleSelectionSection({
                 {selectedCar.make} {selectedCar.model}
               </p>
             </div>
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Daily Rate
-              </p>
-              <p className="font-medium text-gray-900 dark:text-white">
-                ¢{selectedCar.dailyRate}/day
-              </p>
-            </div>
+            
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Color</p>
               <div className="flex items-center gap-2">

@@ -10,6 +10,10 @@ interface PaymentSummarySectionProps {
   startDate: string;
   endDate: string;
   availableCars: Car[];
+  dailyRate: number;                         // <-- new
+  discount: number;                          // <-- new
+  onDailyRateChange: (value: number) => void; // <-- new
+  onDiscountChange: (value: number) => void; 
   onPaymentMethodChange: (method: string) => void;
   payInSlipDetails?: PayInSlipDetails;
   onPayInSlipChange?: (field: string, value: string | number) => void;
@@ -28,6 +32,10 @@ export default function PaymentSummarySection({
   startDate,
   endDate,
   availableCars,
+  dailyRate,
+  discount,
+  onDailyRateChange,
+  onDiscountChange,
   onPaymentMethodChange,
   payInSlipDetails = {
     bankName: "",
@@ -48,15 +56,18 @@ export default function PaymentSummarySection({
 }: PaymentSummarySectionProps) {
   const selectedCar = availableCars.find((c) => c.id === carId);
   const days =
-    startDate && endDate
-      ? Math.max(
-          1,
-          Math.ceil(
-            (new Date(endDate).getTime() - new Date(startDate).getTime()) /
-              (1000 * 60 * 60 * 24)
-          )
+  startDate && endDate
+    ? Math.max(
+        1,
+        Math.ceil(
+          (new Date(endDate).getTime() - new Date(startDate).getTime()) /
+            (1000 * 60 * 60 * 24)
         )
-      : 0;
+      )
+    : 0;
+
+  const subtotal = dailyRate * days;
+  const calculatedTotal = Math.max(0, subtotal - discount);
 
   const mobileMoneyProviders = ["MTN", "Vodafone", "AirtelTigo"];
 
@@ -86,21 +97,35 @@ export default function PaymentSummarySection({
             ¢{totalAmount.toLocaleString()}
           </span>
         </div>
-
-        {selectedCar && startDate && endDate && (
+         {selectedCar && startDate && endDate && (
           <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
-            <h3 className="font-medium text-gray-900 dark:text-white mb-2">
-              Calculation Breakdown:
-            </h3>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
+            <h3 className="font-medium ...">Calculation Breakdown:</h3>
+            <div className="space-y-3">
+              
+
+              {/* Entered daily rate – editable */}
+              <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-600 dark:text-gray-400">
-                  Daily Rate:
+                  Entered Daily Rate:
                 </span>
-                <span className="text-gray-900 dark:text-white">
-                  ¢{selectedCar.dailyRate}/day
-                </span>
+                <div className="flex items-center">
+                  <span className="mr-1">¢</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={dailyRate || ""}
+                    onChange={(e) =>
+                      onDailyRateChange(parseFloat(e.target.value) || 0)
+                    }
+                    className="w-24 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-right"
+                    placeholder="0.00"
+                  />
+                  <span className="ml-1">/day</span>
+                </div>
               </div>
+
+              {/* Days */}
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600 dark:text-gray-400">
                   Number of Days:
@@ -109,12 +134,43 @@ export default function PaymentSummarySection({
                   {days} days
                 </span>
               </div>
+
+              {/* Subtotal */}
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600 dark:text-gray-400">
                   Subtotal:
                 </span>
                 <span className="text-gray-900 dark:text-white">
-                  ¢{(selectedCar.dailyRate * days).toLocaleString()}
+                  ¢{subtotal.toLocaleString()}
+                </span>
+              </div>
+
+              {/* Discount – editable */}
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-600 dark:text-gray-400">
+                  Discount:
+                </span>
+                <div className="flex items-center">
+                  <span className="mr-1">¢</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={discount || ""}
+                    onChange={(e) =>
+                      onDiscountChange(parseFloat(e.target.value) || 0)
+                    }
+                    className="w-24 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-right"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+
+              {/* Final total */}
+              <div className="flex justify-between text-sm font-medium pt-2 border-t ...">
+                <span className="text-gray-700 dark:text-gray-300">Total:</span>
+                <span className="text-gray-900 dark:text-white">
+                  ¢{calculatedTotal.toLocaleString()}
                 </span>
               </div>
             </div>

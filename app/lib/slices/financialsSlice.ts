@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { FinancialTransaction, DailySummary } from "../../types/finance";
-import { api } from "../services/api";
+import apiService from "../services/APIPath";
 import axios from "axios";
 
 interface FinanceState {
@@ -36,33 +36,33 @@ const initialState: FinanceState = {
   },
 };
 
-export const recordTransaction = createAsyncThunk(
-  "finance/recordTransaction",
-  async (
-    transaction: Omit<FinancialTransaction, "id" | "date">,
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await api.post("/transactions", transaction);
-      return response.data;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(
-          error.response?.data?.message || "Failed to create maintenance record"
-        );
-      }
-      return rejectWithValue("An unexpected error occurred");
-    }
-  }
-);
+// export const recordTransaction = createAsyncThunk(
+//   "finance/recordTransaction",
+//   async (
+//     transaction: Omit<FinancialTransaction, "id" | "date">,
+//     { rejectWithValue }
+//   ) => {
+//     try {
+//       const response = await apiService.post("/transactions", transaction);
+//       return response.data;
+//     } catch (error: unknown) {
+//       if (axios.isAxiosError(error)) {
+//         return rejectWithValue(
+//           error.response?.data?.message || "Failed to create maintenance record"
+//         );
+//       }
+//       return rejectWithValue("An unexpected error occurred");
+//     }
+//   }
+// );
 
-export const fetchFinancialStats = createAsyncThunk(
-  "finance/fetchStats",
-  async (period: { start: string; end: string }) => {
-    const response = await api.get("/finance/stats", { params: period });
-    return response.data;
-  }
-);
+// export const fetchFinancialStats = createAsyncThunk(
+//   "finance/fetchStats",
+//   async (period: { start: string; end: string }) => {
+//     const response = await apiService.get("/finance/stats", { params: period });
+//     return response.data;
+//   }
+// );
 
 const financeSlice = createSlice({
   name: "finance",
@@ -77,12 +77,12 @@ const financeSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchFinancialStats.fulfilled, (state, action) => {
-        state.stats = action.payload;
-      })
-      .addCase(recordTransaction.fulfilled, (state, action) => {
-        state.transactions.unshift(action.payload);
-      });
+      // .addCase(fetchFinancialStats.fulfilled, (state, action) => {
+      //   state.stats = action.payload;
+      // })
+      // .addCase(recordTransaction.fulfilled, (state, action) => {
+      //   state.transactions.unshift(action.payload);
+      // });
   },
 });
 

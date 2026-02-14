@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { InsurancePolicy, InsuranceStatus } from "../../types/insurance";
-import { api } from "../services/api";
+import apiService from "../services/APIPath";
 import { RootState } from "../store";
 import axios from "axios";
 import { updateCarStatus } from "./carsSlice";
@@ -35,129 +35,129 @@ const initialState: InsuranceState = {
 };
 
 // Async thunks
-export const fetchInsurancePolicies = createAsyncThunk(
-  "insurance/fetchAll",
-  async (params?: { vehicleId?: string; status?: InsuranceStatus }) => {
-    const response = await api.get("/insurance", { params });
-    return response.data;
-  }
-);
+// export const fetchInsurancePolicies = createAsyncThunk(
+//   "insurance/fetchAll",
+//   async (params?: { vehicleId?: string; status?: InsuranceStatus }) => {
+//     const response = await apiService.get("/insurance", { params });
+//     return response.data;
+//   }
+// );
 
-export const createInsurancePolicy = createAsyncThunk(
-  "insurance/create",
-  async (policyData: Omit<InsurancePolicy, "id">, { rejectWithValue }) => {
-    try {
-      const response = await api.post("/insurance", policyData);
-      return response.data;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(
-          error.response?.data?.message || "Failed to create maintenance record"
-        );
-      }
-      return rejectWithValue("An unexpected error occurred");
-    }
-  }
-);
+// export const createInsurancePolicy = createAsyncThunk(
+//   "insurance/create",
+//   async (policyData: Omit<InsurancePolicy, "id">, { rejectWithValue }) => {
+//     try {
+//       const response = await apiService.post("/insurance", policyData);
+//       return response.data;
+//     } catch (error: unknown) {
+//       if (axios.isAxiosError(error)) {
+//         return rejectWithValue(
+//           error.response?.data?.message || "Failed to create maintenance record"
+//         );
+//       }
+//       return rejectWithValue("An unexpected error occurred");
+//     }
+//   }
+// );
 
-export const updateInsurancePolicy = createAsyncThunk(
-  "insurance/update",
-  async (
-    {
-      policyId,
-      updates,
-    }: {
-      policyId: string;
-      updates: Partial<InsurancePolicy>;
-    },
-    { rejectWithValue, dispatch }
-  ) => {
-    try {
-      const response = await api.patch(`/insurance/${policyId}`, updates);
+// export const updateInsurancePolicy = createAsyncThunk(
+//   "insurance/update",
+//   async (
+//     {
+//       policyId,
+//       updates,
+//     }: {
+//       policyId: string;
+//       updates: Partial<InsurancePolicy>;
+//     },
+//     { rejectWithValue, dispatch }
+//   ) => {
+//     try {
+//       const response = await api.patch(`/insurance/${policyId}`, updates);
 
-      // If insurance is expired, update vehicle status
-      if (updates.status === "expired") {
-        const policy = response.data;
-        dispatch(checkVehicleInsuranceStatus(policy.vehicleId));
-      }
+//       // If insurance is expired, update vehicle status
+//       if (updates.status === "expired") {
+//         const policy = response.data;
+//         dispatch(checkVehicleInsuranceStatus(policy.vehicleId));
+//       }
 
-      return response.data;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(
-          error.response?.data?.message || "Failed to create maintenance record"
-        );
-      }
-      return rejectWithValue("An unexpected error occurred");
-    }
-  }
-);
+//       return response.data;
+//     } catch (error: unknown) {
+//       if (axios.isAxiosError(error)) {
+//         return rejectWithValue(
+//           error.response?.data?.message || "Failed to create maintenance record"
+//         );
+//       }
+//       return rejectWithValue("An unexpected error occurred");
+//     }
+//   }
+// );
 
-export const renewInsurancePolicy = createAsyncThunk(
-  "insurance/renew",
-  async (
-    {
-      policyId,
-      renewalData,
-    }: {
-      policyId: string;
-      renewalData: {
-        startDate: string;
-        endDate: string;
-        premium: number;
-      };
-    },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await api.post(
-        `/insurance/${policyId}/renew`,
-        renewalData
-      );
-      return response.data;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(
-          error.response?.data?.message || "Failed to create maintenance record"
-        );
-      }
-      return rejectWithValue("An unexpected error occurred");
-    }
-  }
-);
+// export const renewInsurancePolicy = createAsyncThunk(
+//   "insurance/renew",
+//   async (
+//     {
+//       policyId,
+//       renewalData,
+//     }: {
+//       policyId: string;
+//       renewalData: {
+//         startDate: string;
+//         endDate: string;
+//         premium: number;
+//       };
+//     },
+//     { rejectWithValue }
+//   ) => {
+//     try {
+//       const response = await api.post(
+//         `/insurance/${policyId}/renew`,
+//         renewalData
+//       );
+//       return response.data;
+//     } catch (error: unknown) {
+//       if (axios.isAxiosError(error)) {
+//         return rejectWithValue(
+//           error.response?.data?.message || "Failed to create maintenance record"
+//         );
+//       }
+//       return rejectWithValue("An unexpected error occurred");
+//     }
+//   }
+// );
 
-export const checkVehicleInsuranceStatus = createAsyncThunk(
-  "insurance/checkVehicleStatus",
-  async (vehicleId: string, { dispatch, getState }) => {
-    try {
-      const state = getState() as RootState;
-      const vehiclePolicies = state.insurance.policies.filter(
-        (policy) => policy.vehicleId === vehicleId
-      );
+// export const checkVehicleInsuranceStatus = createAsyncThunk(
+//   "insurance/checkVehicleStatus",
+//   async (vehicleId: string, { dispatch, getState }) => {
+//     try {
+//       const state = getState() as RootState;
+//       const vehiclePolicies = state.insurance.policies.filter(
+//         (policy) => policy.vehicleId === vehicleId
+//       );
 
-      const hasActiveInsurance = vehiclePolicies.some(
-        (policy) =>
-          policy.status === "active" && new Date(policy.endDate) >= new Date()
-      );
+//       const hasActiveInsurance = vehiclePolicies.some(
+//         (policy) =>
+//           policy.status === "active" && new Date(policy.endDate) >= new Date()
+//       );
 
-      if (!hasActiveInsurance) {
-        dispatch(updateCarStatus({ CarId: vehicleId, status: "retired" }));
-      }
-    } catch (error) {
-      console.error("Failed to check insurance status:", error);
-    }
-  }
-);
+//       if (!hasActiveInsurance) {
+//         dispatch(updateCarStatus({ CarId: vehicleId, status: "retired" }));
+//       }
+//     } catch (error) {
+//       console.error("Failed to check insurance status:", error);
+//     }
+//   }
+// );
 
-export const checkExpiringPolicies = createAsyncThunk(
-  "insurance/checkExpiring",
-  async (daysThreshold: number = 30) => {
-    const response = await api.get("/insurance/expiring", {
-      params: { days: daysThreshold },
-    });
-    return response.data;
-  }
-);
+// export const checkExpiringPolicies = createAsyncThunk(
+//   "insurance/checkExpiring",
+//   async (daysThreshold: number = 30) => {
+//     const response = await api.get("/insurance/expiring", {
+//       params: { days: daysThreshold },
+//     });
+//     return response.data;
+//   }
+// );
 
 const insuranceSlice = createSlice({
   name: "insurance",
@@ -195,55 +195,55 @@ const insuranceSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchInsurancePolicies.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchInsurancePolicies.fulfilled, (state, action) => {
-        state.loading = false;
-        state.policies = action.payload;
-      })
-      .addCase(fetchInsurancePolicies.rejected, (state, action) => {
-        state.loading = false;
-        state.error =
-          action.error.message || "Failed to fetch insurance policies";
-      })
-      .addCase(createInsurancePolicy.fulfilled, (state, action) => {
-        state.policies.unshift(action.payload);
-      })
-      .addCase(updateInsurancePolicy.fulfilled, (state, action) => {
-        const index = state.policies.findIndex(
-          (policy) => policy.id === action.payload.id
-        );
-        if (index !== -1) {
-          state.policies[index] = action.payload;
-        }
-        if (state.selectedPolicy?.id === action.payload.id) {
-          state.selectedPolicy = action.payload;
-        }
-      })
-      .addCase(renewInsurancePolicy.fulfilled, (state, action) => {
-        const index = state.policies.findIndex(
-          (policy) => policy.id === action.payload.id
-        );
-        if (index !== -1) {
-          state.policies[index] = action.payload;
-        }
-        if (state.selectedPolicy?.id === action.payload.id) {
-          state.selectedPolicy = action.payload;
-        }
-      })
-      .addCase(checkExpiringPolicies.fulfilled, (state, action) => {
-        // Update policies that are expiring soon
-        action.payload.forEach((expiringPolicy: InsurancePolicy) => {
-          const index = state.policies.findIndex(
-            (p) => p.id === expiringPolicy.id
-          );
-          if (index !== -1) {
-            state.policies[index] = expiringPolicy;
-          }
-        });
-      });
+      // .addCase(fetchInsurancePolicies.pending, (state) => {
+      //   state.loading = true;
+      //   state.error = null;
+      // })
+      // .addCase(fetchInsurancePolicies.fulfilled, (state, action) => {
+      //   state.loading = false;
+      //   state.policies = action.payload;
+      // })
+      // .addCase(fetchInsurancePolicies.rejected, (state, action) => {
+      //   state.loading = false;
+      //   state.error =
+      //     action.error.message || "Failed to fetch insurance policies";
+      // })
+      // .addCase(createInsurancePolicy.fulfilled, (state, action) => {
+      //   state.policies.unshift(action.payload);
+      // })
+      // .addCase(updateInsurancePolicy.fulfilled, (state, action) => {
+      //   const index = state.policies.findIndex(
+      //     (policy) => policy.id === action.payload.id
+      //   );
+      //   if (index !== -1) {
+      //     state.policies[index] = action.payload;
+      //   }
+      //   if (state.selectedPolicy?.id === action.payload.id) {
+      //     state.selectedPolicy = action.payload;
+      //   }
+      // })
+      // .addCase(renewInsurancePolicy.fulfilled, (state, action) => {
+      //   const index = state.policies.findIndex(
+      //     (policy) => policy.id === action.payload.id
+      //   );
+      //   if (index !== -1) {
+      //     state.policies[index] = action.payload;
+      //   }
+      //   if (state.selectedPolicy?.id === action.payload.id) {
+      //     state.selectedPolicy = action.payload;
+      //   }
+      // })
+      // .addCase(checkExpiringPolicies.fulfilled, (state, action) => {
+      //   // Update policies that are expiring soon
+      //   action.payload.forEach((expiringPolicy: InsurancePolicy) => {
+      //     const index = state.policies.findIndex(
+      //       (p) => p.id === expiringPolicy.id
+      //     );
+      //     if (index !== -1) {
+      //       state.policies[index] = expiringPolicy;
+      //     }
+      //   });
+      // });
   },
 });
 

@@ -3,10 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "../../lib/store";
 import {
   setSelectedRecord,
-  updateMaintenanceStatus,
-  completeMaintenance,
-  extendMaintenanceDeadline,
-  selectMaintenanceBycarId,
+  
 } from "../../lib/slices/maintenanceSlice";
 import { MaintenanceRecord, MaintenanceStatus } from "../../types/maintenance";
 import {
@@ -21,20 +18,19 @@ import {
 } from "react-icons/fa";
 
 interface MaintenanceTableProps {
-  vehicleId: string;
+  records: MaintenanceRecord[];
   onAddRecord: () => void;
   onEditRecord: (record: MaintenanceRecord) => void;
   onDeleteRecord: (id: string) => void;
 }
 
 const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
-  vehicleId,
+  records,
   onAddRecord,
   onEditRecord,
   onDeleteRecord,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const records = useSelector(selectMaintenanceBycarId(vehicleId));
 
   const [localSelectedRecord, setLocalSelectedRecord] =
     useState<MaintenanceRecord | null>(null);
@@ -74,15 +70,15 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
   const handleConfirmStatusUpdate = async (newStatus: MaintenanceStatus) => {
     if (selectedRecordForAction) {
       try {
-        await dispatch(
-          updateMaintenanceStatus({
-            recordId: selectedRecordForAction.id,
-            status: newStatus,
-            carId: vehicleId,
-            estimatedEndDate: selectedRecordForAction.estimatedEndDate,
-            notes: `Status updated to ${newStatus}`,
-          })
-        ).unwrap();
+        // await dispatch(
+        //   updateMaintenanceStatus({
+        //     recordId: selectedRecordForAction.id,
+        //     status: newStatus,
+        //     carId: vehicleId,
+        //     estimatedEndDate: selectedRecordForAction.estimatedEndDate,
+        //     notes: `Status updated to ${newStatus}`,
+        //   })
+        // ).unwrap();
         setIsStatusModalOpen(false);
         setSelectedRecordForAction(null);
       } catch (error) {
@@ -94,13 +90,13 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
   const handleConfirmExtendDeadline = async () => {
     if (selectedRecordForAction && newEstimatedDate && extensionReason) {
       try {
-        await dispatch(
-          extendMaintenanceDeadline({
-            recordId: selectedRecordForAction.id,
-            newEstimatedDate,
-            reason: extensionReason,
-          })
-        ).unwrap();
+        // await dispatch(
+        //   extendMaintenanceDeadline({
+        //     recordId: selectedRecordForAction.id,
+        //     newEstimatedDate,
+        //     reason: extensionReason,
+        //   })
+        // ).unwrap();
         setIsExtendModalOpen(false);
         setSelectedRecordForAction(null);
         setNewEstimatedDate("");
@@ -114,13 +110,13 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
   const handleConfirmCompleteEarly = async () => {
     if (selectedRecordForAction) {
       try {
-        await dispatch(
-          completeMaintenance({
-            recordId: selectedRecordForAction.id,
-            carId: vehicleId,
-            actualEndDate: actualReturnDate || undefined,
-          })
-        ).unwrap();
+        // await dispatch(
+        //   completeMaintenance({
+        //     recordId: selectedRecordForAction.id,
+        //     carId: vehicleId,
+        //     actualEndDate: actualReturnDate || undefined,
+        //   })
+        // ).unwrap();
         setIsCompleteModalOpen(false);
         setSelectedRecordForAction(null);
         setActualReturnDate("");
@@ -176,9 +172,6 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
               Maintenance Records
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Manage maintenance with flexible deadlines for Ghanaian mechanics
-            </p>
           </div>
           <button
             onClick={onAddRecord}

@@ -4,14 +4,12 @@ import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../../lib/store";
 import { useRouter, useParams } from "next/navigation";
-import { setSelectedCar, fetchCars } from "../../../lib/slices/carsSlice";
+import { setSelectedCar, fetchCarById } from "../../../lib/slices/carsSlice";
 import { selectBookings } from "@/app/lib/slices/selectors";
 import {
-  fetchMaintenanceRecords,
   selectMaintenanceBycarId,
 } from "../../../lib/slices/maintenanceSlice";
 import {
-  fetchInsurancePolicies,
   selectInsuranceByVehicleId,
 } from "../../../lib/slices/insuranceSlice";
 import BookingsTable from "../../../components/cars/BookingsTable";
@@ -55,32 +53,21 @@ export default function CarDetailPage() {
   const [loading, setLoading] = useState(true);
 
   // Load all data for the vehicle
-  useEffect(() => {
-    const loadVehicleData = async () => {
-      setLoading(true);
-      const vehicleId = params.id as string;
-
-      try {
-        // Fetch vehicle details if not already loaded
-        if (!selectedCar && vehicleId) {
-          await dispatch(fetchCars()).unwrap();
-        }
-
-        // Fetch related data - FIXED: Using correct parameter names
-        await Promise.all([
-          // dispatch(fetchBookings()).unwrap(),
-          dispatch(fetchMaintenanceRecords({ carId: vehicleId })).unwrap(), // FIXED: carId not vehicleId
-          dispatch(fetchInsurancePolicies({ vehicleId })).unwrap(),
-        ]);
-      } catch (error) {
-        console.error("Failed to load vehicle data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadVehicleData();
-  }, [params.id, dispatch, selectedCar]);
+useEffect(() => {
+  const loadVehicleData = async () => {
+    setLoading(true);
+    const vehicleId = params.id as string;
+    try {
+      // Fetch the car with all related data
+      await dispatch(fetchCarById(vehicleId)).unwrap();
+    } catch (error) {
+      console.error("Failed to load vehicle data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  loadVehicleData();
+}, [params.id, dispatch]);
 
   // Set selected vehicle if available
   useEffect(() => {
@@ -192,8 +179,7 @@ export default function CarDetailPage() {
             </h2>
             <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mt-1">
               <p className="text-gray-600 dark:text-gray-400">
-                Vehicle ID: {selectedCar.id} • Registered:{" "}
-                {new Date(selectedCar.createdAt).toLocaleDateString()}
+                Vehicle ID: {selectedCar.id}
               </p>
               <StatusBadge status={selectedCar.status} />
             </div>
@@ -229,23 +215,6 @@ export default function CarDetailPage() {
             </div>
           </div>
         </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Total Revenue
-              </p>
-              <p className="text-2xl font-bold text-green-600 mt-1">
-                ¢{getTotalRevenue().toLocaleString()}
-              </p>
-            </div>
-            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-              <FaCentSign className="w-6 h-6 text-green-600 dark:text-green-400" />
-            </div>
-          </div>
-        </div>
-
         <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
@@ -287,8 +256,6 @@ export default function CarDetailPage() {
             "bookings",
             "maintenance",
             "insurance",
-            "analytics",
-            "others",
           ].map((tab) => (
             <TabButton
               key={tab}
@@ -313,7 +280,7 @@ export default function CarDetailPage() {
           {activeTab === "maintenance" && (
             <MaintenanceTable
               // maintenanceRecords={maintenanceRecords}
-              vehicleId={selectedCar.id}
+              records={maintenanceRecords}
               onAddRecord={handleAddMaintenanceRecord}
               onEditRecord={handleEditMaintenanceRecord}
               onDeleteRecord={handleDeleteMaintenanceRecord}
@@ -397,11 +364,10 @@ export default function CarDetailPage() {
                                 {policy.provider}
                               </p>
                               <span
-                                className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                  isActive
-                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                                }`}
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${isActive
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                  : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                  }`}
                               >
                                 {isActive ? "Active" : "Expired"}
                               </span>
@@ -432,14 +398,6 @@ export default function CarDetailPage() {
               <StatusBadge status={selectedCar.status} />
             </div>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600 dark:text-gray-400">
-                  Daily Rate
-                </span>
-                <span className="font-bold text-gray-900 dark:text-white">
-                  ¢{selectedCar.dailyRate}/day
-                </span>
-              </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-600 dark:text-gray-400">
                   Utilization
@@ -480,16 +438,19 @@ export default function CarDetailPage() {
                 <span className="text-gray-600 dark:text-gray-400 flex items-center gap-2">
                   <FaCar className="w-4 h-4" /> Color
                 </span>
-                <span className="font-medium text-gray-800 dark:text-white">
-                  {selectedCar.color}
-                </span>
+                <div
+                  className="w-4 h-4 rounded-full border border-gray-200 dark:border-gray-700"
+                  style={{ backgroundColor: `${selectedCar.color}` }}
+                  title={`Color: ${selectedCar.color}`}
+                />
+
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-600 dark:text-gray-400">
                   License Plate
                 </span>
                 <span className="font-medium text-gray-800 dark:text-white">
-                  {selectedCar.licensePlate || "N/A"}
+                  {selectedCar.license_plate || "N/A"}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -503,7 +464,7 @@ export default function CarDetailPage() {
                   <FaGasPump className="w-4 h-4" /> Fuel Type
                 </span>
                 <span className="font-medium text-gray-800 dark:text-white">
-                  {selectedCar.specifications?.fuelType || "N/A"}
+                  {selectedCar.fuel_type || "N/A"}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -511,7 +472,7 @@ export default function CarDetailPage() {
                   Transmission
                 </span>
                 <span className="font-medium text-gray-800 dark:text-white">
-                  {selectedCar.specifications?.transmission || "N/A"}
+                  {selectedCar.transmission || "N/A"}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -519,7 +480,7 @@ export default function CarDetailPage() {
                   Seating Capacity
                 </span>
                 <span className="font-medium text-gray-800 dark:text-white">
-                  {selectedCar.specifications?.seatingCapacity || "N/A"}
+                  {selectedCar.seats || "N/A"}
                 </span>
               </div>
             </div>
@@ -531,37 +492,17 @@ export default function CarDetailPage() {
               Vehicle Features
             </h3>
             <div className="grid grid-cols-2 gap-3">
-              {selectedCar.features?.airConditioning && (
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Air Conditioning
-                  </span>
-                </div>
-              )}
-              {selectedCar.features?.gps && (
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    GPS
-                  </span>
-                </div>
-              )}
-              {selectedCar.features?.bluetooth && (
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Bluetooth
-                  </span>
-                </div>
-              )}
-              {selectedCar.features?.backupCamera && (
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Backup Camera
-                  </span>
-                </div>
+              {selectedCar.features && selectedCar.features.length > 0 ? (
+                selectedCar.features.map((feature, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      {feature}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <span className="text-sm text-gray-500">No features listed</span>
               )}
             </div>
           </div>

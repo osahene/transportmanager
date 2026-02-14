@@ -162,14 +162,6 @@ export default function ConfirmationModal({
                     {summary.car.color}
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Daily Rate
-                  </p>
-                  <p className="font-medium text-gray-900 dark:text-white">
-                    ¢{summary.car.dailyRate}/day
-                  </p>
-                </div>
               </div>
             </div>
           )}
@@ -306,10 +298,27 @@ export default function ConfirmationModal({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-700 dark:text-gray-300">
-                  Subtotal
+                  Daily Rate
                 </span>
                 <span className="font-medium text-gray-900 dark:text-white">
-                  ¢{summary.totalAmount.toLocaleString()}
+                  ¢{summary.dailyRate.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-700 dark:text-gray-300">
+                  VAT
+                </span>
+                <span className="font-medium text-gray-900 dark:text-white">
+                  ¢{summary.totalAmount * 0.12}
+                </span>
+              </div>
+             
+              <div className="flex justify-between">
+                <span className="text-gray-700 dark:text-gray-300">
+                  Discount
+                </span>
+                <span className="font-medium text-gray-900 dark:text-white">
+                  ¢{summary.discount.toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200 dark:border-gray-700">

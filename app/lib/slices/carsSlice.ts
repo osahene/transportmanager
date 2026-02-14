@@ -2,6 +2,11 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { Car, CarStatus, EventPayload } from "../../types/cars";
 import apiService from "../services/APIPath";
 
+const getErrorMessage = (error: any) => {
+  return error.response?.data?.message || error.message || "An error occurred";
+};
+
+
 export interface CarsState {
   Cars: Car[];
   selectedCar: Car | null;
@@ -16,41 +21,7 @@ export interface CarsState {
 }
 
 const initialState: CarsState = {
-  Cars: [
-    {
-      id: "1",
-      make: "Benz",
-      model: "C230",
-      year: 2010,
-      licensePlate: "GT-2023-19",
-      vin: "grrrr",
-      color: "red",
-      dailyRate: 180,
-      status: "available",
-      stats: {
-        totalBookings: 50,
-        totalRevenue: 1000,
-      },
-      features: {
-        airConditioning: true,
-        bluetooth: true,
-        gps: false,
-        backupCamera: true,
-        wifi: true,
-        navigation: true,
-        premiumAudio: true,
-      },
-      specifications: {
-        fuelType: "diesel",
-        transmission: "true",
-        seatingCapacity: 5,
-        fuelCapacity: 150,
-        engineType: "automatic",
-      },
-      createdAt: "10/12/2026",
-      updatedAt: "12/12/2026",
-    },
-  ],
+  Cars: [],
   selectedCar: null,
   loading: false,
   error: null,
@@ -63,16 +34,28 @@ const initialState: CarsState = {
 };
 
 // Async thunks for API calls
-export const fetchCars = createAsyncThunk("Cars/fetchAll", async () => {
-  const response = await apiService.getCars();
-  return response.data;
-});
+export const fetchCars = createAsyncThunk(
+  "cars/fetchCars",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await apiService.getCars();
+      console.log("Fetch Cars Response:", response);
+      return response.data; // Adjust based on your actual API shape
+    } catch (error: any) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  }
+);
 
 export const fetchCarById = createAsyncThunk(
-  "cars/fetchById",
-  async (carId: string) => {
-    const response = await apiService.getCarById(carId);
-    return response.data;
+  "cars/fetchCarById",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const response = await apiService.getCarById(id);
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(getErrorMessage(error));
+    }
   }
 );
 
@@ -106,21 +89,45 @@ const CarsSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder
-      .addCase(fetchCars.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchCars.fulfilled, (state, action) => {
-        state.loading = false;
-        state.Cars = action.payload;
-      })
-      .addCase(fetchCars.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message || "Failed to fetch Cars";
-      })
-      .addCase(fetchCarById.fulfilled, (state, action) => {
-        state.selectedCar = action.payload;
-      });
+    // Fetch Cars
+    builder.addCase(fetchCars.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    });
+    builder.addCase(fetchCars.fulfilled, (state, action) => {
+      state.loading = false;
+      state.Cars = action.payload.results || [];
+    });
+    builder.addCase(fetchCars.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
+    });
+
+    // Fetch Car by ID
+    builder.addCase(fetchCarById.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    });
+    builder.addCase(fetchCarById.fulfilled, (state, action) => {
+      state.loading = false;
+      state.selectedCar = action.payload;
+    });
+    builder.addCase(fetchCarById.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
+    });
+    builder.addCase(updateCarStatusWithEventPayload.fulfilled, (state, action) => {
+      // action.payload should be the updated car object from backend
+      const updatedCar = action.payload;
+      const index = state.Cars.findIndex(c => c.id === updatedCar.id);
+      if (index !== -1) {
+        state.Cars[index] = updatedCar;
+      }
+      if (state.selectedCar?.id === updatedCar.id) {
+        state.selectedCar = updatedCar;
+      }
+      // Optionally clear loading/error
+    });
   },
 });
 
