@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FaUser,
   FaPhone,
@@ -10,29 +10,46 @@ import {
   FaDownload,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { useAppSelector } from "../../lib/store";
+import { useAppSelector, useAppDispatch } from "../../lib/store";
 import { format } from "date-fns";
-// import CryptoJS from "crypto-js";
 import {
   selectCustomers,
   selectFilteredCustomers,
 } from "../../lib/slices/selectors";
+import { fetchCustomers, fetchCustomerBookingsWithGuarantor } from "@/app/lib/slices/customersSlice";
+import BookingsModal from "@/app/components/booking/BookingsModal";
 
 export default function CustomersPage() {
+  const dispatch = useAppDispatch()
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
   const [smsMessage, setSmsMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const filteredCustomers = useAppSelector(selectFilteredCustomers);
 
-  // Fixed: Using memoized selector
   const customers = useAppSelector(selectCustomers);
 
-  // const encryptMessage = (message: string) => {
-  //   return CryptoJS.AES.encrypt(
-  //     message,
-  //     process.env.NEXT_PUBLIC_SMS_KEY || "default-key"
-  //   ).toString();
-  // };
+  const [selectedCustomerForModal, setSelectedCustomerForModal] = useState<{ id: string; name: string } | null>(null);
+  const customerBookings = useAppSelector((state) => state.customers.customerBookings);
+  const modalBookings = selectedCustomerForModal ? customerBookings[selectedCustomerForModal.id] || [] : [];
+
+   useEffect(() => {
+    if (customers.length === 0) {
+      dispatch(fetchCustomers());
+    }
+  }, [dispatch, customers.length]);
+
+
+   const handleViewDetails = (customerId: string, customerName: string) => {
+    setSelectedCustomerForModal({ id: customerId, name: customerName });
+    // Fetch bookings if not already in store (optional)
+    if (!customerBookings[customerId]) {
+      dispatch(fetchCustomerBookingsWithGuarantor(customerId));
+    }
+  };
+
+  const closeModal = () => {
+    setSelectedCustomerForModal(null);
+  };
 
   const toggleSelectCustomer = (customerId: string) => {
     setSelectedCustomers((prev) =>
@@ -222,7 +239,10 @@ export default function CustomersPage() {
                         <FaSms />
                         SMS
                       </button> */}
-                      <button className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-sm text-gray-700 dark:text-gray-300">
+                      <button
+                        onClick={() => handleViewDetails(customer.id, `${customer.firstName} ${customer.lastName}`)}
+                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-sm text-gray-700 dark:text-gray-300"
+                      >
                         View Details
                       </button>
                     </div>
@@ -244,6 +264,14 @@ export default function CustomersPage() {
           Export Customer List
         </button>
       </div>
+      {selectedCustomerForModal && (
+        <BookingsModal
+            isOpen={!!selectedCustomerForModal}
+            onClose={closeModal}
+            bookings={modalBookings}
+            customerName={selectedCustomerForModal.name}
+        />
+      )}
     </div>
   );
 }

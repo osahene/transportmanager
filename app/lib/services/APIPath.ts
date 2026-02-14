@@ -22,6 +22,8 @@ const apiService = {
     getCustomers: () => $axios.get("/customers/"),
     createCustomer: (data: any) => $axios.post("/customers/", data),
     getCustomerById: (id: string) => $axios.get(`/customers/${id}/`),
+    getCustomerBookingsWithGuarantor: (customerId: string) => 
+    $axios.get(`/customers/${customerId}/bookings-with-guarantor/`),
 
     // Other endpoints as needed
 };

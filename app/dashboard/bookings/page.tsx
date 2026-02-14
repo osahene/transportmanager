@@ -234,7 +234,7 @@ export default function BookingsPage() {
 
     if (!booking) return null;
     const { payload } = booking as any;
-    const carDetails = `${booking.carMake} ${booking.carModel} (${booking.carLicensePlate})`;
+    const carDetails = `${booking.carMake} ${booking.carModel} (${booking.carlicense_plate})`;
 
     return {
       bookingId: payload.id,
@@ -560,7 +560,7 @@ export default function BookingsPage() {
                           <FaCar className="text-gray-400 dark:text-gray-500" />
                           <span>
                             {booking.carMake} {booking.carModel} (
-                            {booking.carLicensePlate})
+                            {booking.carlicense_plate})
                           </span>
                         </div>
                       </div>

@@ -339,7 +339,7 @@ export const selectAllBookingsWithDetails = createSelector(
           carMake: car?.make || "Unknown",
           carModel: car?.model || "Unknown",
           carYear: car?.year || "N/A",
-          carLicensePlate: car?.license_plate || "N/A",
+          carlicense_plate: car?.license_plate || "N/A",
           carColor: car?.color || "N/A",
 
           // Computed fields

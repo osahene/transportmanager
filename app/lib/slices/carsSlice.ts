@@ -70,6 +70,7 @@ export const updateCarStatusWithEventPayload = createAsyncThunk(
   "Cars/updateStatus",
   async ({ CarId, payload }: { CarId: string; payload: EventPayload }) => {
     const response = await apiService.updateCarStatusWithEventPayload(CarId, payload);
+    console.log('update', response)
     return response.data;
   }
 );
