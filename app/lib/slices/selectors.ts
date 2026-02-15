@@ -133,41 +133,73 @@ export const selectTopSpendingCustomers = createSelector(
   },
 );
 
-export const selectDashboardStats = createSelector(
-  [
-    selectcars,
-    selectBookings,
-    selectFinance,
-    selectAvailablecars,
-    selectActiveBookings,
-  ],
-  (cars, bookings, finance, availableCars, activeBookings) => {
-    const today = new Date().toISOString().split("T")[0];
-    const todayTransactions = finance.transactions.filter((t) =>
-      t.date.startsWith(today),
-    );
+export const selectDashboardMetrics = createSelector(
+  [selectcars, selectBookings, selectCustomers, selectStaff],
+  (cars, bookings, customers, staff) => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth(); // 0-11
+    const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const previousMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
 
-    // Calculate maintenance due
-    const maintenanceDue = cars.filter(
-      (car) => car.status === "maintenance",
-    ).length;
+    // Helper: check if booking's start date falls in given month/year
+    const isBookingInMonth = (booking: any, month: number, year: number) => {
+      const d = new Date(booking.startDate);
+      return d.getMonth() === month && d.getFullYear() === year;
+    };
+
+    // Current month bookings
+    const currentMonthBookings = bookings.filter(b => isBookingInMonth(b, currentMonth, currentYear)).length;
+
+    // Previous month bookings
+    const previousMonthBookings = bookings.filter(b => isBookingInMonth(b, previousMonth, previousMonthYear)).length;
+
+    // Monthly bookings for current year (Jan-Dec)
+    const monthlyBookings = Array(12).fill(0).map((_, idx) => {
+      return bookings.filter(b => {
+        const d = new Date(b.startDate);
+        return d.getMonth() === idx && d.getFullYear() === currentYear;
+      }).length;
+    });
+
+    // Monthly revenue for current year (only completed bookings)
+    const monthlyRevenue = Array(12).fill(0).map((_, idx) => {
+      return bookings
+        .filter(b => {
+          const d = new Date(b.startDate);
+          return d.getMonth() === idx && d.getFullYear() === currentYear && b.status === 'completed';
+        })
+        .reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+    });
+
+    // Total customers
+    const totalCustomers = customers.length;
+
+    // Total drivers (role === 'driver')
+    const totalDrivers = staff.filter(s => s.role?.toLowerCase() === 'driver').length;
+
+    // Fleet status counts by car status
+    const carStatusCounts = {
+      available: cars.filter(c => c.status === 'available').length,
+      rented: cars.filter(c => c.status === 'rented').length,
+      maintenance: cars.filter(c => c.status === 'maintenance').length,
+      insurance_expired: cars.filter(c => c.status === 'insurance_expired').length,
+      accident: cars.filter(c => c.status === 'accident').length,
+      retired: cars.filter(c => c.status === 'retired').length,
+    };
 
     return {
       totalCars: cars.length,
-      availableCars: availableCars.length,
-      activeBookings: activeBookings.length,
-      pendingBookings: bookings.filter((b) => b.status === "pending").length,
-      maintenanceDue,
-      totalRevenue: finance.transactions
-        .filter((t) => t.type === "revenue")
-        .reduce((sum, t) => sum + t.amount, 0),
-      todayRevenue: todayTransactions
-        .filter((t) => t.type === "revenue")
-        .reduce((sum, t) => sum + t.amount, 0),
+      totalCustomers,
+      totalDrivers,
+      currentMonthBookings,
+      previousMonthBookings,
+      monthlyBookings,
+      monthlyRevenue,
+      carStatusCounts,
     };
-  },
+  }
 );
-
 export const selectCarStats = createSelector(
   [
     selectSelectedCar,
