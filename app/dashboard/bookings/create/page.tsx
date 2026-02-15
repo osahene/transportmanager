@@ -14,7 +14,7 @@ import {
   selectDrivers,
   selectCustomers,
 } from "../../../lib/slices/selectors";
-
+import apiService from "@/app/lib/services/APIPath";
 import CustomerSelectionSection from "../../../components/booking/CustomerSelectionSection";
 import VehicleSelectionSection from "../../../components/booking/VehicleSelectionSection";
 import BookingDetailsSection from "../../../components/booking/BookingDetailsSection";
@@ -566,10 +566,8 @@ export default function CreateBookingPage() {
   const sendBookingConfirmation = useCallback(
     async (summary: BookingSummary) => {
       if (!summary?.customer) return;
-      const smsMessage = `Dear ${summary.customer.firstName} ${summary.customer.lastName}, your booking has been confirmed. Pickup: ${summary.dates.start} at ${formData.pickupLocation || "our main office"}. Return: ${summary.dates.end}. Total: $${summary.totalAmount}. Thank you!`;
-      console.log("SMS Message:", smsMessage);
-      console.log("Email Content:", { to: summary.customer.email, subject: "Booking Confirmation", body: "..." });
-      return Promise.resolve();
+    
+       await apiService.bookingSMS(summary.customer.id);
     },
     [formData.pickupLocation]
   );
@@ -672,7 +670,7 @@ export default function CreateBookingPage() {
     await createBookingFlow(bookingSummary);
   }, [bookingSummary, createBookingFlow]);
 
-  // ---------- UI (EXACTLY THE SAME) ----------
+
   return (
     <div className="space-y-6">
       {/* Header */}

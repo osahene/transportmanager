@@ -247,46 +247,6 @@ export default function BookingsPage() {
     return buttons;
   };
 
-  // const generateReceiptData = (bookingId: string): ReceiptData | null => {
-  //   // Search by booking.id, not carId
-  //   const booking = allDetailedBookings.find((b: any) => b.payload.id === bookingId);
-
-  //   if (!booking) return null;
-  //   const { payload } = booking as any;
-  //   const carDetails = `${booking.carMake} ${booking.carModel} (${booking.carlicense_plate})`;
-
-  //   return {
-  //     bookingId: payload.id,
-  //     customerName: payload.customerName || "Unknown",
-  //     customerPhone: payload.customerPhone || "Unknown",
-  //     customerEmail: payload.customerEmail || "Unknown",
-  //     customerGPSAddress: payload.customerGPSAddress || "Unknown",
-  //     guarantorName: payload.guarantorName || "Unknown",
-  //     guarantorPhone: payload.guarantorPhone || "Unknown",
-  //     guarantorEmail: payload.guarantorEmail || "Unknown",
-  //     guarantorGPSAddress: payload.guarantorGPSAddress || "Unknown",
-  //     pickupLocation: payload.pickupLocation || "Unknown",
-  //     dropoffLocation: payload.dropoffLocation || "Unknown",
-  //     numberOfDays: Math.ceil(
-  //       (new Date(payload.endDate).getTime() - new Date(payload.startDate).getTime()) /
-  //       (1000 * 60 * 60 * 24)
-  //     ) || 0,
-  //     carDetails: carDetails || "Unknown",
-
-  //     bookingDates: `${format(
-  //       new Date(payload.startDate),
-  //       "MMM d, yyyy",
-  //     )} - ${format(new Date(payload.endDate), "MMM d, yyyy")}`,
-  //     dailyRate: payload.dailyRate || 0,
-  //     discount: payload.discount || 0,
-  //     totalAmount: payload.totalAmount,
-  //     paymentMethod: payload.paymentMethod || "Credit Card",
-  //     transactionId: `TXN-${payload.id.slice(0, 8).toUpperCase()}`,
-  //     date: new Date(),
-  //   };
-  // };
-
-
   const generateReceiptData = (bookingId: string): ReceiptData | null => {
     const booking = allDetailedBookings.find(b => b.id === bookingId);
     if (!booking) return null;

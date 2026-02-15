@@ -20,15 +20,17 @@ const apiService = {
     markBookingAsReturned: (id: string, data: any) => $axios.post(`/bookings/${id}/mark_returned/`, data),
     sendEmailReceipt: (id: string) => $axios.post(`/bookings/${id}/send_email_receipt/`),
     sendSMSReceipt: (id: string) => $axios.post(`/bookings/${id}/send_sms_receipt/`),
+    bookingSMS: (bookingId: string) => $axios.post(`/bookings/${bookingId}/send_confirmation_sms/`),
 
     // Customers endpoints
     getCustomers: () => $axios.get("/customers/"),
     createCustomer: (data: any) => $axios.post("/customers/", data),
     getCustomerById: (id: string) => $axios.get(`/customers/${id}/`),
-    getCustomerBookingsWithGuarantor: (customerId: string) => 
-    $axios.get(`/customers/${customerId}/bookings-with-guarantor/`),
-
-        // Staff endpoints
+    getCustomerBookingsWithGuarantor: (customerId: string) => $axios.get(`/customers/${customerId}/bookings-with-guarantor/`),
+    sendBulkSMS: (customerIds: string[], message: string) => $axios.post('/customers/send-bulk-sms/', { customer_ids: customerIds, message }),
+    sendSingleSMS: (customerId: string, message: string) => $axios.post(`/customers/${customerId}/send-sms/`, { message }),
+      
+    // Staff endpoints
     getStaff: () => $axios.get("/staff/"),
     getStaffById: (id: string) => $axios.get(`/staff/${id}/`),
     createStaff: (data: any) => $axios.post("/staff/", data),

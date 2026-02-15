@@ -53,6 +53,23 @@ export const fetchBookings = createAsyncThunk(
 );
 
 // NEW: Create booking thunk that sends data to backend
+export const bookingSMSSending = createAsyncThunk(
+  "bookings/create",
+  async (bookingData: any, { rejectWithValue }) => {
+    try {
+      const response = await apiService.bookingSMS(bookingData);
+      return response.data;
+
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return rejectWithValue(
+          alert(error.response?.data || { message: "Failed to send SMS" })
+        );
+      }
+      return rejectWithValue(getErrorMessage(error));
+    }
+  }
+);
 export const createBooking = createAsyncThunk(
   "bookings/create",
   async (bookingData: any, { rejectWithValue }) => {
@@ -151,7 +168,7 @@ export const sendSMS = createAsyncThunk(
   }
 )
 export const sendEmail = createAsyncThunk(
-  'bookings/sendSMS',
+  'bookings/sendEmail',
   async (bookingId: string, { rejectWithValue }) => {
     try {
       const response = await apiService.sendEmailReceipt(bookingId);

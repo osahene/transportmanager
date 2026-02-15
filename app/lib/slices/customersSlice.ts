@@ -3,6 +3,10 @@ import { Customer, CustomerAddress } from "../../types/customer";
 import { snakeToCamel } from "../snakeToCamel";
 import apiService from "../services/APIPath";
 
+const getErrorMessage = (error: any) => {
+    return error.response?.data?.message || error.message || 'An error occurred';
+};
+
 
 export const fetchCustomers = createAsyncThunk(
   'customers/fetchCustomers',
@@ -14,7 +18,7 @@ export const fetchCustomers = createAsyncThunk(
       console.log('all cust', customers)
       return customers as Customer[];
     } catch (error: any) {
-      return rejectWithValue(error.response?.data || 'Failed to fetch customers');
+     return rejectWithValue(getErrorMessage(error));
     }
   }
 );
@@ -28,10 +32,36 @@ export const fetchCustomerBookingsWithGuarantor = createAsyncThunk(
       console.log('cust res', response)
       return { customerId, bookings: response.data };
     } catch (error: any) {
-      return rejectWithValue(error.response?.data || 'Failed to fetch bookings');
+      return rejectWithValue(getErrorMessage(error));
     }
   }
 ); 
+
+
+export const sendBulkSMS = createAsyncThunk(
+    'customers/sendBulkSMS',
+    async ({ customerIds, message }: { customerIds: string[]; message: string }, { rejectWithValue }) => {
+        try {
+            const response = await apiService.sendBulkSMS(customerIds, message);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(getErrorMessage(error));
+        }
+    }
+);
+
+// Thunk for single SMS
+export const sendSingleSMS = createAsyncThunk(
+    'customers/sendSingleSMS',
+    async ({ customerId, message }: { customerId: string; message: string }, { rejectWithValue }) => {
+        try {
+            const response = await apiService.sendSingleSMS(customerId, message);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(getErrorMessage(error));
+        }
+    }
+);
 
 interface CustomersState {
   customers: Customer[];

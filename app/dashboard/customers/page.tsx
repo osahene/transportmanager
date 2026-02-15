@@ -16,7 +16,7 @@ import {
   selectCustomers,
   selectFilteredCustomers,
 } from "../../lib/slices/selectors";
-import { fetchCustomers, fetchCustomerBookingsWithGuarantor } from "@/app/lib/slices/customersSlice";
+import { fetchCustomers, fetchCustomerBookingsWithGuarantor,sendBulkSMS, sendSingleSMS } from "@/app/lib/slices/customersSlice";
 import BookingsModal from "@/app/components/booking/BookingsModal";
 
 export default function CustomersPage() {
@@ -46,6 +46,32 @@ export default function CustomersPage() {
       dispatch(fetchCustomerBookingsWithGuarantor(customerId));
     }
   };
+
+  const handleSendIndividualSMS = async (customerId: string) => {
+    const message = window.prompt('Enter SMS message:');
+    if (!message) return;
+    try {
+        await dispatch(sendSingleSMS({ customerId, message })).unwrap();
+        alert('SMS sent successfully');
+    } catch (error: any) {
+        alert(`Failed to send SMS: ${error.message || 'Unknown error'}`);
+    }
+};
+
+const handleSendBulkSMS = async () => {
+    if (selectedCustomers.length === 0 || !smsMessage.trim()) return;
+    try {
+        const result = await dispatch(sendBulkSMS({
+            customerIds: selectedCustomers,
+            message: smsMessage.trim()
+        })).unwrap();
+        alert(`SMS sent successfully to ${result.sent_to} customers.`);
+        setSmsMessage('');
+        setSelectedCustomers([]);
+    } catch (error: any) {
+        alert(`Failed to send SMS: ${error.message || 'Unknown error'}`);
+    }
+};
 
   const closeModal = () => {
     setSelectedCustomerForModal(null);
@@ -101,9 +127,7 @@ export default function CustomersPage() {
           />
           <div className="flex gap-4">
             <button
-              onClick={() =>
-                alert("SMS functionality would be implemented here")
-              }
+              onClick={handleSendBulkSMS}
               disabled={selectedCustomers.length === 0 || !smsMessage.trim()}
               className="px-6 py-3 bg-blue-600 dark:bg-blue-700 text-white font-semibold rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -230,15 +254,13 @@ export default function CustomersPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
-                      {/* <button
-                        onClick={() =>
-                          alert("SMS functionality would be implemented here")
-                        }
+                      <button
+                         onClick={() => handleSendIndividualSMS(customer.id)}
                         className="px-4 py-2 bg-green-600 dark:bg-green-700 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-800 transition text-sm flex items-center gap-2"
                       >
                         <FaSms />
                         SMS
-                      </button> */}
+                      </button>
                       <button
                         onClick={() => handleViewDetails(customer.id, `${customer.firstName} ${customer.lastName}`)}
                         className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-sm text-gray-700 dark:text-gray-300"
