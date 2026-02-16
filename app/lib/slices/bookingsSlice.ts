@@ -157,7 +157,6 @@ export const sendSMS = createAsyncThunk(
   async (bookingId: string, { rejectWithValue }) => {
     try {
       const response = await apiService.sendSMSReceipt(bookingId);
-      console.log('sms res', response)
       if (response.status === 200) {
         alert("SMS sent successfull")
       }
@@ -172,7 +171,6 @@ export const sendEmail = createAsyncThunk(
   async (bookingId: string, { rejectWithValue }) => {
     try {
       const response = await apiService.sendEmailReceipt(bookingId);
-      console.log('sms res', response)
       if (response.status === 200) {
         alert("SMS sent successfull")
       }
@@ -206,7 +204,6 @@ const bookingsSlice = createSlice({
         state.loading = true;
       })
       .addCase(fetchBookings.fulfilled, (state, action) => {
-        console.log('fetch book', state)
         state.loading = false;
         state.bookings = action.payload;
       })

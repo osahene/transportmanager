@@ -160,7 +160,7 @@ function SalaryPayslip({ payment, staff, onClose }: any) {
     const handlePrint = useReactToPrint({
         contentRef,
         documentTitle: `Payslip_${staff.name}_${format(new Date(payment.month), "yyyy-MM")}`,
-        onAfterPrint: () => console.log("Printed successfully"), // Optional callback
+        onAfterPrint: () => alert("Printed successfully"), // Optional callback
     });
     const handleEmail = async () => {
         try {
