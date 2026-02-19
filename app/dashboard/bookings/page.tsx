@@ -123,24 +123,7 @@ export default function BookingsPage() {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  // const currentBookings = allDetailedBookings
-  //   .slice(indexOfFirstItem, indexOfLastItem)
-  //   .map((booking: any) => {
-  //     if (booking.payload) {
-  //       console.log("booking", booking);
-  //       console.log("booking payload", booking.payload);
-  //       return {
-  //         ...booking,
-  //         ...booking.payload,
-  //       };
-  //     }
-  //     return booking;
-  //   });
-
-
-
-  // Handle sort
-
+ 
   const currentBookings = filteredBookings.slice(indexOfFirstItem, indexOfLastItem);
 
   const handleSort = (field: SortField) => {
@@ -248,6 +231,7 @@ export default function BookingsPage() {
   };
 
   const generateReceiptData = (bookingId: string): ReceiptData | null => {
+    console.log('bdata', allDetailedBookings)
     const booking = allDetailedBookings.find(b => b.id === bookingId);
     if (!booking) return null;
 
@@ -820,7 +804,7 @@ export default function BookingsPage() {
                   <div className="flex justify-between items-center text-lg font-bold pt-2 border-t">
                     <span className="text-gray-900">Total Amount</span>
                     <span className="text-gray-900">
-                      ¢{(selectedBooking.totalAmount * 1.1).toFixed(2)}
+                      ¢{(selectedBooking.totalAmount)}
                     </span>
                   </div>
                 </div>
