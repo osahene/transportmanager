@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FaSave, FaTimes } from "react-icons/fa";
 import { useAppSelector, useAppDispatch } from "../../../lib/store";
-import { updateCarStatus } from "../../../lib/slices/carsSlice";
+import { updateCarStatus, fetchCars } from "../../../lib/slices/carsSlice";
 import { createBooking, checkCarAvailability } from "../../../lib/slices/bookingsSlice";
 import { Customer, Note } from "../../../types/customer";
 import { Car } from "@/app/types/cars";
@@ -217,6 +217,10 @@ export default function CreateBookingPage() {
     setFormData((prev) => ({ ...prev, totalAmount }));
   }, [totalAmount]);
 
+
+  useEffect(() => {
+    dispatch(fetchCars());
+  }, [dispatch]);
   // Synchronise payInSlip amount when payment method is pay_in_slip
   useEffect(() => {
     if (formData.paymentMethod === "pay_in_slip") {
@@ -524,11 +528,11 @@ export default function CreateBookingPage() {
       customerMode === "existing"
         ? selectedCustomer
         : ({
-            ...newCustomer,
-            id: generateId("CUST"),
-            createdAt: new Date().toISOString(),
-            notes: [],
-          } as Customer);
+          ...newCustomer,
+          id: generateId("CUST"),
+          createdAt: new Date().toISOString(),
+          notes: [],
+        } as Customer);
 
     return {
       customer: customerObj,
@@ -561,16 +565,6 @@ export default function CreateBookingPage() {
       }),
     } as BookingSummary;
   }, [formData, availableCars, drivers, customerMode, selectedCustomer, newCustomer, dailyRate, discount, totalAmount, payInSlipDetails, mobileMoneyDetails, getSelectedCar, getSelectedDriver]);
-
-  // ---------- Confirmation & submission ----------
-  const sendBookingConfirmation = useCallback(
-    async (summary: BookingSummary) => {
-      if (!summary?.customer) return;
-    
-       await apiService.bookingSMS(summary.customer.id);
-    },
-    [formData.pickupLocation]
-  );
 
   const checkAvailability = useCallback(async () => {
     if (!formData.carId || !formData.startDate || !formData.endDate) return { available: true };
@@ -611,7 +605,6 @@ export default function CreateBookingPage() {
 
               await dispatch(createBooking(payload)).unwrap();
               dispatch(updateCarStatus({ CarId: formData.carId, status: "rented" }));
-              await sendBookingConfirmation(summary);
 
               setIsProcessing(false);
               setShowConfirmationModal(false);
@@ -626,7 +619,6 @@ export default function CreateBookingPage() {
         } else {
           await dispatch(createBooking(payload)).unwrap();
           dispatch(updateCarStatus({ CarId: formData.carId, status: "rented" }));
-          await sendBookingConfirmation(summary);
 
           setIsProcessing(false);
           setShowConfirmationModal(false);
@@ -639,7 +631,7 @@ export default function CreateBookingPage() {
         alert(`Failed to create booking: ${error?.message || "Unknown error"}`);
       }
     },
-    [customerMode, selectedCustomer, newCustomer, formData, totalAmount, dispatch, prepareBackendPayload, sendBookingConfirmation, router]
+    [customerMode, selectedCustomer, newCustomer, formData, totalAmount, dispatch, prepareBackendPayload, router]
   );
 
   const handleSubmit = useCallback(
@@ -757,7 +749,7 @@ export default function CreateBookingPage() {
           <button
             type="submit"
             className="px-8 py-3 bg-blue-600 dark:bg-blue-700 text-white font-semibold rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition flex items-center gap-2"
-            disabled={!isFormValid} 
+            disabled={!isFormValid}
           >
             <FaSave />
             Review & Confirm Booking

@@ -231,7 +231,7 @@ export default function CustomerSelectionSection({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b-4 border-gray-300 pb-4">
                   <div>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Name
+                      First Name
                     </p>
                     <p className="font-medium text-gray-900 dark:text-white">
                       {selectedCustomer.firstName}
@@ -239,7 +239,7 @@ export default function CustomerSelectionSection({
                   </div>
                   <div>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Name
+                      Last Name
                     </p>
                     <p className="font-medium text-gray-900 dark:text-white">
                       {selectedCustomer.lastName}
@@ -663,9 +663,9 @@ export default function CustomerSelectionSection({
                 </label>
                 <input
                   type="text"
-                  name="city"
+                  name="address_city"
                   value={newCustomer.address.city}
-                  onChange={(e) => onNewCustomerChange("city", e.target.value)}
+                  onChange={(e) => onNewCustomerChange("address_city", e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
@@ -675,10 +675,10 @@ export default function CustomerSelectionSection({
                 </label>
                 <input
                   type="text"
-                  name="region"
+                  name="address_region"
                   value={newCustomer.address.region}
                   onChange={(e) =>
-                    onNewCustomerChange("region", e.target.value)
+                    onNewCustomerChange("address_region", e.target.value)
                   }
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
@@ -689,10 +689,10 @@ export default function CustomerSelectionSection({
                 </label>
                 <input
                   type="text"
-                  name="country"
+                  name="address_country"
                   value={newCustomer.address.country}
                   onChange={(e) =>
-                    onNewCustomerChange("country", e.target.value)
+                    onNewCustomerChange("address_country", e.target.value)
                   }
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
@@ -833,10 +833,10 @@ export default function CustomerSelectionSection({
                 </label>
                 <input
                   type="text"
-                  name="guarantor_city"
+                  name="guarantor_address_city"
                   value={newCustomer.guarantor.address.city}
                   onChange={(e) =>
-                    onNewCustomerChange("guarantor_city", e.target.value)
+                    onNewCustomerChange("guarantor_address_city", e.target.value)
                   }
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
@@ -847,10 +847,10 @@ export default function CustomerSelectionSection({
                 </label>
                 <input
                   type="text"
-                  name="guarantor_region"
+                  name="guarantor_address_region"
                   value={newCustomer.guarantor.address.region}
                   onChange={(e) =>
-                    onNewCustomerChange("guarantor_region", e.target.value)
+                    onNewCustomerChange("guarantor_address_region", e.target.value)
                   }
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
@@ -861,10 +861,10 @@ export default function CustomerSelectionSection({
                 </label>
                 <input
                   type="text"
-                  name="guarantor_country"
+                  name="guarantor_address_country"
                   value={newCustomer.guarantor.address.country}
                   onChange={(e) =>
-                    onNewCustomerChange("guarantor_country", e.target.value)
+                    onNewCustomerChange("guarantor_address_country", e.target.value)
                   }
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />

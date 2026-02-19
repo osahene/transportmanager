@@ -13,7 +13,7 @@ export const fetchCustomers = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await apiService.getCustomers();
-      const customers = response.data.map((cust: any) => snakeToCamel(cust));
+      const customers = response.data.results.map((cust: any) => snakeToCamel(cust));
       return customers as Customer[];
     } catch (error: any) {
       return rejectWithValue(getErrorMessage(error));

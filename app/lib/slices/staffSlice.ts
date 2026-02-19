@@ -47,7 +47,8 @@ export const fetchStaff = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await apiService.getStaff();
-      return snakeToCamel(response.data) as Staff[];
+      const staffData = response.data.results.map((staff: any) => snakeToCamel(staff));
+      return staffData as Staff[];
     } catch (error: any) {
       return rejectWithValue(error.response?.data || "Failed to fetch staff");
     }

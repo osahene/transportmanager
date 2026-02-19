@@ -7,7 +7,7 @@ const apiService = {
     getCarById: (id: string) => $axios.get(`/cars/${id}/`),
     createCar: (data: any) => $axios.post("/cars/", data),
     updateCar: (id: string, data: any) => $axios.put(`/cars/${id}/`, data),
-    updateCarStatus: (id: string, status: string) => $axios.patch(`/cars/${id}/status/`, { status }),
+    updateCarStatus: (id: string, status: string) => $axios.post(`/cars/${id}/update_status/`, { status }),
     updateCarStatusWithEventPayload: (id: string, payload: any) => $axios.patch(`/cars/${id}/payload/`, payload),
 
     // Bookings endpoints

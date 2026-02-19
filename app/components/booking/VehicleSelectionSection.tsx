@@ -57,9 +57,17 @@ export default function VehicleSelectionSection({
                   <h3 className="font-bold text-gray-900 dark:text-white">
                     {car.make} {car.model}
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {car.year} • {car.color}
-                  </p>
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                  <span>{car.year}</span>
+                  <span>•</span>
+                  <div className="flex items-center gap-1.5">
+                    <div
+                      className="w-4 h-4 rounded-full border border-gray-200 dark:border-gray-700"
+                      style={{ backgroundColor: `${car.color}` }}
+                      title={`Color: ${car.color}`}
+                    />
+                  </div>
+                </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Plate: {car.license_plate}
                   </p>

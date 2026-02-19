@@ -42,11 +42,12 @@ export const fetchBookings = createAsyncThunk(
   "bookings/fetchAll",
   async (params?: any) => {
     const response = await apiService.fetchBookings(params);
-    const converted = snakeToCamel(response.data);
+    console.log('book', response)
+    const converted = snakeToCamel(response.data.results);
     // Add CarId and customerId for selector compatibility
     return converted.map((b: any) => ({
       ...b,
-      CarId: b.car?.id,
+      CarId: b.car,
       customerId: b.customer,
     }));
   }
