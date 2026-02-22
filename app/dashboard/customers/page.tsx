@@ -16,7 +16,7 @@ import {
   selectCustomers,
   selectFilteredCustomers,
 } from "../../lib/slices/selectors";
-import { fetchCustomers, fetchCustomerBookingsWithGuarantor,sendBulkSMS, sendSingleSMS } from "@/app/lib/slices/customersSlice";
+import { fetchCustomerBookingsWithGuarantor,sendBulkSMS, sendSingleSMS } from "@/app/lib/slices/customersSlice";
 import BookingsModal from "@/app/components/booking/BookingsModal";
 
 export default function CustomersPage() {
@@ -31,13 +31,6 @@ export default function CustomersPage() {
   const [selectedCustomerForModal, setSelectedCustomerForModal] = useState<{ id: string; name: string } | null>(null);
   const customerBookings = useAppSelector((state) => state.customers.customerBookings);
   const modalBookings = selectedCustomerForModal ? customerBookings[selectedCustomerForModal.id] || [] : [];
-
-   useEffect(() => {
-    if (customers.length === 0) {
-      dispatch(fetchCustomers());
-    }
-  }, [dispatch, customers.length]);
-
 
    const handleViewDetails = (customerId: string, customerName: string) => {
     setSelectedCustomerForModal({ id: customerId, name: customerName });

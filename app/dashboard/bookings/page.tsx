@@ -20,9 +20,7 @@ import {
 import { motion } from "framer-motion";
 import { useAppSelector, useAppDispatch } from "../../lib/store";
 import { selectAllBookingsWithDetails } from "../../lib/slices/selectors";
-import { fetchBookings, sendEmail, sendSMS } from "../../lib/slices/bookingsSlice";
-import { fetchCars } from "../../lib/slices/carsSlice";
-import { fetchCustomers } from "../../lib/slices/customersSlice";
+import { sendEmail, sendSMS } from "../../lib/slices/bookingsSlice";
 import BookingActions from "@/app/components/booking/bookingActions";
 import { format } from "date-fns";
 import { useReactToPrint } from "react-to-print";
@@ -40,6 +38,13 @@ interface ReceiptData {
   guarantorGPSAddress?: string;
   pickupLocation: string;
   dropoffLocation: string;
+  selfDrive: boolean;
+  driverName: string;
+  driverPhone: string;
+  driverLicenseId?: string;
+  driverLicenseClass?: string;
+  driverLicenseIssueDate?: string;
+  driverLicenseExpiryDate?: string;
   numberOfDays: number;
   dailyRate: number;
   discount: number;
@@ -73,12 +78,6 @@ export default function BookingsPage() {
     page: currentPage,
     page_size: 10
   };
-
-  useEffect(() => {
-    dispatch(fetchBookings(params));
-    dispatch(fetchCars());
-    dispatch(fetchCustomers());
-  }, [dispatch]);
 
   // Client-side filtering
   const filteredBookings = useMemo(() => {
@@ -123,7 +122,7 @@ export default function BookingsPage() {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
- 
+
   const currentBookings = filteredBookings.slice(indexOfFirstItem, indexOfLastItem);
 
   const handleSort = (field: SortField) => {
@@ -231,7 +230,6 @@ export default function BookingsPage() {
   };
 
   const generateReceiptData = (bookingId: string): ReceiptData | null => {
-    console.log('bdata', allDetailedBookings)
     const booking = allDetailedBookings.find(b => b.id === bookingId);
     if (!booking) return null;
 
@@ -247,6 +245,14 @@ export default function BookingsPage() {
       guarantorGPSAddress: booking.guarantorGPSAddress || "N/A",
       pickupLocation: booking.pickupLocation,
       dropoffLocation: booking.dropoffLocation,
+      selfDrive: booking.selfDrive,
+      driverName: booking.driverName,
+      driverPhone: booking.driverPhone,
+      driverLicenseId: booking.driverLicenseId,
+      driverLicenseClass: booking.driverLicenseClass,
+      driverLicenseIssueDate: booking.driverLicenseIssueDate,
+      driverLicenseExpiryDate: booking.driverLicenseExpiryDate,
+
       numberOfDays: booking.durationDays,
       carDetails: `${booking.carMake} ${booking.carModel} (${booking.carlicense_plate})`,
       bookingDates: `${format(new Date(booking.startDate), "MMM d, yyyy")} - ${format(new Date(booking.endDate), "MMM d, yyyy")}`,
@@ -277,7 +283,7 @@ export default function BookingsPage() {
   };
 
   const sendSMSReceipt = async (bookingId: string) => {
-   dispatch(sendSMS(bookingId))
+    dispatch(sendSMS(bookingId))
   };
 
 
@@ -510,11 +516,11 @@ export default function BookingsPage() {
                   >
                     <td className="px-6 py-4">
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {booking.id.slice(0, 8).toUpperCase()}
+                        {booking.id ? booking.id.slice(0, 8).toUpperCase() : 'N/A'}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
                         Created:{" "}
-                        {format(new Date(booking.startDate), "MMM d, yyyy")}
+                        {booking.startDate ? format(new Date(booking.startDate), "MMM d, yyyy") : 'N/A'}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -538,8 +544,8 @@ export default function BookingsPage() {
                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <FaCalendarAlt />
                         <span>
-                          {format(new Date(booking.startDate), "MMM d")} -{" "}
-                          {format(new Date(booking.endDate), "MMM d, yyyy")}
+                          {booking.startDate ? format(new Date(booking.startDate), "MMM d, yyyy") : 'N/A'}
+                          {booking.endDate ? ` - ${format(new Date(booking.endDate), "MMM d, yyyy")}` : ''}
                         </span>
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -553,10 +559,10 @@ export default function BookingsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-lg font-bold text-gray-900 dark:text-white">
-                        ¢{booking.totalAmount.toLocaleString()}
+                        ¢{booking.totalAmount ? booking.totalAmount.toLocaleString() : '0'}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        Daily: ¢{booking.dailyRate}
+                        Daily: ¢{booking.dailyRate || 0}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -565,7 +571,7 @@ export default function BookingsPage() {
                           booking.status,
                         )}`}
                       >
-                        {booking.status.toUpperCase()}
+                        {booking.status || 'Na'}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -780,34 +786,63 @@ export default function BookingsPage() {
                     </p>
                   </div>
                 </div>
+                {selectedBooking.selfDrive && (
+                  <div className="grid grid-cols-2 gap-6 mt-4">
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-2">Driver's License Information</h3>
+                      <p className="text-gray-800"><span className="font-medium">License No:</span> {selectedBooking.driverLicenseId}</p>
+                      <p className="text-gray-800"><span className="font-medium">Class:</span> {selectedBooking.driverLicenseClass}</p>
+                      <p className="text-gray-800"><span className="font-medium">Issue Date:</span> {selectedBooking.driverLicenseIssueDate}</p>
+                      <p className="text-gray-800"><span className="font-medium">Expiry Date:</span> {selectedBooking.driverLicenseExpiryDate}</p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Amount Breakdown */}
-                <div className="border-t border-b py-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-600">Daily Rate</span>
-                    <span className="font-bold text-gray-900">
-                      ¢{selectedBooking.dailyRate}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-600">VAT (12%)</span>
-                    <span className="font-bold text-gray-900">
-                      ¢{(selectedBooking.totalAmount * 0.12).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-600">Discount</span>
-                    <span className="font-bold text-gray-900">
-                      ¢{selectedBooking.discount}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-lg font-bold pt-2 border-t">
-                    <span className="text-gray-900">Total Amount</span>
-                    <span className="text-gray-900">
-                      ¢{(selectedBooking.totalAmount)}
-                    </span>
-                  </div>
-                </div>
+                {/* Amount Breakdown - with 12% tax on daily rate */}
+                {(() => {
+                  const TAX_RATE = 0.12;
+                  const daily = selectedBooking.dailyRate;
+                  const days = selectedBooking.numberOfDays;
+                  const discount = selectedBooking.discount;
+
+                  const taxPerDay = daily * TAX_RATE;
+                  const netDaily = daily - taxPerDay;
+                  const subtotal = netDaily * days;
+                  const totalTax = taxPerDay * days;
+                  const grandTotal = daily * days - discount; // should equal selectedBooking.totalAmount
+
+                  return (
+                    <div className="border-t border-b py-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-gray-600">Daily Rate (after tax)</span>
+                        <span className="font-bold text-gray-900">¢{netDaily.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-gray-600">Number of Days</span>
+                        <span className="font-bold text-gray-900">{days}</span>
+                      </div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-gray-600">Subtotal</span>
+                        <span className="font-bold text-gray-900">¢{subtotal.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-gray-600">Tax (12%)</span>
+                        <span className="font-bold text-gray-900">¢{totalTax.toFixed(2)}</span>
+                      </div>
+                      {discount > 0 && (
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-gray-600">Discount</span>
+                          <span className="font-bold text-gray-900">¢{discount.toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center text-lg font-bold pt-2 border-t">
+                        <span className="text-gray-900">Grand Total</span>
+                        <span className="text-gray-900">¢{grandTotal.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 <div className="grid grid-cols-2 gap-6">
                   <div>
@@ -895,7 +930,7 @@ export default function BookingsPage() {
                     Thank you for choosing YOS Car Rentals!
                   </p>
                   <p className="text-gray-500 text-xs mt-2">
-                    For inquiries: support@yoscarrentals.com | +233 54 621 3027 |  +233 24 445 5757 
+                    For inquiries: support@yoscarrentals.com | +233 54 621 3027 |  +233 24 445 5757
                   </p>
                 </div>
               </div>

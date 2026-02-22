@@ -3,7 +3,6 @@ import { MaintenanceRecord, MaintenanceStatus } from "../../types/maintenance";
 import apiService from "../services/APIPath";
 import axios from "axios";
 import { RootState } from "../store";
-import { updateCarStatus } from "../slices/carsSlice";
 
 interface MaintenanceState {
   records: MaintenanceRecord[];

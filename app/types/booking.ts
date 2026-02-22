@@ -50,7 +50,8 @@ export interface Booking {
   guarantorPhone?: string;
   guarantorEmail?: string;
   guarantorGPSAddress?: string;
-  driverName?: string;
+  driverName: string;
+  driverPhone: string;
   selfDrive: boolean;
   startDate: string;
   endDate: string;

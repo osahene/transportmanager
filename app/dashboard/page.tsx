@@ -60,7 +60,7 @@ export default function DashboardPage() {
     if (metrics.totalCars === 0) dispatch(fetchCars());
     if (metrics.totalCustomers === 0) dispatch(fetchCustomers());
     if (metrics.totalDrivers === 0) dispatch(fetchStaff());
-    if (metrics.currentMonthBookings === 0 && metrics.totalCars > 0) dispatch(fetchBookings(params));
+    if (metrics.currentMonthBookings === 0) dispatch(fetchBookings(params));
   }, [dispatch]);
 
   const handleBookingNewVehicle = () => {

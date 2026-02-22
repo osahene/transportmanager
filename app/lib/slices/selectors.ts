@@ -200,6 +200,9 @@ export const selectDashboardMetrics = createSelector(
     };
   }
 );
+
+
+
 export const selectCarStats = createSelector(
   [
     selectSelectedCar,
@@ -344,10 +347,11 @@ export const selectFilteredCars = createSelector(
 export const selectAllBookingsWithDetails = createSelector(
   [selectBookings, selectcars, selectCustomers],
   (bookings, cars, customers) => {
+    console.log("customer bookings with details...", customers);
+    console.log("cars bookings with details...", cars);
+    console.log("bookins bookings with details...", bookings);
     return bookings
       .map((booking) => {
-        console.log('cusss', customers)
-        console.log('bbb', bookings)
         const carId = booking.CarId;
         const customerId = booking.customerId;
         const car = cars.find((c) => c.id === carId);

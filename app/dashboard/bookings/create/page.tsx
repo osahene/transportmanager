@@ -4,9 +4,9 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FaSave, FaTimes } from "react-icons/fa";
 import { useAppSelector, useAppDispatch } from "../../../lib/store";
-import { updateCarStatus, fetchCars } from "../../../lib/slices/carsSlice";
+import { fetchCars } from "../../../lib/slices/carsSlice";
 import { createBooking, checkCarAvailability } from "../../../lib/slices/bookingsSlice";
-import { Customer, Note } from "../../../types/customer";
+import { Customer } from "../../../types/customer";
 import { Car } from "@/app/types/cars";
 import { BookingSummary, Driver, PaymentMethod } from "../../../types/booking";
 import {
@@ -14,7 +14,6 @@ import {
   selectDrivers,
   selectCustomers,
 } from "../../../lib/slices/selectors";
-import apiService from "@/app/lib/services/APIPath";
 import CustomerSelectionSection from "../../../components/booking/CustomerSelectionSection";
 import VehicleSelectionSection from "../../../components/booking/VehicleSelectionSection";
 import BookingDetailsSection from "../../../components/booking/BookingDetailsSection";
@@ -275,8 +274,10 @@ export default function CreateBookingPage() {
 
   const handleFieldChange = useCallback(
     (field: string, value: any) => {
+      if (field === "selfDrive") {
+        value = Boolean(value);
+      }
       updateFormData(field, value);
-      // No need to manually sync payInSlip amount – handled by useEffect
     },
     [updateFormData]
   );
@@ -604,7 +605,6 @@ export default function CreateBookingPage() {
               payload.mobile_money_transaction_id = transaction.reference;
 
               await dispatch(createBooking(payload)).unwrap();
-              dispatch(updateCarStatus({ CarId: formData.carId, status: "rented" }));
 
               setIsProcessing(false);
               setShowConfirmationModal(false);
@@ -618,7 +618,6 @@ export default function CreateBookingPage() {
           });
         } else {
           await dispatch(createBooking(payload)).unwrap();
-          dispatch(updateCarStatus({ CarId: formData.carId, status: "rented" }));
 
           setIsProcessing(false);
           setShowConfirmationModal(false);
@@ -713,7 +712,7 @@ export default function CreateBookingPage() {
           onFieldChange={handleFieldChange}
           getMinDate={getMinDate}
           getMaxDate={getMaxDate}
-          selfDrive={formData.selfDrive ? "true" : "false"}
+          selfDrive={formData.selfDrive}
           driverLicenseId={formData.driverLicenseId}
           driverLicenseClass={formData.driverLicenseClass}
           driverLicenseIssueDate={formData.driverLicenseIssueDate}

@@ -30,11 +30,11 @@ export default function StaffPage() {
   const [selectedStaffDetails, setSelectedStaffDetails] = useState<any>(null);
   const [paymentStaff, setPaymentStaff] = useState<any>(null);
 
-  useEffect(() => {
-    if (staff.length === 0) {
-      dispatch(fetchStaff());
-    }
-  }, [dispatch, staff.length]);
+  // useEffect(() => {
+  //   if (staff.length === 0) {
+  //     dispatch(fetchStaff());
+  //   }
+  // }, [dispatch, staff.length]);
 
   const monthlyPayroll = staff.reduce((sum, s) => sum + s.salary, 0);
 

@@ -186,9 +186,9 @@ const BookingsTable: React.FC<BookingsTableProps> = ({
                               <div className="font-bold text-gray-900 dark:text-white">
                                 ${booking.totalAmount.toLocaleString()}
                               </div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                              {/* <div className="text-xs text-gray-500 dark:text-gray-400">
                                 Paid: ${booking.amountPaid.toLocaleString()}
-                              </div>
+                              </div> */}
                             </div>
                           </div>
                         </td>
@@ -334,13 +334,12 @@ const BookingsTable: React.FC<BookingsTableProps> = ({
                     </span>
                     <span
                       className={`font-medium ${
-                        selectedBooking.amountPaid >=
-                        selectedBooking.totalAmount
+                        selectedBooking.totalAmount >=500
                           ? "text-green-600"
                           : "text-yellow-600"
                       }`}
                     >
-                      ¢{selectedBooking.amountPaid.toLocaleString()}
+                      {/* ¢{selectedBooking.amountPaid.toLocaleString()} */}
                     </span>
                   </div>
                   {selectedBooking.paymentMethod && (

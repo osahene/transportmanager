@@ -76,7 +76,8 @@ export const createBooking = createAsyncThunk(
   async (bookingData: any, { rejectWithValue }) => {
     try {
       const response = await apiService.createBooking(bookingData);
-      return response.data;
+      console.log("Create booking response:", response);
+      return response.data.results;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         return rejectWithValue(

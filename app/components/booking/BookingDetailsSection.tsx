@@ -8,13 +8,13 @@ import { Driver } from "../../types/booking";
 interface BookingDetailsSectionProps {
   startDate: string;
   endDate: string;
-  selfDrive: string;
+  selfDrive: boolean;
   pickupLocation: string;
   dropoffLocation: string;
   driverId: string;
   specialRequests: string;
   drivers: Driver[];
-  onFieldChange: (field: string, value: string) => void;
+  onFieldChange: (field: string, value: any) => void;
   getMinDate: () => string;
   getMaxDate: () => string;
   driverLicenseId?: string;
@@ -40,20 +40,16 @@ export default function BookingDetailsSection({
   driverLicenseIssueDate = "",
   driverLicenseExpiryDate = "",
 }: BookingDetailsSectionProps) {
-  const [localSelfDrive, setLocalSelfDrive] = useState(selfDrive === "true");
+  const [localSelfDrive, setLocalSelfDrive] = useState(selfDrive);
 
   // Sync with parent prop changes
   useEffect(() => {
-    setLocalSelfDrive(selfDrive === "true");
+    setLocalSelfDrive(selfDrive);
   }, [selfDrive]);
 
-  const handleSelfDriveToggle = (checked: boolean) => {
-    setLocalSelfDrive(checked);
-    onFieldChange("selfDrive", checked ? "true" : "false");
-    // Reset driver selection when toggling self-drive
-    if (checked) {
-      onFieldChange("driverId", "");
-    }
+    const handleSelfDriveToggle = (checked: boolean) => {
+    onFieldChange("selfDrive", checked);
+    if (checked) onFieldChange("driverId", "");
   };
 
   return (
@@ -137,7 +133,7 @@ export default function BookingDetailsSection({
             <input
               type="checkbox"
               id="selectSelfDrive"
-              checked={localSelfDrive}
+              checked={selfDrive}
               onChange={(e) => handleSelfDriveToggle(e.target.checked)}
               className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
@@ -149,14 +145,14 @@ export default function BookingDetailsSection({
             </label>
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {localSelfDrive
+            {selfDrive
               ? "You will need to provide your driver's license details"
               : "A driver will be assigned to you from our available drivers"}
           </p>
         </div>
 
         {/* Conditional rendering based on self-drive selection */}
-        {localSelfDrive ? (
+        {selfDrive ? (
           <div className="space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700/50">
             <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
               <FaRegAddressCard />
@@ -176,7 +172,7 @@ export default function BookingDetailsSection({
                   }
                   placeholder="Enter driver's license number"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  required={localSelfDrive}
+                  required={selfDrive}
                 />
               </div>
 
@@ -192,7 +188,7 @@ export default function BookingDetailsSection({
                   }
                   placeholder="e.g., B, C, CE"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent dark:focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  required={localSelfDrive}
+                  required={selfDrive}
                 />
               </div>
 

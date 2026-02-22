@@ -181,11 +181,7 @@ const InsuranceTable: React.FC<InsuranceTableProps> = ({
                               <div className="font-medium text-gray-800 dark:text-white">
                                 {policy.provider}
                               </div>
-                              {policy.agentName && (
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Agent: {policy.agentName}
-                                </div>
-                              )}
+                              
                             </div>
                           </div>
                         </td>
@@ -199,7 +195,7 @@ const InsuranceTable: React.FC<InsuranceTableProps> = ({
                             {formatCoverageType(policy.coverageType)}
                           </span>
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-4 max-w-full">
                           <div className="flex items-center gap-2 text-sm">
                             <FaCalendar className="w-3 h-3 text-gray-400" />
                             <span className="text-gray-600 dark:text-gray-400">
@@ -226,11 +222,7 @@ const InsuranceTable: React.FC<InsuranceTableProps> = ({
                               ¢{policy.premium.toLocaleString()}
                             </div>
                           </div>
-                          {policy.deductible && (
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                              Deductible: ¢<span className="font-mono">{policy.deductible.toLocaleString()}</span>
-                            </div>
-                          )}
+                          
                         </td>
                         <td className="py-3 px-4">
                           <button
@@ -348,16 +340,7 @@ const InsuranceTable: React.FC<InsuranceTableProps> = ({
                       ¢{selectedPolicy.premium.toLocaleString()}
                     </p>
                   </div>
-                  {selectedPolicy.deductible && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                        Deductible
-                      </label>
-                      <p className="text-lg font-medium text-gray-800 dark:text-white">
-                        ¢{selectedPolicy.deductible.toLocaleString()}
-                      </p>
-                    </div>
-                  )}
+                  
                 </div>
               </div>
 
@@ -372,7 +355,7 @@ const InsuranceTable: React.FC<InsuranceTableProps> = ({
                       Renewal Date
                     </p>
                     <p className="font-medium text-gray-800 dark:text-white">
-                      {formatDate(selectedPolicy.renewalDate)}
+                      {formatDate(selectedPolicy.endDate)}
                     </p>
                   </div>
                   <div className="text-right">
@@ -381,7 +364,7 @@ const InsuranceTable: React.FC<InsuranceTableProps> = ({
                     </p>
                     <p className="font-medium text-yellow-600">
                       {Math.ceil(
-                        (new Date(selectedPolicy.renewalDate).getTime() -
+                        (new Date(selectedPolicy.endDate).getTime() -
                           new Date().getTime()) /
                           (1000 * 60 * 60 * 24)
                       )}{" "}
@@ -390,73 +373,6 @@ const InsuranceTable: React.FC<InsuranceTableProps> = ({
                   </div>
                 </div>
               </div>
-
-              {/* Agent Info */}
-              {(selectedPolicy.agentName || selectedPolicy.agentContact) && (
-                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-800 dark:text-white mb-3">
-                    Agent Information
-                  </h4>
-                  <div className="space-y-2">
-                    {selectedPolicy.agentName && (
-                      <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Agent Name
-                        </p>
-                        <p className="text-gray-800 dark:text-white">
-                          {selectedPolicy.agentName}
-                        </p>
-                      </div>
-                    )}
-                    {selectedPolicy.agentContact && (
-                      <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Contact
-                        </p>
-                        <p className="text-gray-800 dark:text-white">
-                          {selectedPolicy.agentContact}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Documents */}
-              {selectedPolicy.documents &&
-                selectedPolicy.documents.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold text-gray-800 dark:text-white mb-3">
-                      Policy Documents
-                    </h4>
-                    <div className="space-y-2">
-                      {selectedPolicy.documents.map((doc, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded"
-                        >
-                          <div>
-                            <p className="font-medium text-gray-800 dark:text-white">
-                              {doc.name}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              Uploaded:{" "}
-                              {new Date(doc.uploadedAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <a
-                            href={doc.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                          >
-                            View
-                          </a>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
             </div>
 
             <div className="mt-6 flex justify-end space-x-2">

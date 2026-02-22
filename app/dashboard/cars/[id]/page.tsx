@@ -4,8 +4,9 @@ import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../../lib/store";
 import { useRouter, useParams } from "next/navigation";
-import { setSelectedCar, fetchCarById } from "../../../lib/slices/carsSlice";
-import { selectBookings } from "@/app/lib/slices/selectors";
+import { fetchInsurancePolicies } from "../../../lib/slices/insuranceSlice";
+import { setSelectedCar } from "../../../lib/slices/carsSlice";
+import { selectBookings, selectCarDetails } from "@/app/lib/slices/selectors";
 import {
   selectMaintenanceBycarId,
 } from "../../../lib/slices/maintenanceSlice";
@@ -27,19 +28,15 @@ import {
   FaGasPump,
   FaCogs,
 } from "react-icons/fa";
-import { FaCentSign } from "react-icons/fa6";
 
 export default function CarDetailPage() {
   const router = useRouter();
   const params = useParams();
   const dispatch = useDispatch<AppDispatch>();
 
-  const {
-    selectedCar,
-    Cars: vehicles,
-    loading: vehiclesLoading,
-  } = useSelector((state: RootState) => state.car);
-
+  const selectedCar = useSelector((state: RootState) => state.car.selectedCar);
+  const vehicles = useSelector((state: RootState) => state.car.Cars);
+  const vehiclesLoading = useSelector((state: RootState) => state.car.loading);
   const bookings = useSelector(selectBookings);
   const maintenanceRecords = useSelector((state: RootState) =>
     selectMaintenanceBycarId(params.id as string)(state)
@@ -53,34 +50,32 @@ export default function CarDetailPage() {
   const [loading, setLoading] = useState(true);
 
   // Load all data for the vehicle
-useEffect(() => {
-  const loadVehicleData = async () => {
-    setLoading(true);
-    const vehicleId = params.id as string;
-    try {
-      // Fetch the car with all related data
-      await dispatch(fetchCarById(vehicleId)).unwrap();
-    } catch (error) {
-      console.error("Failed to load vehicle data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  loadVehicleData();
-}, [params.id, dispatch]);
+  // useEffect(() => {
+  //   const loadVehicleData = async () => {
+  //     setLoading(true);
+  //     const vehicleId = params.id as string;
+  //     try {
+  //       // Fetch the car with all related data
+  //       await dispatch(fetchCarById(vehicleId)).unwrap();
+  //     } catch (error) {
+  //       console.error("Failed to load vehicle data:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  //   loadVehicleData();
+  // }, [params.id, dispatch]);
 
   // Set selected vehicle if available
-  useEffect(() => {
-    const vehicleId = params.id as string;
-    if (!selectedCar && vehicleId && vehicles.length > 0) {
-      const vehicle = vehicles.find((v) => v.id === vehicleId);
-      if (vehicle) {
-        dispatch(setSelectedCar(vehicle));
-      }
-    }
-  }, [selectedCar, vehicles, params.id, dispatch]);
 
-  if (loading || vehiclesLoading) {
+
+  useEffect(() => {
+    if (selectedCar) {
+      dispatch(fetchInsurancePolicies({ vehicleId: selectedCar.id }));
+    }
+  }, [selectedCar, dispatch]);
+
+  if (vehiclesLoading) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
@@ -161,7 +156,6 @@ useEffect(() => {
   const getMaintenanceCosts = () => {
     return maintenanceRecords.reduce((sum, record) => sum + record.cost, 0);
   };
-
   return (
     <div className="space-y-6">
       {/* Header */}

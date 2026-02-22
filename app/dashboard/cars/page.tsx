@@ -15,13 +15,13 @@ import {
   FaSearch,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { fetchCars } from "../../lib/slices/carsSlice";
 import {
   selectCarsStats,
   selectFilteredCars,
 } from "../../lib/slices/selectors";
 import { AppDispatch, useAppSelector } from "../../lib/store";
 import { Car } from "@/app/types/cars";
+import { setSelectedCar } from "@/app/lib/slices/carsSlice";
 
 export default function CarsPage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -37,13 +37,11 @@ export default function CarsPage() {
     selectFilteredCars(state, searchTerm, statusFilter)
   );
 
-  const handleCarClick = useCallback(
-    (carId: string) => {
-      router.push(`/dashboard/cars/${carId}`);
-    },
-    [router]
-  );
-
+  
+const handleCarClick = useCallback((car: Car) => {
+  dispatch(setSelectedCar(car));
+  router.push(`/dashboard/cars/${car.id}`);
+}, [dispatch, router]);
   // const handleAddCar = useCallback(() => {
   //   router.push("/dashboard/cars/new");
   // }, [router]);
@@ -92,14 +90,7 @@ export default function CarsPage() {
     return car.status === "rented" ? "On rental" : "In maintenance";
   };
 
-  // Get revenue info from backend stats
-  // const getRevenueInfo = (car: Car) => {
-  //   if (!car.stats?.totalRevenue) return "No revenue yet";
-  //   return `$${car.stats.totalRevenue.toLocaleString()} total`;
-  // };
-  useEffect(() => {
-    dispatch(fetchCars());
-  }, [dispatch]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -209,8 +200,8 @@ export default function CarsPage() {
                   key={status}
                   onClick={() => setStatusFilter(status)}
                   className={`px-4 py-2 rounded-lg font-medium transition whitespace-nowrap ${statusFilter === status
-                      ? "bg-blue-600 dark:bg-blue-700 text-white"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                    ? "bg-blue-600 dark:bg-blue-700 text-white"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                     }`}
                 >
                   {status === "all"
@@ -235,7 +226,7 @@ export default function CarsPage() {
             transition={{ delay: index * 0.05 }}
             whileHover={{ y: -4 }}
             className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden hover:shadow-lg transition-all cursor-pointer group"
-            onClick={() => handleCarClick(car.id)}
+            onClick={() => handleCarClick(car)}
           >
             {/* Car Image Placeholder */}
             <div
@@ -268,6 +259,19 @@ export default function CarsPage() {
 
             {/* Car Info */}
             <div className="p-4">
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                  <span>{car.make}</span>
+                  <span>•</span>
+                  <span>{car.model}</span>
+                </div>
+
+              </div>
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                  <span>Current Mileage: {car.mileage}</span>
+                </div>
+              </div>
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                   <span>Year: {car.year}</span>

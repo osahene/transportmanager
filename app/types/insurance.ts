@@ -10,16 +10,7 @@ export interface InsurancePolicy {
   startDate: string;
   endDate: string;
   premium: number;
-  deductible?: number;
   status: InsuranceStatus;
-  agentName?: string;
-  agentContact?: string;
-  renewalDate: string;
-  documents?: Array<{
-    name: string;
-    url: string;
-    uploadedAt: string;
-  }>;
   createdAt: string;
   updatedAt: string;
 }

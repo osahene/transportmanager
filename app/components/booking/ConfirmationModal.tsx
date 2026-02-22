@@ -122,10 +122,10 @@ export default function ConfirmationModal({
               </div>
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                Relationship
+                  Relationship
                 </p>
                 <p className="font-medium text-gray-900 dark:text-white">
-                 {summary.customer?.guarantor.relationship}
+                  {summary.customer?.guarantor.relationship}
                 </p>
               </div>
             </div>
@@ -296,43 +296,51 @@ export default function ConfirmationModal({
               PAYMENT SUMMARY
             </h3>
             <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-gray-700 dark:text-gray-300">
-                  Daily Rate
-                </span>
-                <span className="font-medium text-gray-900 dark:text-white">
-                  ¢{summary.dailyRate.toLocaleString()}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-700 dark:text-gray-300">
-                  VAT
-                </span>
-                <span className="font-medium text-gray-900 dark:text-white">
-                  ¢{summary.totalAmount * 0.12}
-                </span>
-              </div>
-             
-              <div className="flex justify-between">
-                <span className="text-gray-700 dark:text-gray-300">
-                  Discount
-                </span>
-                <span className="font-medium text-gray-900 dark:text-white">
-                  ¢{summary.discount.toLocaleString()}
-                </span>
-              </div>
-              <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200 dark:border-gray-700">
-                <span className="text-gray-900 dark:text-white">
-                  Total Amount
-                </span>
-                <span className="text-gray-900 dark:text-white">
-                  ¢{summary.totalAmount.toLocaleString()}
-                </span>
-              </div>
+              {(() => {
+                const TAX_RATE = 0.12;
+                const daily = summary.dailyRate;
+                const days = summary.duration;
+                const discount = summary.discount;
+
+                const taxPerDay = daily * TAX_RATE;
+                const netDaily = daily - taxPerDay;
+                const subtotal = netDaily * days;
+                const totalTax = taxPerDay * days;
+                const grandTotal = daily * days - discount; // should equal summary.totalAmount
+
+                return (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-gray-700 dark:text-gray-300">Daily Rate (after tax)</span>
+                      <span className="font-medium text-gray-900 dark:text-white">¢{netDaily.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-700 dark:text-gray-300">Number of Days</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{days}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-700 dark:text-gray-300">Subtotal</span>
+                      <span className="font-medium text-gray-900 dark:text-white">¢{subtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-700 dark:text-gray-300">Tax (12%)</span>
+                      <span className="font-medium text-gray-900 dark:text-white">¢{totalTax.toFixed(2)}</span>
+                    </div>
+                    {discount > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-700 dark:text-gray-300">Discount</span>
+                        <span className="font-medium text-gray-900 dark:text-white">¢{discount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200 dark:border-gray-700">
+                      <span className="text-gray-900 dark:text-white">Grand Total</span>
+                      <span className="text-gray-900 dark:text-white">¢{grandTotal.toFixed(2)}</span>
+                    </div>
+                  </>
+                );
+              })()}
               <div className="mt-2">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Payment Method
-                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Payment Method</p>
                 <p className="font-medium text-gray-900 dark:text-white">
                   {summary.paymentMethod.replace("_", " ").toUpperCase()}
                 </p>
@@ -344,13 +352,12 @@ export default function ConfirmationModal({
           <div className="space-y-6">
             {/* Payment Method Badge */}
             <div
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
-                paymentMethod === "cash"
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${paymentMethod === "cash"
                   ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
                   : paymentMethod === "mobile_money"
-                  ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-                  : "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
-              }`}
+                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+                    : "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
+                }`}
             >
               {paymentMethod === "cash" && <FaMoneyBill />}
               {paymentMethod === "mobile_money" && <FaMobileAlt />}
@@ -359,8 +366,8 @@ export default function ConfirmationModal({
                 {paymentMethod === "mobile_money"
                   ? "Mobile Money"
                   : paymentMethod === "pay_in_slip"
-                  ? "Pay-in-Slip"
-                  : "Cash Payment"}
+                    ? "Pay-in-Slip"
+                    : "Cash Payment"}
               </span>
             </div>
             {paymentMethod === "pay_in_slip" &&
@@ -509,11 +516,10 @@ export default function ConfirmationModal({
               <button
                 onClick={onConfirm}
                 disabled={isProcessing}
-                className={`px-6 py-3 font-semibold rounded-lg transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-                  paymentMethod === "mobile_money"
+                className={`px-6 py-3 font-semibold rounded-lg transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${paymentMethod === "mobile_money"
                     ? "bg-green-600 dark:bg-green-700 text-white hover:bg-green-700 dark:hover:bg-green-800"
                     : "bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 dark:hover:bg-blue-800"
-                }`}
+                  }`}
               >
                 {isProcessing ? (
                   <>

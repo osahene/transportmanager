@@ -22,6 +22,14 @@ const apiService = {
     sendSMSReceipt: (id: string) => $axios.post(`/bookings/${id}/send_sms_receipt/`),
     bookingSMS: (bookingId: string) => $axios.post(`/bookings/${bookingId}/send_confirmation_sms/`),
 
+    // Insurance endpoints
+    getInsurancePolicies: (params?: any) => $axios.get("/insurance/", { params }),
+    createInsurancePolicy: (data: any) => $axios.post("/insurance/", data),
+    updateInsurancePolicy: (id: string, data: any) => $axios.patch(`/insurance/${id}/`, data),
+    renewInsurancePolicy: (id: string, data: any) => $axios.post(`/insurance/${id}/renew/`, data),
+    getExpiringPolicies: (days?: number) => $axios.get("/insurance/expiring/", { params: { days } }),
+
+
     // Customers endpoints
     getCustomers: () => $axios.get("/customers/"),
     createCustomer: (data: any) => $axios.post("/customers/", data),
@@ -29,7 +37,7 @@ const apiService = {
     getCustomerBookingsWithGuarantor: (customerId: string) => $axios.get(`/customers/${customerId}/bookings-with-guarantor/`),
     sendBulkSMS: (customerIds: string[], message: string) => $axios.post('/customers/send-bulk-sms/', { customer_ids: customerIds, message }),
     sendSingleSMS: (customerId: string, message: string) => $axios.post(`/customers/${customerId}/send-sms/`, { message }),
-      
+
     // Staff endpoints
     getStaff: () => $axios.get("/staff/"),
     getStaffById: (id: string) => $axios.get(`/staff/${id}/`),
