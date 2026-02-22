@@ -169,7 +169,7 @@ export const selectDashboardMetrics = createSelector(
           const d = new Date(b.startDate);
           return d.getMonth() === idx && d.getFullYear() === currentYear && b.status === 'completed';
         })
-        .reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+        .reduce((sum, b) => sum + Number(b.totalAmount || 0), 0);
     });
 
     // Total customers
@@ -413,7 +413,7 @@ export const selectBookingStats = createSelector(
       cancelled: bookings.filter((b) => b.status === "cancelled").length,
       totalRevenue: bookings
         .filter((b) => b.status === "completed")
-        .reduce((sum, b) => sum + b.totalAmount, 0),
+        .reduce((sum, b) => sum + Number(b.totalAmount), 0),
     };
   },
 );

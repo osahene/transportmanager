@@ -516,11 +516,11 @@ export default function BookingsPage() {
                   >
                     <td className="px-6 py-4">
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {booking.id ? booking.id.slice(0, 8).toUpperCase() : 'N/A'}
+                        {booking.id.slice(0, 8).toUpperCase()}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
                         Created:{" "}
-                        {booking.startDate ? format(new Date(booking.startDate), "MMM d, yyyy") : 'N/A'}
+                        {format(new Date(booking.startDate), "MMM d, yyyy")}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -544,8 +544,8 @@ export default function BookingsPage() {
                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <FaCalendarAlt />
                         <span>
-                          {booking.startDate ? format(new Date(booking.startDate), "MMM d, yyyy") : 'N/A'}
-                          {booking.endDate ? ` - ${format(new Date(booking.endDate), "MMM d, yyyy")}` : ''}
+                          {format(new Date(booking.startDate), "MMM d, yyyy")} {" - "}
+                          {format(new Date(booking.endDate), "MMM d, yyyy")}
                         </span>
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -559,7 +559,7 @@ export default function BookingsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-lg font-bold text-gray-900 dark:text-white">
-                        ¢{booking.totalAmount ? booking.totalAmount.toLocaleString() : '0'}
+                        ¢{booking.totalAmount.toLocaleString()}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
                         Daily: ¢{booking.dailyRate || 0}

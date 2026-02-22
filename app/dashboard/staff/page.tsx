@@ -18,6 +18,8 @@ import { format } from "date-fns";
 import StaffDetailsModal from "@/app/components/staff/StaffDetailsModal";
 import SalaryPaymentModal from "@/app/components/staff/SalaryPaymentModal";
 import AddStaffModal from "@/app/components/staff/AddStaffModal";
+import { Staff } from "@/app/types/staff";
+import StaffPayslipModal from "@/app/components/staff/StaffSalaryPaySlipModal";
 
 export default function StaffPage() {
   const dispatch = useAppDispatch();
@@ -29,14 +31,14 @@ export default function StaffPage() {
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
   const [selectedStaffDetails, setSelectedStaffDetails] = useState<any>(null);
   const [paymentStaff, setPaymentStaff] = useState<any>(null);
-
+  const [selectedPayslipStaff, setSelectedPayslipStaff] = useState<Staff | null>(null);
   // useEffect(() => {
   //   if (staff.length === 0) {
   //     dispatch(fetchStaff());
   //   }
   // }, [dispatch, staff.length]);
 
-  const monthlyPayroll = staff.reduce((sum, s) => sum + s.salary, 0);
+  const monthlyPayroll = staff.reduce((sum, s) => sum + Number(s.salary), 0);
 
   if (loading) {
     return (
@@ -75,7 +77,7 @@ export default function StaffPage() {
           />
           <button
             className="px-6 py-3 bg-blue-600 dark:bg-blue-700 text-white font-semibold rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition flex items-center gap-2"
-              onClick={() => setShowAddModal(true)}
+            onClick={() => setShowAddModal(true)}
           >
             <FaPlus />
             Add Staff Member
@@ -234,10 +236,7 @@ export default function StaffPage() {
                           Pay
                         </button>
                         <button
-                          onClick={() => {
-                            // Optionally open payslip for last payment
-                            alert("Payslip feature will show last payment details");
-                          }}
+                          onClick={() => setSelectedPayslipStaff(staffMember)}
                           className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-sm flex items-center gap-1 text-gray-700 dark:text-gray-300"
                         >
                           <FaFileInvoice />
@@ -319,6 +318,7 @@ export default function StaffPage() {
           onSuccess={() => {
             // Optionally refresh staff list or show success
             setPaymentStaff(null);
+            alert("Salary payment processed successfully");
           }}
         />
       )}
@@ -329,6 +329,12 @@ export default function StaffPage() {
             // Optionally refetch staff list
             dispatch(fetchStaff());
           }}
+        />
+      )}
+      {selectedPayslipStaff && (
+        <StaffPayslipModal
+          staff={selectedPayslipStaff}
+          onClose={() => setSelectedPayslipStaff(null)}
         />
       )}
     </div>

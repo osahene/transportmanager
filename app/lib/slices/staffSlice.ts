@@ -5,7 +5,8 @@ import { snakeToCamel } from "../snakeToCamel";
 interface StaffState {
   staff: Staff[];
   selectedStaff: Staff | null;
-  salaryHistory: SalaryPayment[];
+  salaryHistory: Record<string, SalaryPayment[]>;   // key: staffId
+  driverBookings: Record<string, any[]>; // Store bookings by driver ID
   loading: boolean;
   error: string | null;
   filters: {
@@ -18,7 +19,8 @@ interface StaffState {
 const initialState: StaffState = {
   staff: [],
   selectedStaff: null,
-  salaryHistory: [],
+  salaryHistory: {},
+  driverBookings: {},
   loading: false,
   error: null,
   filters: {
@@ -34,7 +36,7 @@ export const createStaff = createAsyncThunk(
   async (data: any, { rejectWithValue }) => {
     try {
       const response = await apiService.createStaff(data);
-      return snakeToCamel(response.data) as Staff;
+      return snakeToCamel(response.data.results) as Staff;
     } catch (error: any) {
       return rejectWithValue(error.response?.data || "Failed to create staff");
     }
@@ -48,6 +50,7 @@ export const fetchStaff = createAsyncThunk(
     try {
       const response = await apiService.getStaff();
       const staffData = response.data.results.map((staff: any) => snakeToCamel(staff));
+      console.log("Fetched staff data:", staffData); // Debug log
       return staffData as Staff[];
     } catch (error: any) {
       return rejectWithValue(error.response?.data || "Failed to fetch staff");
@@ -60,7 +63,7 @@ export const fetchStaffById = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       const response = await apiService.getStaffById(id);
-      return snakeToCamel(response.data) as Staff;
+      return snakeToCamel(response.data.results) as Staff;
     } catch (error: any) {
       return rejectWithValue(error.response?.data || "Failed to fetch staff details");
     }
@@ -72,7 +75,8 @@ export const fetchSalaryHistory = createAsyncThunk(
   async (staffId: string, { rejectWithValue }) => {
     try {
       const response = await apiService.getSalaryHistory(staffId);
-      return snakeToCamel(response.data) as SalaryPayment[];
+      console.log('staff salary history', response)
+      return snakeToCamel(response.data.results) as SalaryPayment[];
     } catch (error: any) {
       return rejectWithValue(error.response?.data || "Failed to fetch salary history");
     }
@@ -84,6 +88,7 @@ export const createSalaryPayment = createAsyncThunk(
   async (data: any, { rejectWithValue }) => {
     try {
       const response = await apiService.createSalaryPayment(data);
+      console.log('Created salary payment', response)
       return snakeToCamel(response.data) as SalaryPayment;
     } catch (error: any) {
       return rejectWithValue(error.response?.data || "Failed to create salary payment");
@@ -96,7 +101,7 @@ export const updateStaffStatus = createAsyncThunk(
   async ({ id, action, data }: { id: string; action: string; data?: any }, { rejectWithValue }) => {
     try {
       const response = await apiService.updateStaffStatus(id, action, data);
-      return snakeToCamel(response.data) as Staff;
+      return snakeToCamel(response.data.results) as Staff;
     } catch (error: any) {
       return rejectWithValue(error.response?.data || "Failed to update staff status");
     }
@@ -108,7 +113,7 @@ export const fetchDriverBookings = createAsyncThunk(
   async (driverId: string, { rejectWithValue }) => {
     try {
       const response = await apiService.getDriverBookings(driverId);
-      return snakeToCamel(response.data) as any[];
+      return snakeToCamel(response.data.results) as any[];
     } catch (error: any) {
       return rejectWithValue(error.response?.data || "Failed to fetch driver bookings");
     }
@@ -123,7 +128,7 @@ const staffSlice = createSlice({
       state.selectedStaff = action.payload;
     },
     clearSalaryHistory: (state) => {
-      state.salaryHistory = [];
+      state.salaryHistory = {}; // Clear salary history for all staff
     },
     setStaffFilter: (state, action: PayloadAction<{ key: keyof StaffState["filters"]; value: string }>) => {
       state.filters[action.payload.key] = action.payload.value;
@@ -149,6 +154,14 @@ const staffSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
+      .addCase(fetchSalaryHistory.fulfilled, (state, action) => {
+        const staffId = action.meta.arg;                 // staffId passed to thunk
+        state.salaryHistory[staffId] = action.payload;
+      })
+      .addCase(fetchDriverBookings.fulfilled, (state, action) => {
+        const driverId = action.meta.arg;
+        state.driverBookings[driverId] = action.payload;
+      })
       .addCase(fetchStaff.fulfilled, (state, action) => {
         state.loading = false;
         if (Array.isArray(action.payload)) {
@@ -166,11 +179,16 @@ const staffSlice = createSlice({
       .addCase(fetchStaffById.fulfilled, (state, action) => {
         state.selectedStaff = action.payload;
       })
-      .addCase(fetchSalaryHistory.fulfilled, (state, action) => {
-        state.salaryHistory = action.payload;
-      })
+
       .addCase(createSalaryPayment.fulfilled, (state, action) => {
-        state.salaryHistory.unshift(action.payload);
+        const payment = action.payload;
+        const staffId = payment.staff;                    // assuming payment has staff ID
+        if (staffId) {
+          if (!state.salaryHistory[staffId]) {
+            state.salaryHistory[staffId] = [];
+          }
+          state.salaryHistory[staffId].unshift(payment);  // newest first
+        }
       })
       .addCase(updateStaffStatus.fulfilled, (state, action) => {
         const updated = action.payload;

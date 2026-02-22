@@ -217,15 +217,15 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ transactions }) => {
   const refundTransactions = transactions.filter((t) => t.type === "refund");
 
   const totalRevenue = revenueTransactions.reduce(
-    (sum, t) => sum + t.amount,
+    (sum, t) => sum + Number(t.amount),
     0
   );
   const totalExpenses = expenseTransactions.reduce(
-    (sum, t) => sum + Math.abs(t.amount),
+    (sum, t) => sum + Math.abs(Number(t.amount)),
     0
   );
   const totalRefunds = refundTransactions.reduce(
-    (sum, t) => sum + Math.abs(t.amount),
+    (sum, t) => sum + Math.abs(Number(t.amount)),
     0
   );
   const netProfit = totalRevenue - totalExpenses - totalRefunds;

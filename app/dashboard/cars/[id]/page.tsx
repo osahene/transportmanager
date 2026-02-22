@@ -149,12 +149,12 @@ export default function CarDetailPage() {
     const vehicleBookings = bookings.filter((b) => b.CarId === selectedCar.id);
     return vehicleBookings
       .filter((b) => b.status === "completed")
-      .reduce((sum, booking) => sum + booking.totalAmount, 0);
+      .reduce((sum, booking) => sum + Number(booking.totalAmount), 0);
   };
 
   // Calculate total maintenance costs
   const getMaintenanceCosts = () => {
-    return maintenanceRecords.reduce((sum, record) => sum + record.cost, 0);
+    return maintenanceRecords.reduce((sum, record) => sum + Number(record.cost), 0);
   };
   return (
     <div className="space-y-6">

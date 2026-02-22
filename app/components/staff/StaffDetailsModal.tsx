@@ -14,18 +14,17 @@ interface Props {
 
 export default function StaffDetailsModal({ staff, onClose }: Props) {
   const dispatch = useAppDispatch();
-  const salaryHistory = useAppSelector((state) => state.staff.salaryHistory);
-  const [driverBookings, setDriverBookings] = useState<any[]>([]);
+  const salaryHistoryMap = useAppSelector(state => state.staff.salaryHistory);
+  const driverBookingsMap = useAppSelector(state => state.staff.driverBookings);
+  const salaryHistory = salaryHistoryMap[staff.id] || [];
+  const driverBookings = driverBookingsMap[staff.id] || [];
   const [activeTab, setActiveTab] = useState<"details" | "payments" | "bookings">("details");
 
   useEffect(() => {
     dispatch(fetchSalaryHistory(staff.id));
-    if (staff.role.toLowerCase() === "driver") {
-      dispatch(fetchDriverBookings(staff.id)).then((res: any) => {
-        if (res.payload) setDriverBookings(res.payload);
-      });
-    }
+
   }, [dispatch, staff.id, staff.role]);
+  console.log("Driver bookings:", driverBookings);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -169,10 +168,10 @@ export default function StaffDetailsModal({ staff, onClose }: Props) {
                     driverBookings.map((b) => (
                       <tr key={b.id} className="border-t">
                         <td className="px-4 py-2">{b.id.slice(0, 8)}...</td>
-                        <td className="px-4 py-2">{b.carMake} {b.carModel}</td>
+                        <td className="px-4 py-2">{b.carDetails?.make || "Unknown"} {b.carDetails?.model || "Unknown"}</td>
                         <td className="px-4 py-2">{format(new Date(b.startDate), "dd/MM/yy")} - {format(new Date(b.endDate), "dd/MM/yy")}</td>
                         <td className="px-4 py-2">
-                          <span className={`px-2 py-1 rounded-full text-xs ${b.status === "completed" ? "bg-green-100" : b.status === "active" ? "bg-blue-100" : "bg-yellow-100"}`}>
+                          <span className={`px-2 py-1 rounded-full text-xs ${b.status === "completed" ? "bg-green-100" : b.status === "active" ? "bg-blue-100" : "bg-amber-600"}`}>
                             {b.status}
                           </span>
                         </td>

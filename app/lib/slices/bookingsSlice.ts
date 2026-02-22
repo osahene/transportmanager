@@ -92,16 +92,9 @@ export const createBooking = createAsyncThunk(
 
 export const checkCarAvailability = createAsyncThunk(
   "bookings/checkAvailability",
-  async (
-    {
-      carId,
-      startDate,
-      endDate,
-    }: {
-      carId: string;
-      startDate: string;
-      endDate: string;
-    },
+  async ({ carId, startDate, endDate }: {
+    carId: string; startDate: string; endDate: string;
+  },
     { rejectWithValue }
   ) => {
     try {

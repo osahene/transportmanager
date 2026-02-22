@@ -23,10 +23,10 @@ import {
 } from "chart.js";
 import { motion } from "framer-motion";
 import { useAppDispatch, useAppSelector } from "../lib/store";
-import { selectDashboardMetrics } from "../lib/slices/selectors";
+import { selectDashboardMetrics, selectDrivers } from "../lib/slices/selectors";
 import { fetchCars } from "../lib/slices/carsSlice";
 import { fetchCustomers } from "../lib/slices/customersSlice";
-import { fetchStaff } from "../lib/slices/staffSlice";
+import { fetchDriverBookings, fetchStaff } from "../lib/slices/staffSlice";
 import { fetchBookings } from "../lib/slices/bookingsSlice";
 
 ChartJS.register(
@@ -49,6 +49,8 @@ export default function DashboardPage() {
   const customersLoading = useAppSelector((state) => state.customers.loading);
   const staffLoading = useAppSelector((state) => state.staff.loading);
   const bookingsLoading = useAppSelector((state) => state.bookings.loading);
+  const driverBookingsMap = useAppSelector(state => state.staff.driverBookings);
+  const drivers = useAppSelector(selectDrivers);
 
   const isLoading = carsLoading || customersLoading || staffLoading || bookingsLoading;
   const params: any = {
@@ -61,7 +63,15 @@ export default function DashboardPage() {
     if (metrics.totalCustomers === 0) dispatch(fetchCustomers());
     if (metrics.totalDrivers === 0) dispatch(fetchStaff());
     if (metrics.currentMonthBookings === 0) dispatch(fetchBookings(params));
-  }, [dispatch]);
+    if (drivers.length > 0) {
+      drivers.forEach(driver => {
+        if (!driverBookingsMap[driver.id]) {
+          dispatch(fetchDriverBookings(driver.id));
+        }
+      });
+    };
+
+  }, [driverBookingsMap, drivers, dispatch]);
 
   const handleBookingNewVehicle = () => {
     router.push("/dashboard/bookings/create");
