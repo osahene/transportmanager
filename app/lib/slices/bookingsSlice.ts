@@ -89,7 +89,7 @@ export const createBooking = createAsyncThunk(
     try {
       const response = await apiService.createBooking(bookingData);
       console.log("Create booking response:", response);
-      return response.data.results;
+      return response.data || response.data.results;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         return rejectWithValue(
@@ -212,7 +212,7 @@ const bookingsSlice = createSlice({
       })
       .addCase(fetchBookings.fulfilled, (state, action) => {
         state.loading = false;
-        state.bookings = action.payload;
+        state.bookings = (action.payload || []).filter((b: any) => b != null);
       })
       .addCase(fetchBookings.rejected, (state, action) => {
         state.loading = false;

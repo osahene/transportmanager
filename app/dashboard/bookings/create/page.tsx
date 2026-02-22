@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { FaSave, FaTimes } from "react-icons/fa";
 import { useAppSelector, useAppDispatch } from "../../../lib/store";
 import { fetchCars } from "../../../lib/slices/carsSlice";
-import { createBooking, checkCarAvailability } from "../../../lib/slices/bookingsSlice";
+import { createBooking, checkCarAvailability, fetchBookings } from "../../../lib/slices/bookingsSlice";
 import { Customer } from "../../../types/customer";
 import { Car } from "@/app/types/cars";
 import { BookingSummary, Driver, PaymentMethod } from "../../../types/booking";
@@ -19,7 +19,12 @@ import VehicleSelectionSection from "../../../components/booking/VehicleSelectio
 import BookingDetailsSection from "../../../components/booking/BookingDetailsSection";
 import PaymentSummarySection from "../../../components/booking/PaymentSummarySection";
 import ConfirmationModal from "../../../components/booking/ConfirmationModal";
-
+import { fetchCustomers, fetchCustomerById } from "@/app/lib/slices/customersSlice";
+import { fetchStaff } from "@/app/lib/slices/staffSlice";
+const params: any = {
+  page: 1,
+  page_size: 30
+};
 // ---------- Pure helpers (moved outside component) ----------
 const generateId = (prefix: string): string => {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -128,6 +133,9 @@ export default function CreateBookingPage() {
     provider: "MTN",
     phoneNumber: "",
   });
+  useEffect(() => {
+    dispatch(fetchCustomers());
+  }, [dispatch])
 
   // Form state
   const [formData, setFormData] = useState({
@@ -219,6 +227,7 @@ export default function CreateBookingPage() {
 
   useEffect(() => {
     dispatch(fetchCars());
+    dispatch(fetchStaff());
   }, [dispatch]);
   // Synchronise payInSlip amount when payment method is pay_in_slip
   useEffect(() => {
@@ -247,10 +256,53 @@ export default function CreateBookingPage() {
   );
 
   const handleCustomerSelect = useCallback((customer: Customer) => {
-    setSelectedCustomer(customer);
+    // Set basic info immediately (for form)
     setFormData((prev) => ({ ...prev, customerId: customer.id }));
     setCustomerSearch(`${customer.firstName} ${customer.lastName}`);
-  }, []);
+
+    dispatch(fetchCustomerById(customer.id)).then((action) => {
+      if (fetchCustomerById.fulfilled.match(action)) {
+        const fullCustomer = action.payload;
+        const enhancedCustomer: Customer = {
+          ...fullCustomer,
+          address: {
+            city: fullCustomer.addressCity || fullCustomer.address_city || '',
+            region: fullCustomer.addressRegion || fullCustomer.address_region || '',
+            country: fullCustomer.addressCountry || fullCustomer.address_country || 'Ghana',
+          },
+          guarantor: fullCustomer.guarantor ? {
+            ...fullCustomer.guarantor,
+            address: {
+              city: fullCustomer.guarantor.addressCity || fullCustomer.guarantor.address_city || '',
+              region: fullCustomer.guarantor.addressRegion || fullCustomer.guarantor.address_region || '',
+              country: fullCustomer.guarantor.addressCountry || fullCustomer.guarantor.address_country || 'Ghana',
+            }
+          } : undefined
+        };
+        setSelectedCustomer(enhancedCustomer);
+      } else {
+        console.error('Failed to fetch customer details', action.payload);
+
+        const fallbackCustomer: Customer = {
+          ...customer,
+          address: {
+            city: customer.addressCity || customer.address_city || '',
+            region: customer.addressRegion || customer.address_region || '',
+            country: customer.addressCountry || customer.address_country || 'Ghana',
+          },
+          guarantor: customer.guarantor ? {
+            ...customer.guarantor,
+            address: {
+              city: customer.guarantor.addressCity || customer.guarantor.address_city || '',
+              region: customer.guarantor.addressRegion || customer.guarantor.address_region || '',
+              country: customer.guarantor.addressCountry || customer.guarantor.address_country || 'Ghana',
+            }
+          } : undefined
+        };
+        setSelectedCustomer(fallbackCustomer);
+      }
+    });
+  }, [dispatch]);
 
   const handleCarSelect = useCallback((carId: string) => {
     setFormData((prev) => ({ ...prev, carId }));
@@ -605,7 +657,7 @@ export default function CreateBookingPage() {
               payload.mobile_money_transaction_id = transaction.reference;
 
               await dispatch(createBooking(payload)).unwrap();
-
+              await dispatch(fetchBookings(params));
               setIsProcessing(false);
               setShowConfirmationModal(false);
               alert("Booking created successfully!");
@@ -619,6 +671,7 @@ export default function CreateBookingPage() {
         } else {
           await dispatch(createBooking(payload)).unwrap();
 
+          await dispatch(fetchBookings(params));
           setIsProcessing(false);
           setShowConfirmationModal(false);
           alert("Booking created successfully!");

@@ -13,7 +13,6 @@ export const fetchCustomers = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await apiService.getCustomers();
-      console.log("Fetched customers:", response);
       const customers = response.data.results.map((cust: any) => snakeToCamel(cust));
       return customers as Customer[];
     } catch (error: any) {
@@ -22,7 +21,17 @@ export const fetchCustomers = createAsyncThunk(
   }
 );
 
-
+export const fetchCustomerById = createAsyncThunk(
+  'customers/fetchById',
+  async (customerId: string, { rejectWithValue }) => {
+    try {
+      const response = await apiService.getCustomerById(customerId); // you need to add this method
+      return snakeToCamel(response.data);
+    } catch (error: any) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  }
+);
 export const fetchCustomerBookingsWithGuarantor = createAsyncThunk(
   'customers/fetchBookingsWithGuarantor',
   async (customerId: string, { rejectWithValue }) => {
@@ -65,6 +74,7 @@ export const sendSingleSMS = createAsyncThunk(
 interface CustomersState {
   customers: Customer[];
   customerBookings: Record<string, any[]>
+  detailedCustomer: Record<string, any>;
   selectedCustomer: Customer | null;
   loading: boolean;
   error: string | null;
@@ -88,6 +98,7 @@ const initialState: CustomersState = {
   customers: [],
   customerBookings: {},
   selectedCustomer: null,
+  detailedCustomer: {},
   loading: false,
   error: null,
   filters: {
@@ -243,6 +254,9 @@ const customersSlice = createSlice({
       .addCase(fetchCustomers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      .addCase(fetchCustomerById.fulfilled, (state, action) => {
+        state.detailedCustomer[action.payload.id] = action.payload;
       })
       // Fetch Bookings with Guarantor
       .addCase(fetchCustomerBookingsWithGuarantor.fulfilled, (state, action) => {

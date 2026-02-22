@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useRef, useMemo, useEffect, use } from "react";
 import {
   FaCalendarAlt,
   FaCar,
@@ -72,6 +72,7 @@ export default function BookingsPage() {
   const [selectedBooking, setSelectedBooking] = useState<ReceiptData | null>(
     null,
   );
+
 
   const mapDetailedBookingToReceiptData = (detailedBooking: any): ReceiptData => {
     // detailedBooking comes from snakeToCamel, so fields are camelCased
@@ -321,7 +322,6 @@ export default function BookingsPage() {
     dispatch(fetchBookingById(bookingId)).then((action) => {
       if (action.type === fetchBookingById.fulfilled.type) {
         const detailedBooking = action.payload;
-        console.log("Fetched booking details for receipt:", detailedBooking);
         const receiptData = mapDetailedBookingToReceiptData(detailedBooking);
         setSelectedBooking(receiptData);
       } else {

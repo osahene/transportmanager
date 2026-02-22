@@ -8,6 +8,12 @@ export interface Customer {
   driverLicenseId?: string;
   occupation: string;
   gpsAddress: string;
+  addressCity?: string;
+  addressRegion?: string;
+  addressCountry?: string;
+  address_city?: string;
+  address_region?: string;
+  address_country?: string;
   address: CustomerAddress;
   status: "active" | "suspended" | "inactive";
   loyaltyTier: "bronze" | "silver" | "gold" | "platinum";
@@ -16,7 +22,7 @@ export interface Customer {
   createdAt: string;
   lastBookingDate?: string;
   notes: Note[];
-  guarantor: {
+  guarantor?: {
     id: string;
     firstName: string;
     lastName: string;
@@ -27,6 +33,12 @@ export interface Customer {
     gpsAddress: string;
     relationship: string;
     address: CustomerAddress;
+    addressCity?: string;
+    addressRegion?: string;
+    addressCountry?: string;
+    address_city?: string;
+    address_region?: string;
+    address_country?: string;
   };
   communicationPreferences: {
     email: boolean;

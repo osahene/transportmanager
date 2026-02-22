@@ -35,7 +35,8 @@ const persistConfig = {
   key: "root",
   storage: storageSession,
   transforms: [encryptor],
-  whitelist: ["car", "customers", "staff", "insurance", "bookings"], // only these slices will be persisted
+  // whitelist: ["car", "customers", "staff", "insurance", "bookings"], 
+  whitelist: [], // only these slices will be persisted
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
