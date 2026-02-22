@@ -10,6 +10,7 @@ const getErrorMessage = (error: any) => {
 };
 interface BookingsState {
   bookings: Booking[];
+  detailedBookings: Record<string, any>;
   selectedBooking: Booking | null;
   loading: boolean;
   error: string | null;
@@ -24,6 +25,7 @@ interface BookingsState {
 const initialState: BookingsState = {
   bookings: [],
   selectedBooking: null,
+  detailedBookings: {},
   loading: false,
   error: null,
   filters: {
@@ -52,7 +54,17 @@ export const fetchBookings = createAsyncThunk(
     }));
   }
 );
-
+export const fetchBookingById = createAsyncThunk(
+  'bookings/fetchById',
+  async (bookingId: string, { rejectWithValue }) => {
+    try {
+      const response = await apiService.getBookingById(bookingId);  // you may need to add this method to apiService
+      return snakeToCamel(response.data);
+    } catch (error: any) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  }
+);
 // NEW: Create booking thunk that sends data to backend
 export const bookingSMSSending = createAsyncThunk(
   "bookings/create",
@@ -206,9 +218,19 @@ const bookingsSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || "Failed to fetch bookings";
       })
-      // .addCase(fetchBookingsByCarId.fulfilled, (state, action) => {
-      //   state.bookings = action.payload;
-      // })
+      .addCase(fetchBookingById.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchBookingById.fulfilled, (state, action) => {
+        state.loading = false;
+        const booking = action.payload;
+        state.detailedBookings[booking.id] = booking;
+        state.selectedBooking = booking;
+      })
+      .addCase(fetchBookingById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
       // Handle create booking
       .addCase(createBooking.pending, (state) => {
         state.loading = true;

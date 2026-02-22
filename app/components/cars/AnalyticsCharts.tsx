@@ -163,7 +163,7 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ transactions }) => {
           label: (context: TooltipItem<"line">) => {
             const value = context.parsed.y ?? 0;
             const label = context.dataset.label || "";
-            return `${label}: $${value.toLocaleString()}`;
+            return `${label}: ¢${value.toLocaleString()}`;
           },
         },
       },
@@ -196,7 +196,7 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ transactions }) => {
           },
           callback: (value: string | number) => {
             if (typeof value === "number") {
-              return value >= 1000 ? `$${value / 1000}k` : `$${value}`;
+              return value >= 1000 ? `¢${value / 1000}k` : `¢${value}`;
             }
             return value;
           },

@@ -184,11 +184,8 @@ const BookingsTable: React.FC<BookingsTableProps> = ({
                             <FaMoneyBillWave className="w-4 h-4 text-green-500" />
                             <div>
                               <div className="font-bold text-gray-900 dark:text-white">
-                                ${booking.totalAmount.toLocaleString()}
+                                ¢{booking.totalAmount.toLocaleString()}
                               </div>
-                              {/* <div className="text-xs text-gray-500 dark:text-gray-400">
-                                Paid: ${booking.amountPaid.toLocaleString()}
-                              </div> */}
                             </div>
                           </div>
                         </td>
@@ -333,11 +330,10 @@ const BookingsTable: React.FC<BookingsTableProps> = ({
                       Amount Paid:
                     </span>
                     <span
-                      className={`font-medium ${
-                        selectedBooking.totalAmount >=500
+                      className={`font-medium ${selectedBooking.totalAmount >= 500
                           ? "text-green-600"
                           : "text-yellow-600"
-                      }`}
+                        }`}
                     >
                       {/* ¢{selectedBooking.amountPaid.toLocaleString()} */}
                     </span>
@@ -400,7 +396,7 @@ const BookingsTable: React.FC<BookingsTableProps> = ({
 
               {/* Locations */}
               {selectedBooking.pickupLocation ||
-              selectedBooking.dropoffLocation ? (
+                selectedBooking.dropoffLocation ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {selectedBooking.pickupLocation && (
                     <div>
@@ -436,11 +432,10 @@ const BookingsTable: React.FC<BookingsTableProps> = ({
                       Driver Service:
                     </span>
                     <span
-                      className={`font-medium ${
-                        selectedBooking.hasDriver
+                      className={`font-medium ${selectedBooking.hasDriver
                           ? "text-green-600"
                           : "text-gray-600"
-                      }`}
+                        }`}
                     >
                       {selectedBooking.hasDriver ? "Yes" : "No"}
                     </span>
@@ -450,11 +445,10 @@ const BookingsTable: React.FC<BookingsTableProps> = ({
                       Insurance Coverage:
                     </span>
                     <span
-                      className={`font-medium ${
-                        selectedBooking.insuranceCoverage
+                      className={`font-medium ${selectedBooking.insuranceCoverage
                           ? "text-green-600"
                           : "text-gray-600"
-                      }`}
+                        }`}
                     >
                       {selectedBooking.insuranceCoverage ? "Yes" : "No"}
                     </span>

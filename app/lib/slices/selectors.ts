@@ -371,6 +371,11 @@ export const selectAllBookingsWithDetails = createSelector(
             : "Unknown Customer",
           customerEmail: customer?.email || "N/A",
           customerPhone: customer?.phone || "N/A",
+          customerGPSAddress: customer?.gpsAddress || "N/A",
+          guarantorName: customer?.guarantor ? `${customer.guarantor.firstName} ${customer.guarantor.lastName}` : "N/A",
+          guarantorPhone: customer?.guarantor?.phone || "N/A",
+          guarantorEmail: customer?.guarantor?.email || "N/A",
+          guarantorGPSAddress: customer?.guarantor?.gpsAddress || "N/A",
 
           // Car details
           car: car || null,

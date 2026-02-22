@@ -51,7 +51,8 @@ export default function SalaryPayslip({ payment, staff, onClose }: Props) {
             <div>
               <h1 className="text-3xl font-bold text-blue-800">YOS Car Rentals</h1>
               <p className="text-sm text-gray-600"> Opposite Shell filling station, Mango Down, Patasi, Kumasi, Ghana</p>
-              <p className="text-sm text-gray-600">+233 54 621 3027 | +233 24 445 5757 | Email: info@yoscarrentals.com</p>
+              <p className="text-sm text-gray-600">+233 54 621 3027 | +233 24 445 5757</p>
+              <p className="text-sm text-gray-600">https://www.yoscarrentals.com | info@yoscarrentals.com</p>
             </div>
             <div className="text-right">
               <p className="text-sm font-semibold">PAYSLIP</p>
@@ -91,25 +92,25 @@ export default function SalaryPayslip({ payment, staff, onClose }: Props) {
             <tbody>
               <tr>
                 <td className="py-2">Basic Salary</td>
-                <td className="py-2 text-right">{payment.basic_salary?.toLocaleString() || payment.basicSalary?.toLocaleString()}</td>
+                <td className="py-2 text-right">{(Number(payment.basic_salary) || Number(payment.basicSalary))?.toLocaleString()}</td>
               </tr>
               <tr>
                 <td className="py-2">Overtime</td>
-                <td className="py-2 text-right">{payment.overtime?.toLocaleString()}</td>
+                <td className="py-2 text-right">{(Number(payment.overtime) || 0)?.toLocaleString()}</td>
               </tr>
               <tr>
                 <td className="py-2">Bonuses</td>
-                <td className="py-2 text-right">{payment.bonuses?.toLocaleString()}</td>
+                <td className="py-2 text-right">{(Number(payment.bonuses) || 0)?.toLocaleString()}</td>
               </tr>
               <tr className="border-t border-gray-200">
                 <td className="py-2 font-medium">Total Earnings</td>
                 <td className="py-2 text-right font-medium">
-                  ¢{((payment.basic_salary || payment.basicSalary) + (payment.overtime || 0) + (payment.bonuses || 0)).toLocaleString()}
+                  ¢{((Number(payment.basic_salary) || Number(payment.basicSalary)) + (Number(payment.overtime) || 0) + (Number(payment.bonuses) || 0)).toLocaleString()}
                 </td>
               </tr>
               <tr>
                 <td className="py-2 text-red-600">Deductions</td>
-                <td className="py-2 text-right text-red-600">- ¢{payment.deductions?.toLocaleString()}</td>
+                <td className="py-2 text-right text-red-600">- ¢{(Number(payment.deductions) || 0)?.toLocaleString()}</td>
               </tr>
             </tbody>
           </table>
@@ -117,12 +118,12 @@ export default function SalaryPayslip({ payment, staff, onClose }: Props) {
           {/* Net Pay */}
           <div className="flex justify-between items-center border-t-2 border-gray-400 pt-4 text-xl font-bold">
             <span>NET PAY (GHS)</span>
-            <span>¢{payment.net_salary?.toLocaleString() || payment.netSalary?.toLocaleString()}</span>
+            <span>¢{(Number(payment.net_salary) || Number(payment.netSalary) || 0 - (Number(payment.deductions) || 0))?.toLocaleString()}</span>
           </div>
 
           {/* Footer note */}
           <p className="text-xs text-gray-400 mt-6 text-center">
-            This is a computer‑generated document. No signature required.
+            This is an official document of YOS Car Rentals. No signature required.
           </p>
         </div>
 

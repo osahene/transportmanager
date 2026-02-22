@@ -20,7 +20,7 @@ import {
 import { motion } from "framer-motion";
 import { useAppSelector, useAppDispatch } from "../../lib/store";
 import { selectAllBookingsWithDetails } from "../../lib/slices/selectors";
-import { sendEmail, sendSMS } from "../../lib/slices/bookingsSlice";
+import { fetchBookingById, sendEmail, sendSMS } from "../../lib/slices/bookingsSlice";
 import BookingActions from "@/app/components/booking/bookingActions";
 import { format } from "date-fns";
 import { useReactToPrint } from "react-to-print";
@@ -67,11 +67,58 @@ export default function BookingsPage() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [sortField, setSortField] = useState<SortField>("startDate");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-
+  const { detailedBookings } = useAppSelector(state => state.bookings);
   const allDetailedBookings = useAppSelector(selectAllBookingsWithDetails);
   const [selectedBooking, setSelectedBooking] = useState<ReceiptData | null>(
     null,
   );
+
+  const mapDetailedBookingToReceiptData = (detailedBooking: any): ReceiptData => {
+    // detailedBooking comes from snakeToCamel, so fields are camelCased
+    const customer = detailedBooking.customer || {};
+    const guarantor = detailedBooking.guarantor; // may be null or object
+    const car = detailedBooking.car || {};
+    const driver = detailedBooking.driver; // may be null or object (Staff)
+
+    // Format dates
+    const start = new Date(detailedBooking.startDate);
+    const end = new Date(detailedBooking.endDate);
+    const numberOfDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+
+    return {
+      bookingId: detailedBooking.id,
+      customerName: customer.fullName || `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || 'N/A',
+      customerPhone: customer.phone || 'N/A',
+      customerEmail: customer.email || 'N/A',
+      customerGPSAddress: customer.gpsAddress || 'N/A',
+
+      // Use booking’s own guarantor if present, otherwise fallback (optional)
+      guarantorName: guarantor ? `${guarantor.firstName} ${guarantor.lastName}` : 'N/A',
+      guarantorPhone: guarantor?.phone || 'N/A',
+      guarantorEmail: guarantor?.email || 'N/A',
+      guarantorGPSAddress: guarantor?.gpsAddress || 'N/A',
+
+      pickupLocation: detailedBooking.pickupLocation || 'N/A',
+      dropoffLocation: detailedBooking.dropoffLocation || 'N/A',
+      selfDrive: detailedBooking.isSelfDrive || false,
+      driverName: driver ? `${driver.firstName} ${driver.lastName}` : (detailedBooking.isSelfDrive ? 'Self Drive' : 'N/A'),
+      driverPhone: driver?.phone || 'N/A',
+      driverLicenseId: detailedBooking.driverLicenseId || 'N/A',
+      driverLicenseClass: detailedBooking.driverLicenseClass || 'N/A',
+      driverLicenseIssueDate: detailedBooking.driverLicenseIssueDate || 'N/A',
+      driverLicenseExpiryDate: detailedBooking.driverLicenseExpiryDate || 'N/A',
+
+      numberOfDays,
+      dailyRate: detailedBooking.dailyRate || 0,
+      discount: detailedBooking.discount || 0,
+      carDetails: `${car.make || ''} ${car.model || ''} (${car.licensePlate || 'N/A'})`.trim(),
+      bookingDates: `${format(start, 'MMM d, yyyy')} - ${format(end, 'MMM d, yyyy')}`,
+      totalAmount: detailedBooking.totalAmount || 0,
+      paymentMethod: detailedBooking.paymentMethod || 'N/A',
+      transactionId: `TXN-${detailedBooking.id.slice(0, 8).toUpperCase()}`,
+      date: new Date(),
+    };
+  };
 
   const receiptRef = useRef<HTMLDivElement>(null);
   const params: any = {
@@ -266,8 +313,22 @@ export default function BookingsPage() {
   };
 
   const openReceiptModal = (bookingId: string) => {
-    const data = generateReceiptData(bookingId);
-    if (data) setSelectedBooking(data);
+    if (detailedBookings[bookingId]) {
+    const receiptData = mapDetailedBookingToReceiptData(detailedBookings[bookingId]);
+    setSelectedBooking(receiptData);
+    return;
+  }
+    dispatch(fetchBookingById(bookingId)).then((action) => {
+      if (action.type === fetchBookingById.fulfilled.type) {
+        const detailedBooking = action.payload;
+        console.log("Fetched booking details for receipt:", detailedBooking);
+        const receiptData = mapDetailedBookingToReceiptData(detailedBooking);
+        setSelectedBooking(receiptData);
+      } else {
+        // handle error (show toast, etc.)
+        console.error('Failed to fetch booking details', action.payload);
+      }
+    });
   };
 
 
@@ -694,7 +755,7 @@ export default function BookingsPage() {
                   <div>
                     <p className="text-sm text-gray-600">Receipt Number</p>
                     <p className="font-bold text-gray-900">
-                      {selectedBooking.bookingId}
+                      {(selectedBooking.bookingId.slice(0, 8))}
                     </p>
                   </div>
                   <div className="text-right">
