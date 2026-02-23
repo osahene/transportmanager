@@ -335,7 +335,7 @@ export default function CustomerSelectionSection({
                       <input
                         type="text"
                         name="selectedCustomer_guarantor_firstName"
-                        value={selectedCustomer.guarantor.firstName}
+                        value={selectedCustomer.guarantor?.firstName}
                         onChange={(e) =>
                           onExistingCustomerGuarantorChange(
                             "selectedCustomer_guarantor_firstName",
@@ -353,7 +353,7 @@ export default function CustomerSelectionSection({
                       <input
                         type="text"
                         name="selectedCustomer_guarantor_lastName"
-                        value={selectedCustomer.guarantor.lastName}
+                        value={selectedCustomer.guarantor?.lastName}
                         onChange={(e) =>
                           onExistingCustomerGuarantorChange(
                             "selectedCustomer_guarantor_lastName",
@@ -373,7 +373,7 @@ export default function CustomerSelectionSection({
                         <input
                           type="text"
                           name="selectedCustomer_guarantor_phone"
-                          value={selectedCustomer.guarantor.phone}
+                          value={selectedCustomer.guarantor?.phone}
                           onChange={(e) =>
                             onExistingCustomerGuarantorChange(
                               "selectedCustomer_guarantor_phone",
@@ -394,7 +394,7 @@ export default function CustomerSelectionSection({
                         <input
                           type="text"
                           name="selectedCustomer_guarantor_email"
-                          value={selectedCustomer.guarantor.email}
+                          value={selectedCustomer.guarantor?.email}
                           onChange={(e) =>
                             onExistingCustomerGuarantorChange(
                               "selectedCustomer_guarantor_email",
@@ -413,7 +413,7 @@ export default function CustomerSelectionSection({
                       <input
                         type="text"
                         name="selectedCustomer_guarantor_ghanaCardId"
-                        value={selectedCustomer.guarantor.ghanaCardId}
+                        value={selectedCustomer.guarantor?.ghanaCardId}
                         onChange={(e) =>
                           onExistingCustomerGuarantorChange(
                             "selectedCustomer_guarantor_ghanaCardId",
@@ -432,7 +432,7 @@ export default function CustomerSelectionSection({
                         <input
                           type="text"
                           name="selectedCustomer_guarantor_occupation"
-                          value={selectedCustomer.guarantor.occupation}
+                          value={selectedCustomer.guarantor?.occupation}
                           onChange={(e) =>
                             onExistingCustomerGuarantorChange(
                               "selectedCustomer_guarantor_occupation",
@@ -451,7 +451,7 @@ export default function CustomerSelectionSection({
                       <input
                         type="text"
                         name="selectedCustomer_guarantor_relationship"
-                        value={selectedCustomer.guarantor.relationship}
+                        value={selectedCustomer.guarantor?.relationship}
                         onChange={(e) =>
                           onExistingCustomerGuarantorChange(
                             "selectedCustomer_guarantor_relationship",
@@ -469,7 +469,7 @@ export default function CustomerSelectionSection({
                       <input
                         type="text"
                         name="selectedCustomer_guarantor_gpsAddress"
-                        value={selectedCustomer.guarantor.gpsAddress}
+                        value={selectedCustomer.guarantor?.gpsAddress}
                         onChange={(e) =>
                           onExistingCustomerGuarantorChange(
                             "selectedCustomer_guarantor_gpsAddress",
@@ -489,7 +489,7 @@ export default function CustomerSelectionSection({
                       <input
                         type="text"
                         name="selectedCustomer_guarantor_address_city"
-                        value={selectedCustomer.guarantor.address.city}
+                        value={selectedCustomer.guarantor?.address.city}
                         onChange={(e) =>
                           onExistingCustomerGuarantorChange(
                             "selectedCustomer_guarantor_address_city",
@@ -507,7 +507,7 @@ export default function CustomerSelectionSection({
                       <input
                         type="text"
                         name="selectedCustomer_guarantor_address_region"
-                        value={selectedCustomer.guarantor.address.region}
+                        value={selectedCustomer.guarantor?.address.region}
                         onChange={(e) =>
                           onExistingCustomerGuarantorChange(
                             "selectedCustomer_guarantor_address_region",
@@ -525,7 +525,7 @@ export default function CustomerSelectionSection({
                       <input
                         type="text"
                         name="selectedCustomer_guarantor_address_country"
-                        value={selectedCustomer.guarantor.address.country}
+                        value={selectedCustomer.guarantor?.address.country}
                         onChange={(e) =>
                           onExistingCustomerGuarantorChange(
                             "selectedCustomer_guarantor_address_country",
