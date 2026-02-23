@@ -536,6 +536,9 @@ export default function CreateBookingPage() {
 
       if (customerMode === "existing") {
         payload.customer = customerIdForBackend || selectedCustomer?.id;
+        if (selectedCustomer?.guarantor?.id) {
+          payload.guarantor = selectedCustomer.guarantor.id;
+        }
       } else {
         Object.assign(payload, customerPart);
       }

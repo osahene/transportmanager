@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useMemo, useEffect, use } from "react";
+import { useState, useRef, useMemo } from "react";
 import {
   FaCalendarAlt,
   FaCar,
@@ -75,11 +75,10 @@ export default function BookingsPage() {
 
 
   const mapDetailedBookingToReceiptData = (detailedBooking: any): ReceiptData => {
-    // detailedBooking comes from snakeToCamel, so fields are camelCased
     const customer = detailedBooking.customer || {};
-    const guarantor = detailedBooking.guarantor; // may be null or object
+    const guarantor = detailedBooking.guarantor; 
     const car = detailedBooking.car || {};
-    const driver = detailedBooking.driver; // may be null or object (Staff)
+    const driver = detailedBooking.driver; 
 
     // Format dates
     const start = new Date(detailedBooking.startDate);
@@ -93,7 +92,6 @@ export default function BookingsPage() {
       customerEmail: customer.email || 'N/A',
       customerGPSAddress: customer.gpsAddress || 'N/A',
 
-      // Use booking’s own guarantor if present, otherwise fallback (optional)
       guarantorName: guarantor ? `${guarantor.firstName} ${guarantor.lastName}` : 'N/A',
       guarantorPhone: guarantor?.phone || 'N/A',
       guarantorEmail: guarantor?.email || 'N/A',
@@ -175,16 +173,13 @@ export default function BookingsPage() {
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      // Toggle direction if same field
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
-      // New field, default to descending for dates, ascending for others
       setSortField(field);
       setSortDirection(field === "startDate" ? "desc" : "asc");
     }
   };
 
-  // Get sort icon for a field
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) return <FaSort className="ml-1" />;
     return sortDirection === "asc" ? (
@@ -194,12 +189,10 @@ export default function BookingsPage() {
     );
   };
 
-  // Page navigation
   const goToPage = (pageNumber: number) => {
     setCurrentPage(Math.max(1, Math.min(pageNumber, totalPages)));
   };
 
-  // Generate pagination buttons
   const renderPaginationButtons = () => {
     const buttons = [];
     const maxVisiblePages = 5;
@@ -277,41 +270,6 @@ export default function BookingsPage() {
     return buttons;
   };
 
-  const generateReceiptData = (bookingId: string): ReceiptData | null => {
-    const booking = allDetailedBookings.find(b => b.id === bookingId);
-    if (!booking) return null;
-
-    return {
-      bookingId: booking.id,
-      customerName: booking.customerName,
-      customerPhone: booking.customerPhone,
-      customerEmail: booking.customerEmail,
-      customerGPSAddress: booking.customerGPSAddress || "N/A",
-      guarantorName: booking.guarantorName || "N/A",
-      guarantorPhone: booking.guarantorPhone || "N/A",
-      guarantorEmail: booking.guarantorEmail || "N/A",
-      guarantorGPSAddress: booking.guarantorGPSAddress || "N/A",
-      pickupLocation: booking.pickupLocation,
-      dropoffLocation: booking.dropoffLocation,
-      selfDrive: booking.selfDrive,
-      driverName: booking.driverName,
-      driverPhone: booking.driverPhone,
-      driverLicenseId: booking.driverLicenseId,
-      driverLicenseClass: booking.driverLicenseClass,
-      driverLicenseIssueDate: booking.driverLicenseIssueDate,
-      driverLicenseExpiryDate: booking.driverLicenseExpiryDate,
-
-      numberOfDays: booking.durationDays,
-      carDetails: `${booking.carMake} ${booking.carModel} (${booking.carlicense_plate})`,
-      bookingDates: `${format(new Date(booking.startDate), "MMM d, yyyy")} - ${format(new Date(booking.endDate), "MMM d, yyyy")}`,
-      dailyRate: booking.dailyRate || 0,
-      discount: booking.discount || 0,
-      totalAmount: booking.totalAmount,
-      paymentMethod: booking.paymentMethod,
-      transactionId: `TXN-${booking.id.slice(0, 8).toUpperCase()}`,
-      date: new Date(),
-    };
-  };
 
   const openReceiptModal = (bookingId: string) => {
     if (detailedBookings[bookingId]) {
@@ -325,7 +283,6 @@ export default function BookingsPage() {
         const receiptData = mapDetailedBookingToReceiptData(detailedBooking);
         setSelectedBooking(receiptData);
       } else {
-        // handle error (show toast, etc.)
         console.error('Failed to fetch booking details', action.payload);
       }
     });
