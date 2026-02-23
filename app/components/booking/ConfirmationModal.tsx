@@ -101,7 +101,7 @@ export default function ConfirmationModal({
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Name</p>
                 <p className="font-medium text-gray-900 dark:text-white">
-                  {summary.customer?.guarantor.firstName} {summary.customer?.guarantor.lastName}
+                  {summary.customer?.guarantor?.firstName} {summary.customer?.guarantor?.lastName}
                 </p>
               </div>
               <div>
@@ -109,7 +109,7 @@ export default function ConfirmationModal({
                   Phone
                 </p>
                 <p className="font-medium text-gray-900 dark:text-white">
-                  {summary.customer?.guarantor.phone}
+                  {summary.customer?.guarantor?.phone}
                 </p>
               </div>
               <div>
@@ -117,7 +117,7 @@ export default function ConfirmationModal({
                   Email
                 </p>
                 <p className="font-medium text-gray-900 dark:text-white">
-                  {summary.customer?.guarantor.email || "N/A"}
+                  {summary.customer?.guarantor?.email || "N/A"}
                 </p>
               </div>
               <div>
@@ -125,7 +125,7 @@ export default function ConfirmationModal({
                   Relationship
                 </p>
                 <p className="font-medium text-gray-900 dark:text-white">
-                  {summary.customer?.guarantor.relationship}
+                  {summary.customer?.guarantor?.relationship}
                 </p>
               </div>
             </div>
