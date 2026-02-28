@@ -39,7 +39,6 @@ export const fetchInsurancePolicies = createAsyncThunk(
   "insurance/fetchAll",
   async (params?: { vehicleId?: string }) => {
     const response = await apiService.getInsurancePolicies(params);
-    console.log('insurance', response)
     return response.data.results;
   }
 );
@@ -50,7 +49,6 @@ export const createInsurancePolicy = createAsyncThunk(
     try {
       const response = await apiService.createInsurancePolicy(policyData);
       return response.data.results;
-      console.log('created insurance', response)
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         return rejectWithValue(
@@ -113,7 +111,6 @@ export const renewInsurancePolicy = createAsyncThunk(
   ) => {
     try {
       const response = await apiService.renewInsurancePolicy(policyId, renewalData);
-      console.log('renewed insurance', response)
       return response.data.results;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -276,5 +273,4 @@ export const selectInsuranceByVehicleId =
   (vehicleId: string) => (state: RootState) =>
     state.insurance.policies.filter((policy) => policy.vehicleId === vehicleId);
 
-console.log('insurance', selectInsuranceByVehicleId);
 export default insuranceSlice.reducer;

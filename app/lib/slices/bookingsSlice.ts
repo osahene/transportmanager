@@ -1,6 +1,7 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { snakeToCamel } from "../snakeToCamel";
 import { Booking, BookingStatus } from "../../types/booking";
+import { RootState } from "../store";
 import apiService from "../services/APIPath";
 import axios from "axios";
 
@@ -8,8 +9,13 @@ import axios from "axios";
 const getErrorMessage = (error: any) => {
   return error.response?.data?.message || error.message || "An error occurred";
 };
+
+// Helper to generate temporary IDs for offline records
+const generateTempId = () => `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
 interface BookingsState {
   bookings: Booking[];
+  pendingSync: Booking[];
   detailedBookings: Record<string, any>;
   selectedBooking: Booking | null;
   loading: boolean;
@@ -24,6 +30,7 @@ interface BookingsState {
 
 const initialState: BookingsState = {
   bookings: [],
+  pendingSync: [],
   selectedBooking: null,
   detailedBookings: {},
   loading: false,
@@ -39,7 +46,112 @@ const initialState: BookingsState = {
   },
 };
 
-// Async thunks
+
+// Convert a locally stored booking (from pendingSync) to backend API format
+const prepareBackendPayloadFromLocalBooking = (localBooking: any) => {
+  const payload: any = {
+    car: localBooking.carId || localBooking.car?.id,
+    start_date: localBooking.startDate || localBooking.dates?.start,
+    end_date: localBooking.endDate || localBooking.dates?.end,
+    daily_rate: localBooking.dailyRate,
+    discount: localBooking.discount,
+    pickup_location: localBooking.pickupLocation,
+    dropoff_location: localBooking.dropoffLocation,
+    special_requests: localBooking.specialRequests,
+    payment_method: localBooking.paymentMethod,
+    is_self_drive: localBooking.selfDrive === "true" || localBooking.selfDrive === true,
+  };
+
+  // Customer / guarantor handling
+  if (localBooking.customer?.id && !localBooking.customer.id.startsWith('temp_')) {
+    payload.customer = localBooking.customer.id;
+    if (localBooking.customer.guarantor?.id) {
+      payload.guarantor = localBooking.customer.guarantor.id;
+    }
+  } else {
+    // New customer data
+    payload.customer_data = {
+      first_name: localBooking.customer?.firstName,
+      last_name: localBooking.customer?.lastName,
+      email: localBooking.customer?.email,
+      phone: localBooking.customer?.phone,
+      ghana_card_id: localBooking.customer?.ghanaCardId,
+      occupation: localBooking.customer?.occupation,
+      gps_address: localBooking.customer?.gpsAddress,
+      address_city: localBooking.customer?.address?.city,
+      address_region: localBooking.customer?.address?.region,
+      address_country: localBooking.customer?.address?.country,
+      communication_preferences: localBooking.customer?.communicationPreferences,
+    };
+    if (localBooking.customer?.guarantor) {
+      payload.guarantor_data = {
+        first_name: localBooking.customer.guarantor.firstName,
+        last_name: localBooking.customer.guarantor.lastName,
+        phone: localBooking.customer.guarantor.phone,
+        email: localBooking.customer.guarantor.email,
+        ghana_card_id: localBooking.customer.guarantor.ghanaCardId,
+        occupation: localBooking.customer.guarantor.occupation,
+        gps_address: localBooking.customer.guarantor.gpsAddress,
+        relationship: localBooking.customer.guarantor.relationship,
+        address_city: localBooking.customer.guarantor.address?.city,
+        address_region: localBooking.customer.guarantor.address?.region,
+        address_country: localBooking.customer.guarantor.address?.country,
+      };
+    }
+  }
+
+  // Driver / self‑drive
+  if (payload.is_self_drive) {
+    payload.driver_license_id = localBooking.driverLicenseId;
+    payload.driver_license_class = localBooking.driverLicenseClass;
+    payload.driver_license_issue_date = localBooking.driverLicenseIssueDate;
+    payload.driver_license_expiry_date = localBooking.driverLicenseExpiryDate;
+  } else {
+    payload.driver = localBooking.driver?.id;
+  }
+
+  // Payment method specifics
+  if (localBooking.paymentMethod === 'mobile_money') {
+    payload.mobile_money_provider = localBooking.paymentData?.mobileMoneyDetails?.provider;
+    payload.mobile_money_number = localBooking.paymentData?.mobileMoneyDetails?.phoneNumber;
+    payload.mobile_money_transaction_id = localBooking.paymentData?.mobileMoneyDetails?.transactionId;
+  } else if (localBooking.paymentMethod === 'pay_in_slip') {
+    payload.pay_in_slip_bank = localBooking.paymentData?.payInSlipDetails?.bankName;
+    payload.pay_in_slip_branch = localBooking.paymentData?.payInSlipDetails?.branch;
+    payload.pay_in_slip_payee = localBooking.paymentData?.payInSlipDetails?.payeeName;
+    payload.pay_in_slip_reference = localBooking.paymentData?.payInSlipDetails?.referenceNumber;
+    payload.pay_in_slip_number = localBooking.paymentData?.payInSlipDetails?.slipNumber;
+    payload.pay_in_slip_date = localBooking.paymentData?.payInSlipDetails?.paymentDate;
+  }
+
+  return payload;
+};
+
+
+
+export const syncPendingBookings = createAsyncThunk(
+  'bookings/syncPending',
+  async (_, { getState, dispatch }) => {
+    const state = getState() as RootState;
+    const pending = state.bookings.pendingSync;
+
+    for (const booking of pending) {
+      try {
+        // Convert your local booking to backend format
+        const payload = prepareBackendPayloadFromLocalBooking(booking);
+        const response = await apiService.createBooking(payload);
+        // If successful, remove from pendingSync
+        dispatch(removeSyncedBooking(booking.id));
+        // Optionally update the stored booking with the real ID from backend
+      } catch (error) {
+        console.error('Sync failed for booking', booking.id, error);
+        // Keep it in pending; maybe implement retry logic later
+      }
+    }
+  }
+);
+
+
 export const fetchBookings = createAsyncThunk(
   "bookings/fetchAll",
   async (params?: any) => {
@@ -204,6 +316,18 @@ const bookingsSlice = createSlice({
     clearBookingFilters: (state) => {
       state.filters = initialState.filters;
     },
+    addOfflineBooking: (state, action: PayloadAction<Booking>) => {
+      const booking = { ...action.payload, id: generateTempId(), synced: false };
+      state.pendingSync.push(booking);
+      // Optionally also add to bookings list for immediate UI display
+      state.bookings.push(booking);
+    },
+    removeSyncedBooking: (state, action: PayloadAction<string>) => {
+      state.pendingSync = state.pendingSync.filter(b => b.id !== action.payload);
+    },
+    clearPendingSync: (state) => {
+      state.pendingSync = [];
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -275,6 +399,8 @@ export const {
   setSelectedBooking,
   setFilters,
   clearBookingFilters,
+  addOfflineBooking,
+  removeSyncedBooking,
   // createBooking,
 } = bookingsSlice.actions;
 export default bookingsSlice.reducer;

@@ -11,6 +11,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "YOS Car Rentals - Transport Manager",
   description: "Comprehensive transport management system",
+  manifest: "/manifest.json",   
 };
 
 export default function RootLayout({

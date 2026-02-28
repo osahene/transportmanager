@@ -1,14 +1,19 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { FaSave, FaTimes } from "react-icons/fa";
 import { useAppSelector, useAppDispatch } from "../../../lib/store";
 import { fetchCars } from "../../../lib/slices/carsSlice";
-import { createBooking, checkCarAvailability, fetchBookings } from "../../../lib/slices/bookingsSlice";
+import { useOnlineStatus } from '@/app/lib/useOnlineStatus';
+import { mapDetailedBookingToReceiptData, ReceiptData } from "@/app/lib/utils/receiptMapper";
+import { useReactToPrint } from "react-to-print";
+import { FaPrint } from "react-icons/fa";
+import { format } from "date-fns";
+import { createBooking, checkCarAvailability, fetchBookings, addOfflineBooking } from "../../../lib/slices/bookingsSlice";
 import { Customer } from "../../../types/customer";
 import { Car } from "@/app/types/cars";
-import { BookingSummary, Driver, PaymentMethod } from "../../../types/booking";
+import { BookingSummary, Driver, PaymentMethod, Booking } from "../../../types/booking";
 import {
   selectAvailablecars,
   selectDrivers,
@@ -21,6 +26,8 @@ import PaymentSummarySection from "../../../components/booking/PaymentSummarySec
 import ConfirmationModal from "../../../components/booking/ConfirmationModal";
 import { fetchCustomers, fetchCustomerById } from "@/app/lib/slices/customersSlice";
 import { fetchStaff } from "@/app/lib/slices/staffSlice";
+
+
 const params: any = {
   page: 1,
   page_size: 30
@@ -100,6 +107,9 @@ function getNestedValue(obj: any, path: string): any {
 export default function CreateBookingPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const isOnline = useOnlineStatus();
+  const [receiptBooking, setReceiptBooking] = useState<ReceiptData | null>(null);
+
 
   // Redux selectors
   const availableCars = useAppSelector(selectAvailablecars) as Car[];
@@ -128,14 +138,72 @@ export default function CreateBookingPage() {
     referenceNumber: "",
     slipNumber: "",
   });
+
+
   const [mobileMoneyDetails, setMobileMoneyDetails] = useState({
     transactionId: "",
     provider: "MTN",
     phoneNumber: "",
   });
+
+
   useEffect(() => {
     dispatch(fetchCustomers());
   }, [dispatch])
+
+  const receiptRef = useRef<HTMLDivElement>(null);
+
+  const handlePrintReceipt = useReactToPrint({
+    contentRef: receiptRef,
+    documentTitle: `Receipt-${receiptBooking?.bookingId}`,
+    onAfterPrint: () => setReceiptBooking(null),
+  });
+
+
+  const buildLocalBooking = (summary: BookingSummary, mode: string): Booking => {
+    const customer = summary.customer;
+    const car = summary.car;
+    const driver = summary.driver;
+
+    return {
+      id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      CarId: car?.id || '',
+      customerId: customer?.id || (mode === 'new' ? `temp_cust_${Date.now()}` : ''),
+      customerName: customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown',
+      customerPhone: customer?.phone || 'N/A',
+      customerEmail: customer?.email || 'N/A',
+      customerGPSAddress: customer?.gpsAddress || 'N/A',
+      driverPhone: driver?.phone || 'N/A',
+      selfDrive: summary.selfDrive === 'true',
+      amountPaid: 0,
+      paymentStatus: "pending",
+      startDate: summary.dates.start,
+      endDate: summary.dates.end,
+      dailyRate: summary.dailyRate,
+      discount: summary.discount,
+      totalAmount: summary.totalAmount,
+      pickupLocation: summary.pickupLocation,
+      dropoffLocation: summary.dropoffLocation,
+      specialRequests: summary.specialRequests,
+      paymentMethod: summary.paymentMethod,
+      isSelfDrive: summary.selfDrive === 'true',
+      driverId: driver?.id || '',
+      driverLicenseId: summary.driverLicenseId,
+      driverLicenseClass: summary.driverLicenseClass,
+      driverLicenseIssueDate: summary.driverLicenseIssueDate,
+      driverLicenseExpiryDate: summary.driverLicenseExpiryDate,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      // Include nested objects if your Booking type expects them
+      customer: customer || undefined,
+      car: car || undefined,
+      driver: driver || undefined,
+    } as Booking; // cast if necessary – ensure all required fields are present
+  };
+
+
+
+
 
   // Form state
   const [formData, setFormData] = useState({
@@ -714,8 +782,27 @@ export default function CreateBookingPage() {
 
   const handleConfirmBooking = useCallback(async () => {
     if (!bookingSummary) return;
-    await createBookingFlow(bookingSummary);
-  }, [bookingSummary, createBookingFlow]);
+    setIsProcessing(true);
+
+    if (isOnline) {
+      // Existing online flow (Paystack + API)
+      await createBookingFlow(bookingSummary);
+    } else {
+      // OFFLINE: save locally and print receipt
+      // Build a local booking object with all needed fields
+
+      const localBooking = buildLocalBooking(bookingSummary, customerMode);
+      dispatch(addOfflineBooking(localBooking));
+      setIsProcessing(false);
+      setShowConfirmationModal(false);
+
+      const receiptData = mapDetailedBookingToReceiptData(localBooking);
+      setReceiptBooking(receiptData);
+
+      alert('Booking saved offline. It will be synced when you’re back online.');
+      router.push('/dashboard/bookings');
+    }
+  }, [bookingSummary, isOnline, dispatch, createBookingFlow, router]);
 
 
   return (
@@ -823,6 +910,258 @@ export default function CreateBookingPage() {
           onClose={() => setShowConfirmationModal(false)}
           onConfirm={handleConfirmBooking}
         />
+      )}
+      {/* Receipt Modal for Offline Print */}
+      {receiptBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div
+              ref={receiptRef}
+              className="p-8 bg-white"
+              style={{ minHeight: 'auto', boxSizing: 'border-box' }}
+            >
+              <style type="text/css" media="print">{`
+          @page { size: auto; margin: 20mm; }
+          html, body { height: auto; overflow: visible; }
+          #receipt-container { width: 100%; }
+        `}</style>
+              {/* Copy the exact receipt HTML from bookings/page.tsx here, using receiptBooking data */}
+              {/* ... (same receipt structure) */}
+              <div className="text-center mb-8 border-b pb-6">
+                <h1 className="text-3xl font-bold text-gray-900">YOS Car Rentals</h1>
+                <p className="text-gray-600 mt-2">
+                  Location: Opposite Shell filling station, Mango Down, Patasi, Kumasi, Ghana
+                </p>
+                <p className="text-gray-600">
+                  Phone: +233 54 621 3027 | +233 24 445 5757 | Email: info@yoscarrentals.com
+                </p>
+                <h4 className="text-xl font-bold text-gray-900">Official Receipt</h4>
+              </div>
+
+              {/* Receipt Details – use receiptBooking properties exactly as in bookings page */}
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm text-gray-600">Receipt Number</p>
+                    <p className="font-bold text-gray-900">{receiptBooking.bookingId.slice(0, 8)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-gray-600">Date</p>
+                    <p className="font-bold text-gray-900">
+                      {format(receiptBooking.date, "MMM d, yyyy h:mm a")}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-1">
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Customer Details</h3>
+                    <p className="text-gray-800">{receiptBooking.customerName}</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Customer Contact</h3>
+                    <p className="text-gray-800">
+                      {receiptBooking.customerPhone} | {receiptBooking.customerEmail} | {receiptBooking.customerGPSAddress}
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Vehicle Details</h3>
+                    <p className="text-gray-800">{receiptBooking.carDetails}</p>
+                  </div>
+                </div>
+
+                {/* Guarantor details */}
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Guarantor Details</h3>
+                    <p className="text-gray-800">{receiptBooking.guarantorName}</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Guarantor Contact</h3>
+                    <p className="text-gray-800">
+                      {receiptBooking.guarantorPhone} | {receiptBooking.guarantorEmail} | {receiptBooking.guarantorGPSAddress}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Booking Period</h3>
+                    <p className="text-gray-800">{receiptBooking.bookingDates}</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Number of Days</h3>
+                    <p className="text-gray-800">{receiptBooking.numberOfDays} days</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Pickup Location</h3>
+                    <p className="text-gray-800">{receiptBooking.pickupLocation}</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Dropoff Location</h3>
+                    <p className="text-gray-800">{receiptBooking.dropoffLocation}</p>
+                  </div>
+                </div>
+
+                {receiptBooking.selfDrive && (
+                  <div className="grid grid-cols-2 gap-6 mt-4">
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-2">Driver's License Information</h3>
+                      <p className="text-gray-800"><span className="font-medium">License No:</span> {receiptBooking.driverLicenseId}</p>
+                      <p className="text-gray-800"><span className="font-medium">Class:</span> {receiptBooking.driverLicenseClass}</p>
+                      <p className="text-gray-800"><span className="font-medium">Issue Date:</span> {receiptBooking.driverLicenseIssueDate}</p>
+                      <p className="text-gray-800"><span className="font-medium">Expiry Date:</span> {receiptBooking.driverLicenseExpiryDate}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Amount Breakdown */}
+                {(() => {
+                  const TAX_RATE = 0.12;
+                  const daily = receiptBooking.dailyRate;
+                  const days = receiptBooking.numberOfDays;
+                  const discount = receiptBooking.discount;
+
+                  const taxPerDay = daily * TAX_RATE;
+                  const netDaily = daily - taxPerDay;
+                  const subtotal = netDaily * days;
+                  const totalTax = taxPerDay * days;
+                  const grandTotal = daily * days - discount;
+
+                  return (
+                    <div className="border-t border-b py-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-gray-600">Daily Rate (after tax)</span>
+                        <span className="font-bold text-gray-900">¢{netDaily.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-gray-600">Number of Days</span>
+                        <span className="font-bold text-gray-900">{days}</span>
+                      </div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-gray-600">Subtotal</span>
+                        <span className="font-bold text-gray-900">¢{subtotal.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-gray-600">Tax (12%)</span>
+                        <span className="font-bold text-gray-900">¢{totalTax.toFixed(2)}</span>
+                      </div>
+                      {discount > 0 && (
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-gray-600">Discount</span>
+                          <span className="font-bold text-gray-900">¢{discount.toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center text-lg font-bold pt-2 border-t">
+                        <span className="text-gray-900">Grand Total</span>
+                        <span className="text-gray-900">¢{grandTotal.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Payment Method</h3>
+                    <p className="text-gray-800">{receiptBooking.paymentMethod}</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Transaction ID</h3>
+                    <p className="text-gray-800">{receiptBooking.transactionId}</p>
+                  </div>
+                </div>
+
+                {/* Terms and conditions – same as before */}
+                <div className="mt-6">
+                  <h3 className="font-semibold text-center text-gray-900 mb-2">
+                    Terms and Conditions
+                  </h3>
+                  <p className="text-gray-800">
+                    <span className="font-bold mr-2">1.</span>
+                    Minimum rental period: 24 hours
+                  </p>
+                  <p className="text-gray-800">
+                    <span className="font-bold mr-2">2.</span>
+                    Car(s) is to be returned to the garage by 8:00 AM on the due date that the car is to be returned. When the time exceeds by an hour, the recipient would pay an extra fee of full day rent.
+                  </p>
+                  <p className="text-gray-800">
+                    <span className="font-bold mr-2">3.</span>
+                    Car recipient must provide a valid Ghana Card or Passport, Ghana Driver's License and a guarantor. The guarantor must provide details of their Ghana Card or Passport and other relevant information to the company.
+                  </p>
+                  <p className="text-gray-800">
+                    <span className="font-bold mr-2">4.</span>
+                    In case the recipient would need a driver from the company, they would pay an additional fee of two hundred Ghana Cedis (¢ 200.00) as service fee.
+                  </p>
+                  <p className="text-gray-800">
+                    <span className="font-bold mr-2">5.</span>
+                    The recipient would be responsible for the upkeep and accommodation of the driver.
+                  </p>
+                  <p className="text-gray-800">
+                    <span className="font-bold mr-2">6.</span>
+                    In case of any accident, the recipient would bear the full cost of the damages. In such a situation, the recipient would have not more than a month to put the car in its original shape.
+                  </p>
+                  <p className="text-gray-800">
+                    <span className="font-bold mr-2">7.</span>
+                    In case of very serious damage, the recipient would have to replace the car with a new one.
+                  </p>
+                  <p className="text-gray-800">
+                    <span className="font-bold mr-2">8.</span>
+                    No smoking, eating or drinking of alcohol in vehicle. The recipient must ensure that the vehicle is well cleaned when returning it.
+                  </p>
+                  <p className="text-gray-800">
+                    <span className="font-bold mr-2">9.</span>
+                    Fuel policy: The recipient must return the vehicle with a full tank of fuel; specifically, SHELL V-POWER.
+                  </p>
+                </div>
+                {/* Signature */}
+                <div className="flex justify-between items-center mt-8">
+                  <div className="text-center">
+                    <div className="border-t w-48 mx-auto border-gray-400"></div>
+                    <p className="text-gray-600 mt-2">Customer Sign</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="border-t w-48 mx-auto border-gray-400"></div>
+                    <p className="text-gray-600 mt-2">Guarantor Sign</p>
+                  </div>
+                </div>
+                <div className="flex justify-center items-center mt-8">
+                  <div className="text-center">
+                    <div className="border-t w-48 mx-auto border-gray-400"></div>
+                    <p className="text-gray-600 mt-2">Transport Manager Sign</p>
+                  </div>
+
+                </div>
+
+                {/* Footer */}
+                <div className="text-center pt-6 border-t">
+                  <p className="text-gray-600 text-sm">
+                    Thank you for choosing YOS Car Rentals!
+                  </p>
+                  <p className="text-gray-500 text-xs mt-2">
+                    For inquiries: support@yoscarrentals.com | +233 54 621 3027 |  +233 24 445 5757
+                  </p>
+                </div>
+                {/* Signature and footer – same as before */}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-4 mt-6">
+              <button
+                onClick={() => setReceiptBooking(null)}
+                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handlePrintReceipt()}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+              >
+                <FaPrint />
+                Print Receipt
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

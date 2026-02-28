@@ -2,6 +2,7 @@ import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import { persistReducer, persistStore } from "redux-persist";
 import {encryptTransform} from "redux-persist-transform-encrypt";
+import { offlineStorage } from "./storage";
 import storageSession from "redux-persist/lib/storage/session";
 import uIReducer from "../lib/slices/uiSlice";
 import carReducer from "../lib/slices/carsSlice";
@@ -33,10 +34,10 @@ const rootReducer = combineReducers({
 
 const persistConfig = {
   key: "root",
-  storage: storageSession,
+  storage: offlineStorage,
   transforms: [encryptor],
-  // whitelist: ["car", "customers", "staff", "insurance", "bookings"], 
-  whitelist: [], // only these slices will be persisted
+  whitelist: ["car", "customers", "staff", "insurance", "bookings"], 
+  // whitelist: []
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

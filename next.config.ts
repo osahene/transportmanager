@@ -1,5 +1,27 @@
 import type { NextConfig } from "next";
 
+const withPWA = require('@ducanh2912/next-pwa').default({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development', // enable only in production
+  workboxOptions: {
+    runtimeCaching: [
+      {
+        urlPattern: /^https?.*/, // cache all same‑origin and CDN assets
+        handler: 'NetworkFirst',
+        options: {
+          cacheName: 'offlineCache',
+          expiration: {
+            maxEntries: 200,
+            maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+          },
+        },
+      },
+    ],
+  },
+});
+
 const nextConfig: NextConfig = {
   /* config options here */
   reactStrictMode: true,
@@ -16,20 +38,20 @@ const nextConfig: NextConfig = {
     ];
   },
   // async headers() {
-  //   return [
-  //     {
-  //       source: '/:path*',
-  //       headers: [
-  //         {
+    //   return [
+      //     {
+        //       source: '/:path*',
+        //       headers: [
+          //         {
   //           key: 'X-Content-Type-Options',
   //           value: 'nosniff',
   //         },
   //         {
-  //           key: 'X-Frame-Options',
+    //           key: 'X-Frame-Options',
   //           value: 'DENY',
   //         },
   //         {
-  //           key: 'X-XSS-Protection',
+    //           key: 'X-XSS-Protection',
   //           value: '1; mode=block',
   //         },
   //       ],
@@ -42,3 +64,5 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+module.exports = withPWA(nextConfig);

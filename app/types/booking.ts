@@ -50,12 +50,12 @@ export interface Booking {
   guarantorPhone?: string;
   guarantorEmail?: string;
   guarantorGPSAddress?: string;
-  driverName: string;
-  driverPhone: string;
+  driverName?: string;
+  driverPhone?: string;
   selfDrive: boolean;
   startDate: string;
   endDate: string;
-  currentMileage: string;
+  currentMileage?: string;
   lastMileage?: string;
   status: BookingStatus;
   totalAmount: number;
@@ -78,7 +78,7 @@ export interface Booking {
   dropoffLocation: string;
 
   // Additional services
-  hasDriver: string; // Changed from string to boolean
+  hasDriver?: string; // Changed from string to boolean
   driverId?: string;
   insuranceCoverage?: boolean;
 

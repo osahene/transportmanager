@@ -37,7 +37,6 @@ export const fetchCustomerBookingsWithGuarantor = createAsyncThunk(
   async (customerId: string, { rejectWithValue }) => {
     try {
       const response = await apiService.getCustomerBookingsWithGuarantor(customerId);
-      console.log('bookings with guarantor', response);
       return { customerId, bookings: response.data };
     } catch (error: any) {
       return rejectWithValue(getErrorMessage(error));
