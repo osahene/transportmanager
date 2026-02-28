@@ -71,7 +71,7 @@ export default function DashboardPage() {
       });
     };
 
-  }, [driverBookingsMap, drivers, dispatch]);
+  }, [dispatch]);
 
   const handleBookingNewVehicle = () => {
     router.push("/dashboard/bookings/create");
