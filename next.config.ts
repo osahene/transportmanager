@@ -4,29 +4,17 @@ const withPWA = require('@ducanh2912/next-pwa').default({
   dest: 'public',
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development', // enable only in production
-  workboxOptions: {
-    runtimeCaching: [
-      {
-        urlPattern: /^https?.*/, // cache all same‑origin and CDN assets
-        handler: 'NetworkFirst',
-        options: {
-          cacheName: 'offlineCache',
-          expiration: {
-            maxEntries: 200,
-            maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
-          },
-        },
-      },
-    ],
-  },
+  disable: process.env.NODE_ENV === 'development', 
+  // Enable these for better Next.js App Router offline support:
+  cacheOnFrontEndNav: true, 
+  aggressiveFrontEndNavCaching: true,
+  reloadOnOnline: true,
 });
 
 const nextConfig: NextConfig = {
-  /* config options here */
   reactStrictMode: true,
   images: {
-    remotePatterns: [{ protocol: "http", hostname: "localhost" }], // Add your image domains
+    remotePatterns: [{ protocol: "http", hostname: "localhost" }],
   },
   async redirects() {
     return [
@@ -37,32 +25,10 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // async headers() {
-    //   return [
-      //     {
-        //       source: '/:path*',
-        //       headers: [
-          //         {
-  //           key: 'X-Content-Type-Options',
-  //           value: 'nosniff',
-  //         },
-  //         {
-    //           key: 'X-Frame-Options',
-  //           value: 'DENY',
-  //         },
-  //         {
-    //           key: 'X-XSS-Protection',
-  //           value: '1; mode=block',
-  //         },
-  //       ],
-  //     },
-  //   ];
-  // },
   experimental: {
     optimizeCss: true,
   },
 };
 
 export default nextConfig;
-
 module.exports = withPWA(nextConfig);
