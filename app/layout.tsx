@@ -11,7 +11,15 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "YOS Car Rentals - Transport Manager",
   description: "Comprehensive transport management system",
-  manifest: "/manifest.json",   
+  manifest: "/manifest.json",  
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "YOS Cars",
+  },
+  formatDetection: {
+    telephone: false,
+  }, 
 };
 
 export default function RootLayout({
@@ -30,3 +38,7 @@ export default function RootLayout({
     </html>
   );
 }
+
+export const viewport = {
+  themeColor: "#1e40af",
+};
