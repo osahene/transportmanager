@@ -137,20 +137,21 @@ export const syncPendingBookings = createAsyncThunk(
 
     for (const booking of pending) {
       try {
-        // Convert your local booking to backend format
         const payload = prepareBackendPayloadFromLocalBooking(booking);
         const response = await apiService.createBooking(payload);
-        // If successful, remove from pendingSync
+        const realBooking = snakeToCamel(response.data); // adjust based on API response
+
+        // Remove temp booking from pendingSync and from main list
         dispatch(removeSyncedBooking(booking.id));
-        // Optionally update the stored booking with the real ID from backend
+        dispatch(removeTempBooking(booking.id)); // new action
+        // Add the real booking
+        dispatch(addRealBooking(realBooking));
       } catch (error) {
         console.error('Sync failed for booking', booking.id, error);
-        // Keep it in pending; maybe implement retry logic later
       }
     }
   }
 );
-
 
 export const fetchBookings = createAsyncThunk(
   "bookings/fetchAll",
@@ -325,6 +326,12 @@ const bookingsSlice = createSlice({
     removeSyncedBooking: (state, action: PayloadAction<string>) => {
       state.pendingSync = state.pendingSync.filter(b => b.id !== action.payload);
     },
+    removeTempBooking: (state, action: PayloadAction<string>) => {
+      state.bookings = state.bookings.filter(b => b.id !== action.payload);
+    },
+    addRealBooking: (state, action: PayloadAction<Booking>) => {
+      state.bookings.unshift(action.payload);
+    },
     clearPendingSync: (state) => {
       state.pendingSync = [];
     },
@@ -401,6 +408,9 @@ export const {
   clearBookingFilters,
   addOfflineBooking,
   removeSyncedBooking,
+  removeTempBooking,
+  addRealBooking,
+  clearPendingSync,
   // createBooking,
 } = bookingsSlice.actions;
 export default bookingsSlice.reducer;

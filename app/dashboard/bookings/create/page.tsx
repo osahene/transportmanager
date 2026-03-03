@@ -6,14 +6,13 @@ import { FaSave, FaTimes } from "react-icons/fa";
 import { useAppSelector, useAppDispatch } from "../../../lib/store";
 import { fetchCars } from "../../../lib/slices/carsSlice";
 import { useOnlineStatus } from '@/app/lib/useOnlineStatus';
-import { mapDetailedBookingToReceiptData, ReceiptData } from "@/app/lib/utils/receiptMapper";
 import { useReactToPrint } from "react-to-print";
 import { FaPrint } from "react-icons/fa";
 import { format } from "date-fns";
 import { createBooking, checkCarAvailability, fetchBookings, addOfflineBooking } from "../../../lib/slices/bookingsSlice";
 import { Customer } from "../../../types/customer";
 import { Car } from "@/app/types/cars";
-import { BookingSummary, Driver, PaymentMethod, Booking } from "../../../types/booking";
+import { mapDetailedBookingToReceiptData, ReceiptData, BookingSummary, Driver, PaymentMethod, Booking } from "../../../types/booking";
 import {
   selectAvailablecars,
   selectDrivers,

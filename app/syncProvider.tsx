@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { useAppDispatch } from '@/app/lib/store';
 import { syncPendingBookings } from '@/app/lib/slices/bookingsSlice';
-import { useOnlineStatus } from '@/app/lib/useOnlineStatus';
+import {useOnlineStatus} from '@/app/lib/useOnlineStatus';
 
 export function SyncProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();

@@ -3,19 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "next dev --turbopack",
+     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
-    "@ducanh2912/next-pwa": "^10.2.9",
     "@headlessui/react": "^2.2.9",
     "@hookform/resolvers": "^5.2.2",
     "@paystack/inline-js": "^2.22.7",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.2",
     "@reduxjs/toolkit": "^2.11.2",
+    "@serwist/next": "^9.5.6",
+    "@serwist/precaching": "^9.5.6",
+    "@serwist/sw": "^9.5.6",
     "@tanstack/react-query": "^5.90.14",
     "@tanstack/react-query-devtools": "^5.91.2",
     "axios": "^1.13.2",
@@ -25,6 +27,7 @@
     "framer-motion": "^12.23.26",
     "gsap": "^3.14.2",
     "html2canvas-pro": "^1.6.2",
+    "idb": "^8.0.3",
     "jspdf": "^3.0.4",
     "localforage": "^1.10.0",
     "next": "16.1.1",
@@ -41,7 +44,6 @@
     "redux-persist-transform-encrypt": "^5.1.1",
     "three": "^0.182.0",
     "use-network": "^0.0.1",
-    "workbox-window": "^7.4.0",
     "zod": "^4.2.1"
   },
   "devDependencies": {

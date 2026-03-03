@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { SecureHeaders } from "./components/SecureHeaders";
+import OfflineBanner from "./components/offlineBanner";
 import { Providers } from "./providers";
 const inter = Inter({
   variable: "--font-inter",
@@ -11,7 +12,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "YOS Car Rentals - Transport Manager",
   description: "Comprehensive transport management system",
-  manifest: "/manifest.json",  
+  manifest: "/manifest.webmanifest",  
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -33,6 +34,7 @@ export default function RootLayout({
         <SecureHeaders />
       </head>
       <body className={`${inter.className} antialiased`}>
+        <OfflineBanner />
         <Providers>{children}</Providers>
       </body>
     </html>

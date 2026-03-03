@@ -19,7 +19,7 @@ import {
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useAppSelector, useAppDispatch } from "../../lib/store";
-import { mapDetailedBookingToReceiptData } from "@/app/lib/utils/receiptMapper";
+import { mapDetailedBookingToReceiptData } from "@/app/types/booking";
 import { selectAllBookingsWithDetails } from "../../lib/slices/selectors";
 import { fetchBookingById, sendEmail, sendSMS } from "../../lib/slices/bookingsSlice";
 import BookingActions from "@/app/components/booking/bookingActions";
