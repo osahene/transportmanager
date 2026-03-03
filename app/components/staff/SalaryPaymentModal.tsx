@@ -46,7 +46,6 @@ export default function SalaryPaymentModal({ staff, onClose, onSuccess }: Props)
         try {
             const result = await dispatch(createSalaryPayment(data)).unwrap();
             setCreatedPayment(result);
-            console.log("Created salary payment:", result);
             if (onSuccess) onSuccess();
         } catch (error) {
             console.error("Error creating salary payment:", error);

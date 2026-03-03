@@ -50,7 +50,6 @@ export const fetchStaff = createAsyncThunk(
     try {
       const response = await apiService.getStaff();
       const staffData = response.data.results.map((staff: any) => snakeToCamel(staff));
-      console.log("Fetched staff data:", staffData); // Debug log
       return staffData as Staff[];
     } catch (error: any) {
       return rejectWithValue(error.response?.data || "Failed to fetch staff");
@@ -75,7 +74,6 @@ export const fetchSalaryHistory = createAsyncThunk(
   async (staffId: string, { rejectWithValue }) => {
     try {
       const response = await apiService.getSalaryHistory(staffId);
-      console.log('staff salary history', response)
       return snakeToCamel(response.data.results) as SalaryPayment[];
     } catch (error: any) {
       return rejectWithValue(error.response?.data || "Failed to fetch salary history");
@@ -88,7 +86,6 @@ export const createSalaryPayment = createAsyncThunk(
   async (data: any, { rejectWithValue }) => {
     try {
       const response = await apiService.createSalaryPayment(data);
-      console.log('Created salary payment', response)
       return snakeToCamel(response.data) as SalaryPayment;
     } catch (error: any) {
       return rejectWithValue(error.response?.data || "Failed to create salary payment");
@@ -168,7 +165,6 @@ const staffSlice = createSlice({
           state.staff = action.payload;
         } else {
           // Fallback if the API structure is different than expected
-          console.error("Payload is not an array:", action.payload);
           state.staff = [];
         }
       })

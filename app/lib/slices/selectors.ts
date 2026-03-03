@@ -347,9 +347,6 @@ export const selectFilteredCars = createSelector(
 export const selectAllBookingsWithDetails = createSelector(
   [selectBookings, selectcars, selectCustomers],
   (bookings, cars, customers) => {
-    console.log("customer bookings with details...", customers);
-    console.log("cars bookings with details...", cars);
-    console.log("bookins bookings with details...", bookings);
     return bookings
       .map((booking) => {
         const carId = booking.CarId;
