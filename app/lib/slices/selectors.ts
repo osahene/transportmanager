@@ -355,9 +355,6 @@ export const selectAllBookingsWithDetails = createSelector(
           : booking.customerId;
         const car = cars.find((c) => c.id === carId);
         const customer = customers.find((c) => c.id === customerId);
-        console.log("customer bookings with details of bookings...", booking);
-        console.log("customer bookings with details...", customerId);
-        console.log("customer bookings with details with id...", customer);
         // Calculate duration
         const startDate = new Date(booking.startDate);
         const endDate = new Date(booking.endDate);

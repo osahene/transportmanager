@@ -749,6 +749,34 @@ export default function CreateBookingPage() {
         }
       } catch (error: any) {
         console.error("Error creating booking:", error);
+
+        // 1. Detect if the error is actually a network/offline failure
+        const errorMessage = error?.message?.toLowerCase() || "";
+        const isNetworkFailure =
+          errorMessage.includes("network error") ||
+          errorMessage.includes("cors") ||
+          errorMessage.includes("failed to fetch") ||
+          error?.code === "ERR_NETWORK" ||
+          !navigator.onLine;
+
+        // 2. Fall back to offline save if the network failed
+        if (isNetworkFailure) {
+          console.warn("Network failed. Falling back to offline save.");
+
+          const localBooking = buildLocalBooking(summary, customerMode);
+          dispatch(addOfflineBooking(localBooking));
+
+          const receiptData = mapDetailedBookingToReceiptData(localBooking);
+          setReceiptBooking(receiptData);
+
+          setIsProcessing(false);
+          setShowConfirmationModal(false);
+          alert('Network unreachable. Booking saved offline. It will be synced when you’re back online.');
+          router.push('/dashboard/bookings');
+          return; // Exit the function so we don't hit the standard error alert
+        }
+
+        // 3. Handle actual API errors (e.g., 400 Bad Request, 500 Server Error)
         setIsProcessing(false);
         alert(`Failed to create booking: ${error?.message || "Unknown error"}`);
       }
