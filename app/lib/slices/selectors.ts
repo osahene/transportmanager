@@ -350,11 +350,15 @@ export const selectAllBookingsWithDetails = createSelector(
     return bookings
       .map((booking) => {
         const carId = booking.CarId;
-        const customerId = booking.customerId;
+        const customerId = (typeof booking.customerId === 'object' && booking.customerId !== null)
+          ? (booking.customerId as any).id
+          : booking.customerId;
         const car = cars.find((c) => c.id === carId);
         const customer = customers.find((c) => c.id === customerId);
-        console.log("customer bookings with details...", customer);
-              // Calculate duration
+        console.log("customer bookings with details of bookings...", booking);
+        console.log("customer bookings with details...", customerId);
+        console.log("customer bookings with details with id...", customer);
+        // Calculate duration
         const startDate = new Date(booking.startDate);
         const endDate = new Date(booking.endDate);
         const durationDays = Math.ceil(

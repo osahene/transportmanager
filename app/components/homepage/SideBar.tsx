@@ -16,6 +16,7 @@ import {
   FaCog,
   // FaChartLine,
 } from "react-icons/fa";
+import Link from "next/link";
 
 const navItems = [
   {
@@ -47,13 +48,21 @@ export default function SideNav() {
   const { sidebarOpen } = useSelector((state: RootState) => state.ui);
   const [mobileOpen, setMobileOpen] = React.useState(false);
 
-  const handleNavigation = (item: (typeof navItems)[0]) => {
-    dispatch(setCurrentPage(item.id));
-    router.push(item.path);
+  // const handleNavigation = (item: (typeof navItems)[0]) => {
+  //   dispatch(setCurrentPage(item.id));
+  //   router.push(item.path);
+  //   if (window.innerWidth < 768) {
+  //     setMobileOpen(false);
+  //   }
+  // };
+
+  const handleNavigation = (id: string) => {
+    dispatch(setCurrentPage(id));
     if (window.innerWidth < 768) {
       setMobileOpen(false);
     }
   };
+
 
   const isActive = (path: string) => {
     return pathname === path || pathname?.startsWith(`${path}/`);
@@ -91,7 +100,6 @@ export default function SideNav() {
           ) : (
             <div className="w-8 h-8 bg-linear-to-r from-blue-600 to-indigo-600 rounded-lg mx-auto" />
           )}
-
           <button
             onClick={() => setMobileOpen(false)}
             className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
@@ -107,28 +115,21 @@ export default function SideNav() {
             const active = isActive(item.path) && item.id !== "dashboard";
 
             return (
-              <button
+              <Link
                 key={item.id}
-                onClick={() => handleNavigation(item)}
-                className={`
-                  w-full flex items-center ${
-                    sidebarOpen
-                      ? "justify-start px-4 space-x-3"
-                      : "justify-center"
-                  }
-                  py-3 rounded-xl transition-all duration-200
-                  ${
-                    active
-                      ? "bg-linear-to-r from-blue-500 to-indigo-500 text-white shadow-lg"
-                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  }
-                `}
+                href={item.path} 
+                onClick={() => handleNavigation(item.id)} 
+                className={`w-full flex items-center ${sidebarOpen ? "justify-start px-4 space-x-3" : "justify-center"
+                  } py-3 rounded-xl transition-all duration-200
+                 ${active
+                    ? "bg-linear-to-r from-blue-500 to-indigo-500 text-white shadow-lg"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"}
+                  `}
                 title={sidebarOpen ? "" : item.label}
               >
                 <Icon
-                  className={`w-5 h-5 ${
-                    active ? "text-white" : "text-current"
-                  }`}
+                  className={`w-5 h-5 ${active ? "text-white" : "text-current"
+                    }`}
                 />
                 {sidebarOpen && (
                   <>
@@ -138,7 +139,7 @@ export default function SideNav() {
                     )}
                   </>
                 )}
-              </button>
+              </Link>
             );
           })}
         </nav>
@@ -147,9 +148,8 @@ export default function SideNav() {
         <div className="absolute bottom-0 left-0 right-0 p-2 border-t border-gray-200 dark:border-gray-700">
           <div className="space-y-2">
             <button
-              className={`flex items-center ${
-                sidebarOpen ? "justify-start px-4 space-x-3" : "justify-center"
-              } w-full py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl`}
+              className={`flex items-center ${sidebarOpen ? "justify-start px-4 space-x-3" : "justify-center"
+                } w-full py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl`}
               title={sidebarOpen ? "" : "Settings"}
               onClick={() => router.push("/dashboard/settings")}
             >
