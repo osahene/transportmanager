@@ -21,6 +21,7 @@ import {
   Legend,
   Filler,
 } from "chart.js";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { useAppDispatch, useAppSelector } from "../lib/store";
 import { selectDashboardMetrics, selectDrivers } from "../lib/slices/selectors";
@@ -42,8 +43,6 @@ ChartJS.register(
 
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
-  const router = useRouter();
-
   const metrics = useAppSelector(selectDashboardMetrics);
   const carsLoading = useAppSelector((state) => state.car.loading);
   const customersLoading = useAppSelector((state) => state.customers.loading);
@@ -73,9 +72,6 @@ export default function DashboardPage() {
 
   }, [dispatch]);
 
-  const handleBookingNewVehicle = () => {
-    router.push("/dashboard/bookings/create");
-  };
 
   if (isLoading) {
     return (
@@ -290,12 +286,12 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex gap-4 mt-4 md:mt-0">
-            <button
-              className="px-6 py-3 bg-white text-blue-600 dark:text-blue-700 font-semibold rounded-lg hover:bg-blue-50 dark:hover:bg-blue-100 transition"
-              onClick={handleBookingNewVehicle}
+            <Link
+              href="/dashboard/bookings/create"
+              className="px-6 py-3 bg-white text-blue-600 dark:text-blue-700 font-semibold rounded-lg hover:bg-blue-50 dark:hover:bg-blue-100 transition inline-block"
             >
               New Booking
-            </button>
+            </Link>
           </div>
         </div>
       </motion.div>

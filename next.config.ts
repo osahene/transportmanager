@@ -28,5 +28,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-// Use ONLY this for the export
 export default withSerwist(nextConfig);

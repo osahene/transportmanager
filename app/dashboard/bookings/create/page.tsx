@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { FaSave, FaTimes } from "react-icons/fa";
 import { useAppSelector, useAppDispatch } from "../../../lib/store";
 import { fetchCars } from "../../../lib/slices/carsSlice";
@@ -9,7 +10,7 @@ import { useOnlineStatus } from '@/app/lib/useOnlineStatus';
 import { useReactToPrint } from "react-to-print";
 import { FaPrint } from "react-icons/fa";
 import { format } from "date-fns";
-import { createBooking, checkCarAvailability, fetchBookings, addOfflineBooking } from "../../../lib/slices/bookingsSlice";
+import { createBooking, fetchBookings, addOfflineBooking } from "../../../lib/slices/bookingsSlice";
 import { Customer } from "../../../types/customer";
 import { Car } from "@/app/types/cars";
 import { mapDetailedBookingToReceiptData, ReceiptData, BookingSummary, Driver, PaymentMethod, Booking } from "../../../types/booking";
@@ -199,10 +200,6 @@ export default function CreateBookingPage() {
       driver: driver || undefined,
     } as Booking; // cast if necessary – ensure all required fields are present
   };
-
-
-
-
 
   // Form state
   const [formData, setFormData] = useState({
@@ -689,22 +686,6 @@ export default function CreateBookingPage() {
     } as BookingSummary;
   }, [formData, availableCars, drivers, customerMode, selectedCustomer, newCustomer, dailyRate, discount, totalAmount, payInSlipDetails, mobileMoneyDetails, getSelectedCar, getSelectedDriver]);
 
-  const checkAvailability = useCallback(async () => {
-    if (!formData.carId || !formData.startDate || !formData.endDate) return { available: true };
-    try {
-      const result = await dispatch(
-        checkCarAvailability({
-          carId: formData.carId,
-          startDate: formData.startDate,
-          endDate: formData.endDate,
-        })
-      ).unwrap();
-      return result;
-    } catch (error) {
-      console.error("Availability check failed:", error);
-      return { available: false, message: "Unable to verify availability. Please try again." };
-    }
-  }, [dispatch, formData.carId, formData.startDate, formData.endDate]);
 
   const createBookingFlow = useCallback(
     async (summary: BookingSummary) => {
@@ -748,8 +729,7 @@ export default function CreateBookingPage() {
           router.push("/dashboard/bookings");
         }
       } catch (error: any) {
-        console.error("Error creating booking:", error);
-
+        
         // 1. Detect if the error is actually a network/offline failure
         const errorMessage = error?.message?.toLowerCase() || "";
         const isNetworkFailure =
@@ -758,7 +738,8 @@ export default function CreateBookingPage() {
           errorMessage.includes("failed to fetch") ||
           error?.code === "ERR_NETWORK" ||
           !navigator.onLine;
-
+          console.error("Error creating new booking:", error);
+          console.log("Is network failure:", isNetworkFailure);
         // 2. Fall back to offline save if the network failed
         if (isNetworkFailure) {
           console.warn("Network failed. Falling back to offline save.");
@@ -776,7 +757,6 @@ export default function CreateBookingPage() {
           return; // Exit the function so we don't hit the standard error alert
         }
 
-        // 3. Handle actual API errors (e.g., 400 Bad Request, 500 Server Error)
         setIsProcessing(false);
         alert(`Failed to create booking: ${error?.message || "Unknown error"}`);
       }
@@ -789,12 +769,6 @@ export default function CreateBookingPage() {
       e.preventDefault();
       if (!validateForm()) return;
 
-      // const availability = await checkAvailability();
-      // if (!availability.available) {
-      //   alert(`Car is not available: ${availability.message || "Unavailable"}`);
-      //   return;
-      // }
-
       const summary = buildBookingSummary();
       if (!summary) {
         alert("Unable to build booking summary. Please check the inputs.");
@@ -804,7 +778,7 @@ export default function CreateBookingPage() {
       setBookingSummary(summary);
       setShowConfirmationModal(true);
     },
-    [validateForm, checkAvailability, buildBookingSummary]
+    [validateForm, buildBookingSummary]
   );
 
   const handleConfirmBooking = useCallback(async () => {
@@ -813,6 +787,7 @@ export default function CreateBookingPage() {
 
     if (isOnline) {
       // Existing online flow (Paystack + API)
+      console.log('booking online')
       await createBookingFlow(bookingSummary);
     } else {
       // OFFLINE: save locally and print receipt
@@ -840,13 +815,12 @@ export default function CreateBookingPage() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Create New Booking</h1>
           <p className="text-gray-600 dark:text-gray-300 mt-2">Fill in the details below to create a new booking</p>
         </div>
-        <button
-          onClick={() => router.back()}
+        <Link
+          href="/dashboard/bookings"
           className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center gap-2"
         >
-          <FaTimes />
-          Cancel
-        </button>
+          <FaTimes /> Cancel
+        </Link>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">

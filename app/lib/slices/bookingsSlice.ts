@@ -214,32 +214,6 @@ export const createBooking = createAsyncThunk(
   }
 );
 
-
-export const checkCarAvailability = createAsyncThunk(
-  "bookings/checkAvailability",
-  async ({ carId, startDate, endDate }: {
-    carId: string; startDate: string; endDate: string;
-  },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await apiService.checkAvailability({
-        car_id: carId,
-        start_date: startDate,
-        end_date: endDate,
-      });
-      return response.data;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(
-          error.response?.data?.message || "Failed to check availability"
-        );
-      }
-      return rejectWithValue("An unexpected error occurred");
-    }
-  }
-);
-
 // export const fetchBookingsByCarId = createAsyncThunk(
 //   "bookings/fetchByCarId",
 //   async (carId: string) => {
@@ -247,8 +221,6 @@ export const checkCarAvailability = createAsyncThunk(
 //     return response.data;
 //   }
 // );
-
-
 
 export const markBookingAsReturned = createAsyncThunk(
   'bookings/markReturned',

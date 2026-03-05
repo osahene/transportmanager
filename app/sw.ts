@@ -19,7 +19,7 @@ const serwist = new Serwist({
   fallbacks: {
     entries: [
       {
-        url: "/~offline", // This URL must match a route in your /app folder
+        url: "/~offline", 
         matcher({ request }) {
           return request.destination === "document";
         },
