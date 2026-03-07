@@ -1,13 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useAppDispatch, useAppSelector } from "../../../../lib/store";
-import {
-  updateCarStatusWithEventPayload,
-  fetchCarById,
-} from "../../../../lib/slices/carsSlice";
-import { selectCarById } from "@/app/lib/slices/selectors"; // Removed unused selectSelectedCar
+import { useCar, useUpdateCarStatusWithEventPayload } from "@/app/lib/hooks/useCars";
 import {
   FaArrowLeft,
   FaSave,
@@ -28,14 +23,15 @@ const INPUT_CLASSES = "w-full px-4 py-2 bg-white dark:bg-gray-700 border border-
 export default function AddEventPage() {
   const router = useRouter();
   const params = useParams();
-  const dispatch = useAppDispatch();
+  const carId = params.id as string;
+
+  // Fetch car data using React Query
+  const { data: currentCar, isLoading: carLoading } = useCar(carId);
+  const updateCarStatusMutation = useUpdateCarStatusWithEventPayload();
+
   const [loading, setLoading] = useState(false);
 
-  const carId = params.id as string;
-  const currentCar = useAppSelector(selectCarById(carId));
-
   // 3. Consolidated State
-  // We use generic names (startDate, endDate, vendor) and map them on submit
   const [formData, setFormData] = useState({
     type: "maintenance" as EventType,
     title: "",
@@ -47,12 +43,6 @@ export default function AddEventPage() {
     referenceNumber: "", // Covers: Policy Number
     severity: "low",
   });
-
-  useEffect(() => {
-    if (!currentCar && carId) {
-      dispatch(fetchCarById(carId));
-    }
-  }, [carId, currentCar, dispatch]);
 
   // 4. Helper to get labels based on type
   const getTypeConfig = useMemo(() => {
@@ -125,12 +115,10 @@ export default function AddEventPage() {
         eventPayload.returnDate = formData.endDate;
       }
 
-      await dispatch(
-        updateCarStatusWithEventPayload({
-          CarId: currentCar.id,
-          payload: eventPayload,
-        })
-      ).unwrap();
+      await updateCarStatusMutation.mutateAsync({
+        id: currentCar.id,
+        payload: eventPayload,
+      });
 
       alert("Event added successfully!");
       router.push(`/dashboard/cars/${carId}`);
@@ -151,6 +139,14 @@ export default function AddEventPage() {
       [name]: type === "number" ? (value === "" ? 0 : parseFloat(value)) : value,
     }));
   };
+
+  if (carLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   if (!currentCar) {
     return (
@@ -185,7 +181,7 @@ export default function AddEventPage() {
           <button onClick={() => router.push(`/dashboard/cars/${currentCar.id}`)} className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600">
             <FaTimes className="w-4 h-4 inline mr-2" /> Cancel
           </button>
-          <button onClick={handleSubmit} disabled={loading} className="px-4 py-2 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:opacity-90 disabled:opacity-50">
+          <button onClick={handleSubmit} disabled={loading || updateCarStatusMutation.isPending} className="px-4 py-2 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:opacity-90 disabled:opacity-50">
             <FaSave className="w-4 h-4 inline mr-2" /> {loading ? "Adding..." : "Add Event"}
           </button>
         </div>

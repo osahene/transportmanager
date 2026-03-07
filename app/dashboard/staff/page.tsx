@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   FaUserTie,
   FaMoneyBillWave,
@@ -11,36 +11,47 @@ import {
   FaPlus,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { useAppSelector, useAppDispatch } from "../../lib/store";
-import { selectStaff, selectDrivers } from "../../lib/slices/selectors";
-import { fetchStaff } from "../../lib/slices/staffSlice";
 import { format } from "date-fns";
 import StaffDetailsModal from "@/app/components/staff/StaffDetailsModal";
 import SalaryPaymentModal from "@/app/components/staff/SalaryPaymentModal";
 import AddStaffModal from "@/app/components/staff/AddStaffModal";
-import { Staff } from "@/app/types/staff";
 import StaffPayslipModal from "@/app/components/staff/StaffSalaryPaySlipModal";
+import { Staff } from "@/app/types/staff";
+import { useStaff, useCreateStaff, useCreateSalaryPayment } from "@/app/lib/hooks/useStaff";
 
 export default function StaffPage() {
-  const dispatch = useAppDispatch();
-  const staff = useAppSelector(selectStaff);
-  const drivers = useAppSelector(selectDrivers);
-  const loading = useAppSelector((state) => state.staff.loading);
-  const error = useAppSelector((state) => state.staff.error);
-  const [showAddModal, setShowAddModal] = useState(false);
+  // Local UI state
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
-  const [selectedStaffDetails, setSelectedStaffDetails] = useState<any>(null);
-  const [paymentStaff, setPaymentStaff] = useState<any>(null);
+  const [selectedStaffDetails, setSelectedStaffDetails] = useState<Staff | null>(null);
+  const [paymentStaff, setPaymentStaff] = useState<Staff | null>(null);
   const [selectedPayslipStaff, setSelectedPayslipStaff] = useState<Staff | null>(null);
-  // useEffect(() => {
-  //   if (staff.length === 0) {
-  //     dispatch(fetchStaff());
-  //   }
-  // }, [dispatch, staff.length]);
+  const [showAddModal, setShowAddModal] = useState(false);
 
-  const monthlyPayroll = staff.reduce((sum, s) => sum + Number(s.salary), 0);
+  // Fetch staff data using React Query
+  const { data: staff = [], isLoading, error } = useStaff();
 
-  if (loading) {
+  // Mutations
+  const createStaffMutation = useCreateStaff();
+  const createSalaryPaymentMutation = useCreateSalaryPayment();
+
+  // Derived data
+  const drivers = useMemo(() => {
+    return staff.filter(
+      (member) =>
+        member.role.toLowerCase().includes("driver") ||
+        member.department.toLowerCase().includes("operations")
+    );
+  }, [staff]);
+
+  const monthlyPayroll = useMemo(() => {
+    return staff.reduce((sum, s) => sum + Number(s.salary), 0);
+  }, [staff]);
+
+  const activeStaffCount = useMemo(() => {
+    return staff.filter((s) => s.status === "active").length;
+  }, [staff]);
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-lg">Loading staff data...</div>
@@ -51,10 +62,20 @@ export default function StaffPage() {
   if (error) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-red-500">Error: {error}</div>
+        <div className="text-red-500">Error: {error.message}</div>
       </div>
     );
   }
+
+  const handleAddStaffSuccess = async () => {
+    // No need to manually refetch; the mutation's onSuccess invalidates the query
+    setShowAddModal(false);
+    alert("Staff member added successfully");
+  };
+
+  const handleSalaryPaymentSuccess = () => {
+    alert("Salary payment processed successfully");
+  };
 
   return (
     <div className="space-y-6 p-4 md:p-6">
@@ -118,9 +139,7 @@ export default function StaffPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-300">Active Staff</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {staff.filter((s) => s.status === "active").length}
-              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{activeStaffCount}</p>
             </div>
             <FaCalendarAlt className="text-yellow-600 dark:text-yellow-400 text-2xl" />
           </div>
@@ -211,10 +230,11 @@ export default function StaffPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${staffMember.status === "active"
-                          ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
-                          : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300"
-                          }`}
+                        className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
+                          staffMember.status === "active"
+                            ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
+                            : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300"
+                        }`}
                       >
                         {staffMember.status.toUpperCase().replace("_", " ")}
                       </span>
@@ -231,6 +251,7 @@ export default function StaffPage() {
                         <button
                           onClick={() => setPaymentStaff(staffMember)}
                           className="px-3 py-2 bg-green-600 dark:bg-green-700 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-800 transition text-sm flex items-center gap-1"
+                          disabled={createSalaryPaymentMutation.isPending}
                         >
                           <FaMoneyBillWave />
                           Pay
@@ -315,20 +336,13 @@ export default function StaffPage() {
         <SalaryPaymentModal
           staff={paymentStaff}
           onClose={() => setPaymentStaff(null)}
-          onSuccess={() => {
-            // Optionally refresh staff list or show success
-            setPaymentStaff(null);
-            alert("Salary payment processed successfully");
-          }}
+          onSuccess={handleSalaryPaymentSuccess}
         />
       )}
       {showAddModal && (
         <AddStaffModal
           onClose={() => setShowAddModal(false)}
-          onSuccess={() => {
-            // Optionally refetch staff list
-            dispatch(fetchStaff());
-          }}
+          onSuccess={handleAddStaffSuccess}
         />
       )}
       {selectedPayslipStaff && (

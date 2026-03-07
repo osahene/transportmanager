@@ -1,13 +1,11 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useMemo } from "react";
 import {
   FaCar,
   FaCalendarCheck,
   FaUsers,
   FaUserTie,
-  FaTools,
 } from "react-icons/fa";
 import { Line } from "react-chartjs-2";
 import {
@@ -23,12 +21,11 @@ import {
 } from "chart.js";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useAppDispatch, useAppSelector } from "../lib/store";
-import { selectDashboardMetrics, selectDrivers } from "../lib/slices/selectors";
-import { fetchCars } from "../lib/slices/carsSlice";
-import { fetchCustomers } from "../lib/slices/customersSlice";
-import { fetchDriverBookings, fetchStaff } from "../lib/slices/staffSlice";
-import { fetchBookings } from "../lib/slices/bookingsSlice";
+import { useCars } from "../lib/hooks/useCars";
+import { useBookings } from "../lib/hooks/useBookings";
+import { useCustomers } from "../lib/hooks/useCustomers";
+import { useStaff } from "../lib/hooks/useStaff";
+import { computeDashboardMetrics } from "@/app/lib/hooks/dashboardMetrics";
 
 ChartJS.register(
   CategoryScale,
@@ -42,36 +39,17 @@ ChartJS.register(
 );
 
 export default function DashboardPage() {
-  const dispatch = useAppDispatch();
-  const metrics = useAppSelector(selectDashboardMetrics);
-  const carsLoading = useAppSelector((state) => state.car.loading);
-  const customersLoading = useAppSelector((state) => state.customers.loading);
-  const staffLoading = useAppSelector((state) => state.staff.loading);
-  const bookingsLoading = useAppSelector((state) => state.bookings.loading);
-  const driverBookingsMap = useAppSelector(state => state.staff.driverBookings);
-  const drivers = useAppSelector(selectDrivers);
+  const { data: cars = [], isLoading: carsLoading } = useCars();
+  const { data: bookings = [], isLoading: bookingsLoading } = useBookings({ page: 1, page_size: 30 });
+  const { data: customers = [], isLoading: customersLoading } = useCustomers();
+  const { data: staff = [], isLoading: staffLoading } = useStaff();
 
-  const isLoading = carsLoading || customersLoading || staffLoading || bookingsLoading;
-  const params: any = {
-    page: 1,
-    page_size: 30
-  };
-  // Fetch data if not already loaded
-  useEffect(() => {
-    if (metrics.totalCars === 0) dispatch(fetchCars());
-    if (metrics.totalCustomers === 0) dispatch(fetchCustomers());
-    if (metrics.totalDrivers === 0) dispatch(fetchStaff());
-    if (metrics.currentMonthBookings === 0) dispatch(fetchBookings(params));
-    if (drivers.length > 0) {
-      drivers.forEach(driver => {
-        if (!driverBookingsMap[driver.id]) {
-          dispatch(fetchDriverBookings(driver.id));
-        }
-      });
-    };
+  const isLoading = carsLoading || bookingsLoading || customersLoading || staffLoading;
 
-  }, [dispatch]);
-
+  const metrics = useMemo(
+    () => computeDashboardMetrics(cars, bookings, customers, staff),
+    [cars, bookings, customers, staff]
+  );
 
   if (isLoading) {
     return (

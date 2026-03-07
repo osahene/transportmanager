@@ -9,11 +9,7 @@ import {
   FaClock,
   FaCalendarCheck,
 } from "react-icons/fa";
-import { useAppDispatch } from "../../lib/store";
-import {
-  markBookingAsReturned,
-  cancelBooking,
-} from "../../lib/slices/bookingsSlice";
+import { useMarkBookingAsReturned, useCancelBooking } from "@/app/lib/hooks/useBookings";
 
 interface BookingActionsProps {
   bookingId: string;
@@ -44,7 +40,10 @@ export default function BookingActions({
   dailyRate,
   endDate,
 }: BookingActionsProps) {
-  const dispatch = useAppDispatch();
+  // Mutations
+  const markAsReturnedMutation = useMarkBookingAsReturned();
+  const cancelBookingMutation = useCancelBooking();
+
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [returnMileage, setReturnMileage] = useState("");
@@ -145,13 +144,11 @@ export default function BookingActions({
 
     setLoading(true);
     try {
-      await dispatch(
-        markBookingAsReturned({
-          bookingId,
-          actualReturnTime: new Date(actualReturnTime).toISOString(),
-          returnMileage: parseInt(returnMileage) || undefined,
-        })
-      ).unwrap();
+      await markAsReturnedMutation.mutateAsync({
+        bookingId,
+        actualReturnTime: new Date(actualReturnTime).toISOString(),
+        returnMileage: parseInt(returnMileage) || undefined,
+      });
       setShowReturnModal(false);
       alert("Car marked as returned successfully!");
     } catch (error) {
@@ -162,8 +159,6 @@ export default function BookingActions({
     }
   };
 
-
-
   const handleCancelBooking = async () => {
     if (!reason.trim()) {
       alert("Please provide a reason for cancellation");
@@ -172,13 +167,11 @@ export default function BookingActions({
 
     setLoading(true);
     try {
-      await dispatch(
-        cancelBooking({
-          bookingId,
-          refundAmount,
-          reason,
-        })
-      ).unwrap();
+      await cancelBookingMutation.mutateAsync({
+        bookingId,
+        refundAmount,
+        reason,
+      });
       setShowCancelModal(false);
       setReason("");
       setRefundAmount(0);
@@ -375,23 +368,23 @@ export default function BookingActions({
                         <button
                           type="button"
                           onClick={() => setPenaltyPaymentMethod("cash")}
-                          className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition ${penaltyPaymentMethod === "cash"
+                          className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition ${
+                            penaltyPaymentMethod === "cash"
                               ? "bg-green-100 dark:bg-green-900 border-green-500 text-green-700 dark:text-green-300"
                               : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
-                            }`}
+                          }`}
                         >
                           <FaMoneyBillWave />
                           Cash Payment
                         </button>
                         <button
                           type="button"
-                          onClick={() =>
-                            setPenaltyPaymentMethod("mobile_money")
-                          }
-                          className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition ${penaltyPaymentMethod === "mobile_money"
+                          onClick={() => setPenaltyPaymentMethod("mobile_money")}
+                          className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition ${
+                            penaltyPaymentMethod === "mobile_money"
                               ? "bg-blue-100 dark:bg-blue-900 border-blue-500 text-blue-700 dark:text-blue-300"
                               : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
-                            }`}
+                          }`}
                         >
                           <FaMobileAlt />
                           Mobile Money

@@ -1,10 +1,4 @@
 import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch } from "../../lib/store";
-import {
-  setSelectedRecord,
-  
-} from "../../lib/slices/maintenanceSlice";
 import { MaintenanceRecord, MaintenanceStatus } from "../../types/maintenance";
 import {
   FaEye,
@@ -16,6 +10,11 @@ import {
   FaClock,
   FaExclamationTriangle,
 } from "react-icons/fa";
+import {
+  useUpdateMaintenanceStatus,
+  useExtendMaintenanceDeadline,
+  useCompleteMaintenance,
+} from "@/app/lib/hooks/useMaintenance";
 
 interface MaintenanceTableProps {
   records: MaintenanceRecord[];
@@ -30,22 +29,23 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
   onEditRecord,
   onDeleteRecord,
 }) => {
-  const dispatch = useDispatch<AppDispatch>();
-
-  const [localSelectedRecord, setLocalSelectedRecord] =
-    useState<MaintenanceRecord | null>(null);
+  // Local state for modals
+  const [localSelectedRecord, setLocalSelectedRecord] = useState<MaintenanceRecord | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
-  const [selectedRecordForAction, setSelectedRecordForAction] =
-    useState<MaintenanceRecord | null>(null);
+  const [selectedRecordForAction, setSelectedRecordForAction] = useState<MaintenanceRecord | null>(null);
   const [newEstimatedDate, setNewEstimatedDate] = useState("");
   const [extensionReason, setExtensionReason] = useState("");
   const [actualReturnDate, setActualReturnDate] = useState("");
 
+  // Mutations
+  const updateStatusMutation = useUpdateMaintenanceStatus();
+  const extendDeadlineMutation = useExtendMaintenanceDeadline();
+  const completeMaintenanceMutation = useCompleteMaintenance();
+
   const handleViewDetails = (record: MaintenanceRecord) => {
-    dispatch(setSelectedRecord(record));
     setLocalSelectedRecord(record);
     setIsModalOpen(true);
   };
@@ -70,19 +70,17 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
   const handleConfirmStatusUpdate = async (newStatus: MaintenanceStatus) => {
     if (selectedRecordForAction) {
       try {
-        // await dispatch(
-        //   updateMaintenanceStatus({
-        //     recordId: selectedRecordForAction.id,
-        //     status: newStatus,
-        //     carId: vehicleId,
-        //     estimatedEndDate: selectedRecordForAction.estimatedEndDate,
-        //     notes: `Status updated to ${newStatus}`,
-        //   })
-        // ).unwrap();
+        await updateStatusMutation.mutateAsync({
+          recordId: selectedRecordForAction.id,
+          status: newStatus,
+          estimatedEndDate: selectedRecordForAction.estimatedEndDate,
+          notes: `Status updated to ${newStatus}`,
+        });
         setIsStatusModalOpen(false);
         setSelectedRecordForAction(null);
       } catch (error) {
         console.error("Failed to update status:", error);
+        alert("Failed to update status");
       }
     }
   };
@@ -90,19 +88,18 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
   const handleConfirmExtendDeadline = async () => {
     if (selectedRecordForAction && newEstimatedDate && extensionReason) {
       try {
-        // await dispatch(
-        //   extendMaintenanceDeadline({
-        //     recordId: selectedRecordForAction.id,
-        //     newEstimatedDate,
-        //     reason: extensionReason,
-        //   })
-        // ).unwrap();
+        await extendDeadlineMutation.mutateAsync({
+          recordId: selectedRecordForAction.id,
+          newEstimatedDate,
+          reason: extensionReason,
+        });
         setIsExtendModalOpen(false);
         setSelectedRecordForAction(null);
         setNewEstimatedDate("");
         setExtensionReason("");
       } catch (error) {
         console.error("Failed to extend deadline:", error);
+        alert("Failed to extend deadline");
       }
     }
   };
@@ -110,18 +107,16 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
   const handleConfirmCompleteEarly = async () => {
     if (selectedRecordForAction) {
       try {
-        // await dispatch(
-        //   completeMaintenance({
-        //     recordId: selectedRecordForAction.id,
-        //     carId: vehicleId,
-        //     actualEndDate: actualReturnDate || undefined,
-        //   })
-        // ).unwrap();
+        await completeMaintenanceMutation.mutateAsync({
+          id: selectedRecordForAction.id,
+          actualEndDate: actualReturnDate || undefined,
+        });
         setIsCompleteModalOpen(false);
         setSelectedRecordForAction(null);
         setActualReturnDate("");
       } catch (error) {
         console.error("Failed to complete maintenance:", error);
+        alert("Failed to complete maintenance");
       }
     }
   };
@@ -663,10 +658,10 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
               </button>
               <button
                 onClick={handleConfirmExtendDeadline}
-                disabled={!newEstimatedDate || !extensionReason}
+                disabled={!newEstimatedDate || !extensionReason || extendDeadlineMutation.isPending}
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Extend Deadline
+                {extendDeadlineMutation.isPending ? "Extending..." : "Extend Deadline"}
               </button>
             </div>
           </div>
@@ -756,9 +751,10 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
               </button>
               <button
                 onClick={handleConfirmCompleteEarly}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                disabled={completeMaintenanceMutation.isPending}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
               >
-                Complete Maintenance
+                {completeMaintenanceMutation.isPending ? "Completing..." : "Complete Maintenance"}
               </button>
             </div>
           </div>

@@ -2,8 +2,7 @@
 
 import { useState, useRef } from "react";
 import { FaPrint, FaEnvelope, FaSms } from "react-icons/fa";
-import { useAppDispatch } from "../../lib/store";
-import { createSalaryPayment } from "../../lib/slices/staffSlice";
+import { useCreateSalaryPayment } from "@/app/lib/hooks/useStaff";
 import { Staff } from "@/app/types/staff";
 import { format } from "date-fns";
 import { useReactToPrint } from "react-to-print";
@@ -16,7 +15,6 @@ interface Props {
 }
 
 export default function SalaryPaymentModal({ staff, onClose, onSuccess }: Props) {
-    const dispatch = useAppDispatch();
     const [month, setMonth] = useState(format(new Date(), "yyyy-MM"));
     const [basicSalary, setBasicSalary] = useState(staff.salary);
     const [overtime, setOvertime] = useState(0);
@@ -26,6 +24,8 @@ export default function SalaryPaymentModal({ staff, onClose, onSuccess }: Props)
     const [paymentDate, setPaymentDate] = useState(format(new Date(), "yyyy-MM-dd"));
     const [loading, setLoading] = useState(false);
     const [createdPayment, setCreatedPayment] = useState<any>(null);
+
+    const createSalaryPaymentMutation = useCreateSalaryPayment();
 
     const netSalary = basicSalary + overtime + bonuses - deductions;
 
@@ -44,7 +44,7 @@ export default function SalaryPaymentModal({ staff, onClose, onSuccess }: Props)
             payment_method: paymentMethod,
         };
         try {
-            const result = await dispatch(createSalaryPayment(data)).unwrap();
+            const result = await createSalaryPaymentMutation.mutateAsync(data);
             setCreatedPayment(result);
             if (onSuccess) onSuccess();
         } catch (error) {
@@ -181,80 +181,80 @@ function SalaryPayslip({ payment, staff, onClose }: any) {
     };
 
     return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl max-w-2xl w-full p-6">
-        <div 
-          ref={contentRef} 
-          id="payslip" 
-          className="p-8 border rounded-lg bg-white text-black"
-        >
-          <div className="text-center mb-6">
-            <h2 className="text-3xl font-bold uppercase tracking-wide">Payslip</h2>
-            <p className="text-lg font-semibold mt-2">{staff.name}</p>
-            <p className="text-gray-600">{staff.role}</p>
-            <p className="text-sm text-gray-500 mt-1">
-              Period: {format(new Date(payment.month), "MMMM yyyy")}
-            </p>
-          </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl max-w-2xl w-full p-6">
+                <div
+                    ref={contentRef}
+                    id="payslip"
+                    className="p-8 border rounded-lg bg-white text-black"
+                >
+                    <div className="text-center mb-6">
+                        <h2 className="text-3xl font-bold uppercase tracking-wide">Payslip</h2>
+                        <p className="text-lg font-semibold mt-2">{staff.name}</p>
+                        <p className="text-gray-600">{staff.role}</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                            Period: {format(new Date(payment.month), "MMMM yyyy")}
+                        </p>
+                    </div>
 
-          <div className="mt-4 border-t border-b py-4 space-y-3">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Basic Salary:</span>
-              <span className="font-medium">¢{payment.basic_salary?.toLocaleString() || payment.basicSalary?.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Overtime:</span>
-              <span className="font-medium">¢{payment.overtime?.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Bonuses:</span>
-              <span className="font-medium">¢{payment.bonuses?.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between text-red-600">
-              <span className="text-gray-600">Deductions:</span>
-              <span>-¢{payment.deductions?.toLocaleString()}</span>
-            </div>
-          </div>
+                    <div className="mt-4 border-t border-b py-4 space-y-3">
+                        <div className="flex justify-between">
+                            <span className="text-gray-600">Basic Salary:</span>
+                            <span className="font-medium">¢{payment.basic_salary?.toLocaleString() || payment.basicSalary?.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-gray-600">Overtime:</span>
+                            <span className="font-medium">¢{payment.overtime?.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-gray-600">Bonuses:</span>
+                            <span className="font-medium">¢{payment.bonuses?.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-red-600">
+                            <span className="text-gray-600">Deductions:</span>
+                            <span>-¢{payment.deductions?.toLocaleString()}</span>
+                        </div>
+                    </div>
 
-          <div className="flex justify-between items-center font-bold text-xl mt-4 pt-2 border-t border-black">
-            <span>Net Salary:</span>
-            <span>¢{payment.net_salary?.toLocaleString() || payment.netSalary?.toLocaleString()}</span>
-          </div>
+                    <div className="flex justify-between items-center font-bold text-xl mt-4 pt-2 border-t border-black">
+                        <span>Net Salary:</span>
+                        <span>¢{payment.net_salary?.toLocaleString() || payment.netSalary?.toLocaleString()}</span>
+                    </div>
 
-          <div className="mt-8 text-xs text-gray-400 flex justify-between">
-            <p>Payment Date: {format(new Date(payment.paymentDate), "dd MMM yyyy")}</p>
-            <p>Method: {payment.paymentMethod.replace("_", " ").toUpperCase()}</p>
-          </div>
+                    <div className="mt-8 text-xs text-gray-400 flex justify-between">
+                        <p>Payment Date: {format(new Date(payment.paymentDate), "dd MMM yyyy")}</p>
+                        <p>Method: {payment.paymentMethod.replace("_", " ").toUpperCase()}</p>
+                    </div>
+                </div>
+
+                {/* Action Buttons (These will NOT be printed because they are outside the ref) */}
+                <div className="flex justify-end gap-4 mt-6 print:hidden">
+                    <button
+                        onClick={onClose}
+                        className="px-4 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white dark:border-gray-600"
+                    >
+                        Close
+                    </button>
+                    <button
+                        onClick={() => handlePrint()}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 hover:bg-blue-700"
+                    >
+                        <FaPrint /> Print PDF
+                    </button>
+                    <button
+                        onClick={handleEmail}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg flex items-center gap-2 hover:bg-green-700"
+                    >
+                        <FaEnvelope /> Email
+                    </button>
+                    <button
+                        onClick={handleSMS}
+                        className="px-4 py-2 bg-yellow-600 text-white rounded-lg flex items-center gap-2 hover:bg-yellow-700"
+                    >
+                        <FaSms /> SMS
+                    </button>
+                </div>
+            </div>
         </div>
-
-        {/* Action Buttons (These will NOT be printed because they are outside the ref) */}
-        <div className="flex justify-end gap-4 mt-6 print:hidden">
-          <button 
-            onClick={onClose} 
-            className="px-4 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white dark:border-gray-600"
-          >
-            Close
-          </button>
-          <button 
-            onClick={() => handlePrint()} 
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 hover:bg-blue-700"
-          >
-            <FaPrint /> Print PDF
-          </button>
-          <button 
-            onClick={handleEmail} 
-            className="px-4 py-2 bg-green-600 text-white rounded-lg flex items-center gap-2 hover:bg-green-700"
-          >
-            <FaEnvelope /> Email
-          </button>
-          <button 
-            onClick={handleSMS} 
-            className="px-4 py-2 bg-yellow-600 text-white rounded-lg flex items-center gap-2 hover:bg-yellow-700"
-          >
-            <FaSms /> SMS
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+    );
 }

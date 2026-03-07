@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useDispatch } from "react-redux";
 
 import {
   FaCar,
@@ -15,36 +14,40 @@ import {
   FaSearch,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
-import {
-  selectCarsStats,
-  selectFilteredCars,
-} from "../../lib/slices/selectors";
-import { AppDispatch, useAppSelector } from "../../lib/store";
 import { Car } from "@/app/types/cars";
-import { setSelectedCar } from "@/app/lib/slices/carsSlice";
+import { useCars } from "@/app/lib/hooks/useCars";
 
 export default function CarsPage() {
-  const dispatch = useDispatch<AppDispatch>();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const router = useRouter();
+  const { data: cars = [], isLoading, error } = useCars();
 
   // Select cars from state
-  const stats = useAppSelector(selectCarsStats);
+
+  const stats = {
+    total: cars.length,
+    available: cars.filter((c) => c.status === "available").length,
+    rented: cars.filter((c) => c.status === "rented").length,
+    maintenance: cars.filter((c) => c.status === "maintenance").length,
+    retired: cars.filter((c) => c.status === "retired").length,
+  };
 
   // Get filtered cars using selector
-  const filteredCars = useAppSelector((state) =>
-    selectFilteredCars(state, searchTerm, statusFilter)
-  );
+    const filteredCars = cars.filter((car) => {
+    const matchesSearch =
+      !searchTerm ||
+      car.make.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      car.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      car.license_plate?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || car.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
-  
-const handleCarClick = useCallback((car: Car) => {
-  dispatch(setSelectedCar(car));
-  router.push(`/dashboard/cars/${car.id}`);
-}, [dispatch, router]);
-  // const handleAddCar = useCallback(() => {
-  //   router.push("/dashboard/cars/new");
-  // }, [router]);
+const handleCarClick = (car: Car) => {
+    router.push(`/dashboard/cars/${car.id}`);
+  };
+ 
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -89,6 +92,9 @@ const handleCarClick = useCallback((car: Car) => {
 
     return car.status === "rented" ? "On rental" : "In maintenance";
   };
+
+  if (isLoading) return <div>Loading cars...</div>;
+  if (error) return <div>Error loading cars</div>;
 
 
   return (

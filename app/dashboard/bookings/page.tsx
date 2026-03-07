@@ -18,14 +18,14 @@ import {
   FaSortDown,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { useAppSelector, useAppDispatch } from "../../lib/store";
 import { mapDetailedBookingToReceiptData } from "@/app/types/booking";
-import { selectAllBookingsWithDetails } from "../../lib/slices/selectors";
-import { fetchBookingById, sendEmail, sendSMS } from "../../lib/slices/bookingsSlice";
+import { useDetailedBookings } from "../../lib/hooks/useDetailedBookings";
+import { useSendSMS, useSendEmail } from "@/app/lib/hooks/useBookings";
 import BookingActions from "@/app/components/booking/bookingActions";
 import { format } from "date-fns";
 import { useReactToPrint } from "react-to-print";
 import Link from "next/link";
+import apiService from "@/app/lib/services/APIPath";
 
 interface ReceiptData {
   bookingId: string;
@@ -61,20 +61,19 @@ type SortField = "startDate" | "endDate" | "totalAmount" | "customerName";
 type SortDirection = "asc" | "desc";
 
 export default function BookingsPage() {
-  const dispatch = useAppDispatch()
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [sortField, setSortField] = useState<SortField>("startDate");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-  const { detailedBookings } = useAppSelector(state => state.bookings);
-  const allDetailedBookings = useAppSelector(selectAllBookingsWithDetails);
-  const [selectedBooking, setSelectedBooking] = useState<ReceiptData | null>(
-    null,
-  );
+  const [selectedBooking, setSelectedBooking] = useState<ReceiptData | null>(null);
 
+  // Fetch detailed bookings (online + offline) using custom hook
+  const { data: allDetailedBookings = [], isLoading, error } = useDetailedBookings();
 
+  const sendSMSMutation = useSendSMS();
+  const sendEmailMutation = useSendEmail();
 
 
   const receiptRef = useRef<HTMLDivElement>(null);
@@ -84,17 +83,14 @@ export default function BookingsPage() {
   };
 
   // Client-side filtering
-  const filteredBookings = useMemo(() => {
+const filteredBookings = useMemo(() => {
     return allDetailedBookings
       .filter((booking) => {
-        const matchesStatus =
-          statusFilter === "all" || booking.status === statusFilter;
+        const matchesStatus = statusFilter === "all" || booking.status === statusFilter;
         const matchesSearch =
-          booking.customerName
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          booking.carMake.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          booking.carModel.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          booking.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (booking.carMake?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+          (booking.carModel?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
           booking.id.toLowerCase().includes(searchTerm.toLowerCase());
 
         return matchesStatus && matchesSearch;
@@ -109,17 +105,15 @@ export default function BookingsPage() {
             ? a.totalAmount - b.totalAmount
             : b.totalAmount - a.totalAmount;
         } else {
-          // customerName
           const nameA = a.customerName.toLowerCase();
           const nameB = b.customerName.toLowerCase();
-          if (sortDirection === "asc") {
-            return nameA.localeCompare(nameB);
-          } else {
-            return nameB.localeCompare(nameA);
-          }
+          return sortDirection === "asc"
+            ? nameA.localeCompare(nameB)
+            : nameB.localeCompare(nameA);
         }
       });
   }, [allDetailedBookings, statusFilter, searchTerm, sortField, sortDirection]);
+
 
   // Calculate pagination
   const totalItems = filteredBookings.length;
@@ -228,27 +222,25 @@ export default function BookingsPage() {
     return buttons;
   };
 
-const openReceiptModal = (bookingId: string) => {
-  // First try to find the booking in the already computed list (includes offline)
-  const bookingFromList = allDetailedBookings.find(b => b.id === bookingId);
-  if (bookingFromList) {
-    const receiptData = mapDetailedBookingToReceiptData(bookingFromList);
-    setSelectedBooking(receiptData);
-    return;
-  }
+ const openReceiptModal = async (bookingId: string) => {
+    const bookingFromList = allDetailedBookings.find((b) => b.id === bookingId);
+    if (bookingFromList) {
+      const receiptData = mapDetailedBookingToReceiptData(bookingFromList);
+      setSelectedBooking(receiptData);
+      return;
+    }
 
-  // Fallback to API fetch (should rarely happen)
-  dispatch(fetchBookingById(bookingId)).then((action) => {
-    if (action.type === fetchBookingById.fulfilled.type) {
-      const detailedBooking = action.payload;
+    // Fallback: fetch directly from API
+    try {
+      const response = await apiService.getBookingById(bookingId);
+      const detailedBooking = response.data; // adjust if needed
       const receiptData = mapDetailedBookingToReceiptData(detailedBooking);
       setSelectedBooking(receiptData);
-    } else {
-      console.error('Failed to fetch booking details', action.payload);
+    } catch (error) {
+      console.error("Failed to fetch booking details", error);
+      alert("Could not load booking details.");
     }
-  });
-};
-
+  };
 
   const handlePrint = useReactToPrint({
     contentRef: receiptRef,
@@ -257,12 +249,23 @@ const openReceiptModal = (bookingId: string) => {
   });
 
 
+
   const sendEmailReceipt = async (bookingId: string) => {
-    dispatch(sendEmail(bookingId))
+    try {
+      await sendEmailMutation.mutateAsync(bookingId);
+      alert("Email sent successfully!");
+    } catch (error) {
+      alert("Failed to send email.");
+    }
   };
 
   const sendSMSReceipt = async (bookingId: string) => {
-    dispatch(sendSMS(bookingId))
+    try {
+      await sendSMSMutation.mutateAsync(bookingId);
+      alert("SMS sent successfully!");
+    } catch (error) {
+      alert("Failed to send SMS.");
+    }
   };
 
 
@@ -583,7 +586,7 @@ const openReceiptModal = (bookingId: string) => {
                     <td className="px-6 py-4">
                       <BookingActions
                         bookingId={booking.id}
-                        carId={booking.carId}
+                        carId={booking.CarId}
                         currentStatus={booking.status}
                         customerName={booking.customerName}
                         carName={`${booking.carMake} ${booking.carModel}`}

@@ -2,18 +2,15 @@
 
 import { useState } from "react";
 import { FaTimes } from "react-icons/fa";
-import { useAppDispatch } from "../../lib/store";
-import { createStaff } from "../../lib/slices/staffSlice";
-
+import { useCreateStaff } from "@/app/lib/hooks/useStaff";
 interface AddStaffModalProps {
   onClose: () => void;
   onSuccess?: () => void;
 }
 
 export default function AddStaffModal({ onClose, onSuccess }: AddStaffModalProps) {
-  const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
-
+  const createStaffMutation = useCreateStaff()
   // Form fields
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -55,7 +52,7 @@ export default function AddStaffModal({ onClose, onSuccess }: AddStaffModalProps
       }),
     };
     try {
-      await dispatch(createStaff(payload)).unwrap();
+       await createStaffMutation.mutateAsync(payload);
       onSuccess?.();
       onClose();
     } catch (error) {

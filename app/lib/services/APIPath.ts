@@ -1,7 +1,7 @@
-// services/APIPath.ts
 import { $axios } from "./api";
 
 const apiService = {
+    healthCheck: ()=> $axios.get("/account/health/"),
     // Cars endpoints
     getCars: () => $axios.get("/cars/"),
     getCarById: (id: string) => $axios.get(`/cars/${id}/`),
@@ -49,6 +49,19 @@ const apiService = {
     getDriverBookings: (driverId: string) => $axios.get(`/staff/${driverId}/bookings/`),
     sendSalaryEmail: (paymentId: string) => $axios.post(`/salary-payments/${paymentId}/send_email/`),
     sendSalarySMS: (paymentId: string) => $axios.post(`/salary-payments/${paymentId}/send_sms/`),
+
+    // Maintenance endpoints
+    getMaintenanceRecords: (params?: any) => $axios.get("/maintenance/", { params }),
+    createMaintenanceRecord: (data: any) => $axios.post("/maintenance/", data),
+    updateMaintenanceStatus: (recordId: string, data: any) => $axios.patch(`/maintenance/${recordId}/`, data),
+    getMaintenanceStats: () => $axios.get("/maintenance/stats/"),
+    getOverdueMaintenance: () => {
+        const today = new Date().toISOString().split("T")[0];
+        return $axios.get("/maintenance/overdue/", { params: { end_date__lt: today } });
+    },
+    completeMaintenance: (recordId: string, data: any) => $axios.post(`/maintenance/${recordId}/complete/`, data),  
+    extendMaintenanceDeadline: (recordId: string, data: any) => $axios.post(`/maintenance/${recordId}/extend_deadline/`, data),
+
 };
 
 export default apiService;

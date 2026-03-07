@@ -20,10 +20,19 @@ $axios.interceptors.request.use((config) => {
 $axios.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Handle unauthorized
     if (error.response?.status === 401) {
-      // Handle unauthorized
       window.location.href = '/login';
+      return Promise.reject(error);
     }
+
+    // Handle offline / network errors
+    if (!error.response && error.isAxiosError) {
+      console.error("Network error detected. You might be offline.");
+      // The offlineBanner will handle the UI, but this prevents the app from crashing
+      // You can also dispatch a specific Redux action here if needed
+    }
+
     return Promise.reject(error);
   }
 );

@@ -8,7 +8,6 @@ import {
   FaUniversity,
 } from "react-icons/fa";
 import { BookingSummary } from "../../types/booking";
-// import { Customer } from "../../lib/slices/customersSlice";
 
 interface ConfirmationModalProps {
   show: boolean;

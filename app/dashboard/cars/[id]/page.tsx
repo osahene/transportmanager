@@ -1,18 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { RootState, AppDispatch } from "../../../lib/store";
+import React, { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { fetchInsurancePolicies } from "../../../lib/slices/insuranceSlice";
-import { setSelectedCar } from "../../../lib/slices/carsSlice";
-import { selectBookings, selectCarDetails } from "@/app/lib/slices/selectors";
-import {
-  selectMaintenanceBycarId,
-} from "../../../lib/slices/maintenanceSlice";
-import {
-  selectInsuranceByVehicleId,
-} from "../../../lib/slices/insuranceSlice";
+import { useCar } from "@/app/lib/hooks/useCars";
+import { useBookings } from "@/app/lib/hooks/useBookings";
+import { useMaintenanceRecords } from "@/app/lib/hooks/useMaintenance";
+import { useInsurancePolicies } from "@/app/lib/hooks/useInsurance";
 import BookingsTable from "../../../components/cars/BookingsTable";
 import MaintenanceTable from "../../../components/cars/MaintenanceTable";
 import InsuranceTable from "../../../components/cars/InsuranceTable";
@@ -32,50 +25,39 @@ import {
 export default function CarDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const dispatch = useDispatch<AppDispatch>();
+  const carId = params.id as string;
 
-  const selectedCar = useSelector((state: RootState) => state.car.selectedCar);
-  const vehicles = useSelector((state: RootState) => state.car.Cars);
-  const vehiclesLoading = useSelector((state: RootState) => state.car.loading);
-  const bookings = useSelector(selectBookings);
-  const maintenanceRecords = useSelector((state: RootState) =>
-    selectMaintenanceBycarId(params.id as string)(state)
-  );
-
-  const insurancePolicies = useSelector((state: RootState) =>
-    selectInsuranceByVehicleId(params.id as string)(state)
-  );
+  // Fetch data using React Query
+  const { data: car, isLoading: carLoading, error: carError } = useCar(carId);
+  const { data: bookings = [], isLoading: bookingsLoading } = useBookings({ carId }); // Assuming API supports filtering by carId
+  const { data: maintenanceRecords = [], isLoading: maintenanceLoading } = useMaintenanceRecords(carId);
+  const { data: insurancePolicies = [], isLoading: insuranceLoading } = useInsurancePolicies({ vehicleId: carId });
 
   const [activeTab, setActiveTab] = useState<string>("overview");
-  const [loading, setLoading] = useState(true);
 
-  // Load all data for the vehicle
-  // useEffect(() => {
-  //   const loadVehicleData = async () => {
-  //     setLoading(true);
-  //     const vehicleId = params.id as string;
-  //     try {
-  //       // Fetch the car with all related data
-  //       await dispatch(fetchCarById(vehicleId)).unwrap();
-  //     } catch (error) {
-  //       console.error("Failed to load vehicle data:", error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   loadVehicleData();
-  // }, [params.id, dispatch]);
+  const handleBack = () => {
+    router.back();
+  };
 
-  // Set selected vehicle if available
+  const handleAddMaintenanceRecord = () => {
+    router.push(`/dashboard/cars/${carId}/addevent?type=maintenance`);
+  };
 
+  const handleEditMaintenanceRecord = (record: any) => {
+    // This would navigate to edit page or open modal
+    console.log("Edit record:", record);
+  };
 
-  useEffect(() => {
-    if (selectedCar) {
-      dispatch(fetchInsurancePolicies({ vehicleId: selectedCar.id }));
+  const handleDeleteMaintenanceRecord = (id: string) => {
+    if (confirm("Are you sure you want to delete this maintenance record?")) {
+      // This would be handled by a mutation
+      console.log("Delete record:", id);
     }
-  }, [selectedCar, dispatch]);
+  };
 
-  if (vehiclesLoading) {
+  const isLoading = carLoading || bookingsLoading || maintenanceLoading || insuranceLoading;
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
@@ -88,7 +70,7 @@ export default function CarDetailPage() {
     );
   }
 
-  if (!selectedCar) {
+  if (carError || !car) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
@@ -107,55 +89,23 @@ export default function CarDetailPage() {
     );
   }
 
-  const handleBack = () => {
-    router.back();
-  };
+  // Filter bookings for this car (if API didn't already)
+  const carBookings = bookings.filter((b) => b.CarId === carId);
 
-  const handleAddMaintenanceRecord = () => {
-    router.push(`/dashboard/cars/${selectedCar.id}/addevent?type=maintenance`);
-  };
+  // Calculate stats
+  const totalBookings = carBookings.length;
+  const completedBookings = carBookings.filter((b) => b.status === "completed").length;
+  const utilizationRate = totalBookings > 0 ? Math.round((completedBookings / totalBookings) * 100) : 0;
+  const totalRevenue = carBookings
+    .filter((b) => b.status === "completed")
+    .reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+  const maintenanceCosts = maintenanceRecords.reduce((sum, r) => sum + (r.cost || 0), 0);
 
-  const handleEditMaintenanceRecord = (record: any) => {
-    // This would be handled by maintenance slice
-    console.log("Edit record:", record);
-  };
+  // Get last booking date
+  const lastBooking = carBookings.length > 0
+    ? carBookings.sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())[0]
+    : null;
 
-  const handleDeleteMaintenanceRecord = (id: string) => {
-    if (confirm("Are you sure you want to delete this maintenance record?")) {
-      // This would be handled by maintenance slice
-      console.log("Delete record:", id);
-    }
-  };
-
-  // const handleAddOtherEvent = () => {
-  //   router.push(`/dashboard/cars/${selectedCar.id}/addevent?type=other`);
-  // };
-
-  // Calculate utilization rate from bookings
-  const getUtilizationRate = () => {
-    const vehicleBookings = bookings.filter((b) => b.CarId === selectedCar.id);
-    if (vehicleBookings.length === 0) return 0;
-
-    const completedBookings = vehicleBookings.filter(
-      (b) => b.status === "completed"
-    ).length;
-
-    return Math.round((completedBookings / vehicleBookings.length) * 100);
-  };
-
-  // Calculate total revenue from completed bookings
-  const getTotalRevenue = () => {
-    // FIXED: Using carId instead of vehicleId
-    const vehicleBookings = bookings.filter((b) => b.CarId === selectedCar.id);
-    return vehicleBookings
-      .filter((b) => b.status === "completed")
-      .reduce((sum, booking) => sum + Number(booking.totalAmount), 0);
-  };
-
-  // Calculate total maintenance costs
-  const getMaintenanceCosts = () => {
-    return maintenanceRecords.reduce((sum, record) => sum + Number(record.cost), 0);
-  };
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -169,21 +119,19 @@ export default function CarDetailPage() {
           </button>
           <div>
             <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-              {selectedCar.make} {selectedCar.model} ({selectedCar.year})
+              {car.make} {car.model} ({car.year})
             </h2>
             <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mt-1">
               <p className="text-gray-600 dark:text-gray-400">
-                Vehicle ID: {selectedCar.id}
+                Vehicle ID: {car.id}
               </p>
-              <StatusBadge status={selectedCar.status} />
+              <StatusBadge status={car.status} />
             </div>
           </div>
         </div>
         <div className="flex items-center space-x-2">
           <button
-            onClick={() =>
-              router.push(`/dashboard/cars/${selectedCar.id}/addevent`)
-            }
+            onClick={() => router.push(`/dashboard/cars/${car.id}/addevent`)}
             className="px-4 py-2 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2"
           >
             <FaPlus className="w-4 h-4" />
@@ -201,7 +149,7 @@ export default function CarDetailPage() {
                 Total Bookings
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                {bookings.filter((b) => b.CarId === selectedCar.id).length}
+                {totalBookings}
               </p>
             </div>
             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
@@ -213,10 +161,25 @@ export default function CarDetailPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">
+                Total Revenue
+              </p>
+              <p className="text-2xl font-bold text-green-600 mt-1">
+                ¢{totalRevenue.toLocaleString()}
+              </p>
+            </div>
+            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+              <FaCalendarAlt className="w-6 h-6 text-green-600 dark:text-green-400" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Maintenance Costs
               </p>
               <p className="text-2xl font-bold text-yellow-600 mt-1">
-                ¢{getMaintenanceCosts().toLocaleString()}
+                ¢{maintenanceCosts.toLocaleString()}
               </p>
             </div>
             <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
@@ -224,7 +187,6 @@ export default function CarDetailPage() {
             </div>
           </div>
         </div>
-
         <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
@@ -232,7 +194,7 @@ export default function CarDetailPage() {
                 Utilization Rate
               </p>
               <p className="text-2xl font-bold text-purple-600 mt-1">
-                {getUtilizationRate()}%
+                {utilizationRate}%
               </p>
             </div>
             <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
@@ -245,12 +207,7 @@ export default function CarDetailPage() {
       {/* Tabs */}
       <div className="border-b border-gray-200 dark:border-gray-700">
         <nav className="flex space-x-8 overflow-x-auto">
-          {[
-            "overview",
-            "bookings",
-            "maintenance",
-            "insurance",
-          ].map((tab) => (
+          {["overview", "bookings", "maintenance", "insurance"].map((tab) => (
             <TabButton
               key={tab}
               tab={tab}
@@ -267,13 +224,12 @@ export default function CarDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Bookings Table */}
           {activeTab === "bookings" && (
-            <BookingsTable bookings={bookings} vehicleId={selectedCar.id} />
+            <BookingsTable bookings={carBookings} vehicleId={car.id} />
           )}
 
           {/* Maintenance Table */}
           {activeTab === "maintenance" && (
             <MaintenanceTable
-              // maintenanceRecords={maintenanceRecords}
               records={maintenanceRecords}
               onAddRecord={handleAddMaintenanceRecord}
               onEditRecord={handleEditMaintenanceRecord}
@@ -294,10 +250,8 @@ export default function CarDetailPage() {
                   Recent Bookings
                 </h3>
                 <BookingsTable
-                  bookings={bookings
-                    .filter((b) => b.CarId === selectedCar.id)
-                    .slice(0, 5)}
-                  vehicleId={selectedCar.id}
+                  bookings={carBookings.slice(0, 5)}
+                  vehicleId={car.id}
                 />
               </div>
 
@@ -358,10 +312,11 @@ export default function CarDetailPage() {
                                 {policy.provider}
                               </p>
                               <span
-                                className={`px-2 py-1 rounded-full text-xs font-medium ${isActive
-                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                  : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                                  }`}
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  isActive
+                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                }`}
                               >
                                 {isActive ? "Active" : "Expired"}
                               </span>
@@ -389,7 +344,7 @@ export default function CarDetailPage() {
               <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
                 Vehicle Status
               </h3>
-              <StatusBadge status={selectedCar.status} />
+              <StatusBadge status={car.status} />
             </div>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -397,7 +352,7 @@ export default function CarDetailPage() {
                   Utilization
                 </span>
                 <span className="font-bold text-gray-900 dark:text-white">
-                  {getUtilizationRate()}%
+                  {utilizationRate}%
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -405,18 +360,7 @@ export default function CarDetailPage() {
                   Last Booking
                 </span>
                 <span className="font-medium text-gray-800 dark:text-white">
-                  {(() => {
-                    const vehicleBookings = bookings.filter(
-                      (b) => b.CarId === selectedCar.id
-                    );
-                    if (vehicleBookings.length === 0) return "None";
-                    const lastBooking = vehicleBookings.sort(
-                      (a, b) =>
-                        new Date(b.endDate).getTime() -
-                        new Date(a.endDate).getTime()
-                    )[0];
-                    return new Date(lastBooking.endDate).toLocaleDateString();
-                  })()}
+                  {lastBooking ? new Date(lastBooking.endDate).toLocaleDateString() : "None"}
                 </span>
               </div>
             </div>
@@ -434,23 +378,22 @@ export default function CarDetailPage() {
                 </span>
                 <div
                   className="w-4 h-4 rounded-full border border-gray-200 dark:border-gray-700"
-                  style={{ backgroundColor: `${selectedCar.color}` }}
-                  title={`Color: ${selectedCar.color}`}
+                  style={{ backgroundColor: car.color }}
+                  title={`Color: ${car.color}`}
                 />
-
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-600 dark:text-gray-400">
                   License Plate
                 </span>
                 <span className="font-medium text-gray-800 dark:text-white">
-                  {selectedCar.license_plate || "N/A"}
+                  {car.license_plate || "N/A"}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-600 dark:text-gray-400">VIN</span>
                 <span className="font-medium text-gray-800 dark:text-white">
-                  {selectedCar.vin || "N/A"}
+                  {car.vin || "N/A"}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -458,7 +401,7 @@ export default function CarDetailPage() {
                   <FaGasPump className="w-4 h-4" /> Fuel Type
                 </span>
                 <span className="font-medium text-gray-800 dark:text-white">
-                  {selectedCar.fuel_type || "N/A"}
+                  {car.fuel_type || "N/A"}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -466,7 +409,7 @@ export default function CarDetailPage() {
                   Transmission
                 </span>
                 <span className="font-medium text-gray-800 dark:text-white">
-                  {selectedCar.transmission || "N/A"}
+                  {car.transmission || "N/A"}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -474,7 +417,7 @@ export default function CarDetailPage() {
                   Seating Capacity
                 </span>
                 <span className="font-medium text-gray-800 dark:text-white">
-                  {selectedCar.seats || "N/A"}
+                  {car.seats || "N/A"}
                 </span>
               </div>
             </div>
@@ -486,8 +429,8 @@ export default function CarDetailPage() {
               Vehicle Features
             </h3>
             <div className="grid grid-cols-2 gap-3">
-              {selectedCar.features && selectedCar.features.length > 0 ? (
-                selectedCar.features.map((feature, index) => (
+              {car.features && car.features.length > 0 ? (
+                car.features.map((feature, index) => (
                   <div key={index} className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <span className="text-sm text-gray-600 dark:text-gray-400">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   FaUser,
   FaPhone,
@@ -10,64 +10,67 @@ import {
   FaDownload,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { useAppSelector, useAppDispatch } from "../../lib/store";
 import { format } from "date-fns";
-import {
-  selectCustomers,
-  selectFilteredCustomers,
-} from "../../lib/slices/selectors";
-import { fetchCustomerBookingsWithGuarantor,sendBulkSMS, sendSingleSMS } from "@/app/lib/slices/customersSlice";
 import BookingsModal from "@/app/components/booking/BookingsModal";
+import { useCustomers, useCustomerBookingsWithGuarantor, useSendSingleSMS, useSendBulkSMS } from "@/app/lib/hooks/useCustomers";
 
 export default function CustomersPage() {
-  const dispatch = useAppDispatch()
+  // Local UI state
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
   const [smsMessage, setSmsMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const filteredCustomers = useAppSelector(selectFilteredCustomers);
-
-  const customers = useAppSelector(selectCustomers);
-
   const [selectedCustomerForModal, setSelectedCustomerForModal] = useState<{ id: string; name: string } | null>(null);
-  const customerBookings = useAppSelector((state) => state.customers.customerBookings);
-  const modalBookings = selectedCustomerForModal ? customerBookings[selectedCustomerForModal.id] || [] : [];
 
-   const handleViewDetails = (customerId: string, customerName: string) => {
+  // Fetch customers with React Query
+  const { data: customers = [], isLoading, error } = useCustomers();
+
+  // Fetch bookings for modal when a customer is selected
+  const { data: modalBookings = [], refetch: refetchBookings } = useCustomerBookingsWithGuarantor(selectedCustomerForModal?.id || '');
+
+  // Mutations for SMS
+  const sendSingleSMSMutation = useSendSingleSMS();
+  const sendBulkSMSMutation = useSendBulkSMS();
+
+  // Client-side filtering based on searchTerm
+  const filteredCustomers = useMemo(() => {
+    if (!searchTerm.trim()) return customers;
+    const lowerSearch = searchTerm.toLowerCase();
+    return customers.filter((customer) =>
+      `${customer.firstName} ${customer.lastName}`.toLowerCase().includes(lowerSearch) ||
+      customer.email?.toLowerCase().includes(lowerSearch) ||
+      customer.phone?.includes(searchTerm)
+    );
+  }, [customers, searchTerm]);
+
+  const handleViewDetails = (customerId: string, customerName: string) => {
     setSelectedCustomerForModal({ id: customerId, name: customerName });
-    // Fetch bookings if not already in store (optional)
-    if (!customerBookings[customerId]) {
-      dispatch(fetchCustomerBookingsWithGuarantor(customerId));
-    }
+    refetchBookings(); // optionally refetch when modal opens
   };
 
   const handleSendIndividualSMS = async (customerId: string) => {
     const message = window.prompt('Enter SMS message:');
     if (!message) return;
     try {
-        await dispatch(sendSingleSMS({ customerId, message })).unwrap();
-        alert('SMS sent successfully');
+      await sendSingleSMSMutation.mutateAsync({ customerId, message });
+      alert('SMS sent successfully');
     } catch (error: any) {
-        alert(`Failed to send SMS: ${error.message || 'Unknown error'}`);
+      alert(`Failed to send SMS: ${error.message || 'Unknown error'}`);
     }
-};
+  };
 
-const handleSendBulkSMS = async () => {
+  const handleSendBulkSMS = async () => {
     if (selectedCustomers.length === 0 || !smsMessage.trim()) return;
     try {
-        const result = await dispatch(sendBulkSMS({
-            customerIds: selectedCustomers,
-            message: smsMessage.trim()
-        })).unwrap();
-        alert(`SMS sent successfully to ${result.sent_to} customers.`);
-        setSmsMessage('');
-        setSelectedCustomers([]);
+      const result = await sendBulkSMSMutation.mutateAsync({
+        customerIds: selectedCustomers,
+        message: smsMessage.trim()
+      });
+      alert(`SMS sent successfully to ${result || selectedCustomers.length} customers.`);
+      setSmsMessage('');
+      setSelectedCustomers([]);
     } catch (error: any) {
-        alert(`Failed to send SMS: ${error.message || 'Unknown error'}`);
+      alert(`Failed to send SMS: ${error.message || 'Unknown error'}`);
     }
-};
-
-  const closeModal = () => {
-    setSelectedCustomerForModal(null);
   };
 
   const toggleSelectCustomer = (customerId: string) => {
@@ -85,6 +88,18 @@ const handleSendBulkSMS = async () => {
       setSelectedCustomers(filteredCustomers.map((c) => c.id));
     }
   };
+
+  const closeModal = () => {
+    setSelectedCustomerForModal(null);
+  };
+
+  if (isLoading) {
+    return <div className="flex justify-center p-8">Loading customers...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500 p-8">Error loading customers: {error.message}</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -121,10 +136,10 @@ const handleSendBulkSMS = async () => {
           <div className="flex gap-4">
             <button
               onClick={handleSendBulkSMS}
-              disabled={selectedCustomers.length === 0 || !smsMessage.trim()}
+              disabled={selectedCustomers.length === 0 || !smsMessage.trim() || sendBulkSMSMutation.isPending}
               className="px-6 py-3 bg-blue-600 dark:bg-blue-700 text-white font-semibold rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Send SMS ({selectedCustomers.length})
+              {sendBulkSMSMutation.isPending ? 'Sending...' : `Send SMS (${selectedCustomers.length})`}
             </button>
             <button
               onClick={selectAll}
@@ -248,8 +263,9 @@ const handleSendBulkSMS = async () => {
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
                       <button
-                         onClick={() => handleSendIndividualSMS(customer.id)}
-                        className="px-4 py-2 bg-green-600 dark:bg-green-700 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-800 transition text-sm flex items-center gap-2"
+                        onClick={() => handleSendIndividualSMS(customer.id)}
+                        disabled={sendSingleSMSMutation.isPending}
+                        className="px-4 py-2 bg-green-600 dark:bg-green-700 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-800 transition text-sm flex items-center gap-2 disabled:opacity-50"
                       >
                         <FaSms />
                         SMS
@@ -279,12 +295,14 @@ const handleSendBulkSMS = async () => {
           Export Customer List
         </button>
       </div>
+
+      {/* Bookings Modal */}
       {selectedCustomerForModal && (
         <BookingsModal
-            isOpen={!!selectedCustomerForModal}
-            onClose={closeModal}
-            bookings={modalBookings}
-            customerName={selectedCustomerForModal.name}
+          isOpen={!!selectedCustomerForModal}
+          onClose={closeModal}
+          bookings={modalBookings}
+          customerName={selectedCustomerForModal.name}
         />
       )}
     </div>

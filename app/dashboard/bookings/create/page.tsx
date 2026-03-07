@@ -1,31 +1,25 @@
-"use client";
-
 import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FaSave, FaTimes } from "react-icons/fa";
-import { useAppSelector, useAppDispatch } from "../../../lib/store";
-import { fetchCars } from "../../../lib/slices/carsSlice";
+import { useAppDispatch } from "../../../lib/store";
 import { useOnlineStatus } from '@/app/lib/useOnlineStatus';
 import { useReactToPrint } from "react-to-print";
 import { FaPrint } from "react-icons/fa";
 import { format } from "date-fns";
-import { createBooking, fetchBookings, addOfflineBooking } from "../../../lib/slices/bookingsSlice";
+import { addOfflineBooking } from "../../../lib/slices/bookingsSlice";
 import { Customer } from "../../../types/customer";
 import { Car } from "@/app/types/cars";
 import { mapDetailedBookingToReceiptData, ReceiptData, BookingSummary, Driver, PaymentMethod, Booking } from "../../../types/booking";
-import {
-  selectAvailablecars,
-  selectDrivers,
-  selectCustomers,
-} from "../../../lib/slices/selectors";
+import { useCars } from '../../../lib/hooks/useCars';
+import { useStaff } from '../../../lib/hooks/useStaff';
+import { useCustomers, useCustomer } from '../../../lib/hooks/useCustomers';
+import { useCreateBooking } from '../../../lib/hooks/useBookings';
 import CustomerSelectionSection from "../../../components/booking/CustomerSelectionSection";
 import VehicleSelectionSection from "../../../components/booking/VehicleSelectionSection";
 import BookingDetailsSection from "../../../components/booking/BookingDetailsSection";
 import PaymentSummarySection from "../../../components/booking/PaymentSummarySection";
 import ConfirmationModal from "../../../components/booking/ConfirmationModal";
-import { fetchCustomers, fetchCustomerById } from "@/app/lib/slices/customersSlice";
-import { fetchStaff } from "@/app/lib/slices/staffSlice";
 
 
 const params: any = {
@@ -109,22 +103,36 @@ export default function CreateBookingPage() {
   const dispatch = useAppDispatch();
   const isOnline = useOnlineStatus();
   const [receiptBooking, setReceiptBooking] = useState<ReceiptData | null>(null);
+  const createBookingMutation = useCreateBooking();
 
+  // React Query hooks
+  const { data: cars = [], isLoading: carsLoading } = useCars();
+  const { data: staff = [], isLoading: staffLoading } = useStaff();
+  const { data: customers = [], isLoading: customersLoading } = useCustomers();
 
-  // Redux selectors
-  const availableCars = useAppSelector(selectAvailablecars) as Car[];
-  const drivers = useAppSelector(selectDrivers) as Driver[];
-  const allCustomers = useAppSelector(selectCustomers) as Customer[];
+  const availableCars = cars.filter(car => car.status === 'available') as Car[];
+  const drivers = staff.filter(member =>
+    member.role?.toLowerCase() === 'driver' || member.department?.toLowerCase() === 'operations'
+  ) as Driver[];
+  const allCustomers = customers as Customer[];
 
   // ---------- Local UI state ----------
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [bookingSummary, setBookingSummary] = useState<BookingSummary | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-
-  // Customer selection / search
   const [customerSearch, setCustomerSearch] = useState("");
   const [customerMode, setCustomerMode] = useState<"existing" | "new">("existing");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const { data: selectedCustomerDetails } = useCustomer(selectedCustomerId || '');
+
+  // Fetch full customer details when selected
+  useEffect(() => {
+    if (selectedCustomerDetails) {
+      setSelectedCustomer(selectedCustomerDetails);
+    }
+  }, [selectedCustomerDetails]);
+
 
   // Payment details
   const [dailyRate, setDailyRate] = useState<number>(0);
@@ -147,9 +155,6 @@ export default function CreateBookingPage() {
   });
 
 
-  useEffect(() => {
-    dispatch(fetchCustomers());
-  }, [dispatch])
 
   const receiptRef = useRef<HTMLDivElement>(null);
 
@@ -288,11 +293,13 @@ export default function CreateBookingPage() {
     setFormData((prev) => ({ ...prev, totalAmount }));
   }, [totalAmount]);
 
-
   useEffect(() => {
-    dispatch(fetchCars());
-    dispatch(fetchStaff());
-  }, [dispatch]);
+    if (selectedCustomerDetails) {
+      setSelectedCustomerId(selectedCustomerDetails.id);
+    }
+  }, [selectedCustomerDetails]);
+
+
   // Synchronise payInSlip amount when payment method is pay_in_slip
   useEffect(() => {
     if (formData.paymentMethod === "pay_in_slip") {
@@ -319,54 +326,11 @@ export default function CreateBookingPage() {
     [updateMobileMoney]
   );
 
-  const handleCustomerSelect = useCallback((customer: Customer) => {
-    // Set basic info immediately (for form)
+  const handleCustomerSelect = (customer: Customer) => {
     setFormData((prev) => ({ ...prev, customerId: customer.id }));
     setCustomerSearch(`${customer.firstName} ${customer.lastName}`);
-
-    dispatch(fetchCustomerById(customer.id)).then((action) => {
-      if (fetchCustomerById.fulfilled.match(action)) {
-        const fullCustomer = action.payload;
-        const enhancedCustomer: Customer = {
-          ...fullCustomer,
-          address: {
-            city: fullCustomer.addressCity || fullCustomer.address_city || '',
-            region: fullCustomer.addressRegion || fullCustomer.address_region || '',
-            country: fullCustomer.addressCountry || fullCustomer.address_country || 'Ghana',
-          },
-          guarantor: fullCustomer.guarantor ? {
-            ...fullCustomer.guarantor,
-            address: {
-              city: fullCustomer.guarantor.addressCity || fullCustomer.guarantor.address_city || '',
-              region: fullCustomer.guarantor.addressRegion || fullCustomer.guarantor.address_region || '',
-              country: fullCustomer.guarantor.addressCountry || fullCustomer.guarantor.address_country || 'Ghana',
-            }
-          } : undefined
-        };
-        setSelectedCustomer(enhancedCustomer);
-      } else {
-        console.error('Failed to fetch customer details', action.payload);
-
-        const fallbackCustomer: Customer = {
-          ...customer,
-          address: {
-            city: customer.addressCity || customer.address_city || '',
-            region: customer.addressRegion || customer.address_region || '',
-            country: customer.addressCountry || customer.address_country || 'Ghana',
-          },
-          guarantor: customer.guarantor ? {
-            ...customer.guarantor,
-            address: {
-              city: customer.guarantor.addressCity || customer.guarantor.address_city || '',
-              region: customer.guarantor.addressRegion || customer.guarantor.address_region || '',
-              country: customer.guarantor.addressCountry || customer.guarantor.address_country || 'Ghana',
-            }
-          } : undefined
-        };
-        setSelectedCustomer(fallbackCustomer);
-      }
-    });
-  }, [dispatch]);
+    setSelectedCustomerId(customer.id);
+  };
 
   const handleCarSelect = useCallback((carId: string) => {
     setFormData((prev) => ({ ...prev, carId }));
@@ -479,6 +443,7 @@ export default function CreateBookingPage() {
 
     return true;
   }, [customerMode, selectedCustomer, newCustomer, formData, dailyRate, discount, payInSlipDetails, mobileMoneyDetails]);
+
 
   const validateForm = useCallback((): boolean => {
     if (!isFormValid) {
@@ -707,8 +672,7 @@ export default function CreateBookingPage() {
               setMobileMoneyDetails((prev) => ({ ...prev, transactionId: transaction.reference }));
               payload.mobile_money_transaction_id = transaction.reference;
 
-              await dispatch(createBooking(payload)).unwrap();
-              await dispatch(fetchBookings(params));
+              await createBookingMutation.mutateAsync(payload);
               setIsProcessing(false);
               setShowConfirmationModal(false);
               alert("Booking created successfully!");
@@ -720,17 +684,13 @@ export default function CreateBookingPage() {
             },
           });
         } else {
-          await dispatch(createBooking(payload)).unwrap();
-
-          await dispatch(fetchBookings(params));
+          await createBookingMutation.mutateAsync(payload);
           setIsProcessing(false);
           setShowConfirmationModal(false);
           alert("Booking created successfully!");
           router.push("/dashboard/bookings");
         }
       } catch (error: any) {
-        
-        // 1. Detect if the error is actually a network/offline failure
         const errorMessage = error?.message?.toLowerCase() || "";
         const isNetworkFailure =
           errorMessage.includes("network error") ||
@@ -738,30 +698,27 @@ export default function CreateBookingPage() {
           errorMessage.includes("failed to fetch") ||
           error?.code === "ERR_NETWORK" ||
           !navigator.onLine;
-          console.error("Error creating new booking:", error);
-          console.log("Is network failure:", isNetworkFailure);
-        // 2. Fall back to offline save if the network failed
+        console.error("Error creating new booking:", error);
+        console.log("Is network failure:", isNetworkFailure);
+
         if (isNetworkFailure) {
           console.warn("Network failed. Falling back to offline save.");
-
           const localBooking = buildLocalBooking(summary, customerMode);
           dispatch(addOfflineBooking(localBooking));
-
           const receiptData = mapDetailedBookingToReceiptData(localBooking);
           setReceiptBooking(receiptData);
-
           setIsProcessing(false);
           setShowConfirmationModal(false);
           alert('Network unreachable. Booking saved offline. It will be synced when you’re back online.');
           router.push('/dashboard/bookings');
-          return; // Exit the function so we don't hit the standard error alert
+          return;
         }
 
         setIsProcessing(false);
         alert(`Failed to create booking: ${error?.message || "Unknown error"}`);
       }
     },
-    [customerMode, selectedCustomer, newCustomer, formData, totalAmount, dispatch, prepareBackendPayload, router]
+    [customerMode, selectedCustomer, newCustomer, formData, totalAmount, dispatch, prepareBackendPayload, router, createBookingMutation]
   );
 
   const handleSubmit = useCallback(
@@ -786,26 +743,22 @@ export default function CreateBookingPage() {
     setIsProcessing(true);
 
     if (isOnline) {
-      // Existing online flow (Paystack + API)
-      console.log('booking online')
       await createBookingFlow(bookingSummary);
     } else {
-      // OFFLINE: save locally and print receipt
-      // Build a local booking object with all needed fields
-
       const localBooking = buildLocalBooking(bookingSummary, customerMode);
       dispatch(addOfflineBooking(localBooking));
       setIsProcessing(false);
       setShowConfirmationModal(false);
-
       const receiptData = mapDetailedBookingToReceiptData(localBooking);
       setReceiptBooking(receiptData);
-
       alert('Booking saved offline. It will be synced when you’re back online.');
       router.push('/dashboard/bookings');
     }
-  }, [bookingSummary, isOnline, dispatch, createBookingFlow, router]);
+  }, [bookingSummary, isOnline, dispatch, createBookingFlow, router, customerMode]);
 
+  if (carsLoading || staffLoading || customersLoading) {
+    return <div>Loading initial data...</div>;
+  }
 
   return (
     <div className="space-y-6">
