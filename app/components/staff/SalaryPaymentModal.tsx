@@ -45,7 +45,7 @@ export default function SalaryPaymentModal({ staff, onClose, onSuccess }: Props)
         };
         try {
             const result = await createSalaryPaymentMutation.mutateAsync(data);
-            setCreatedPayment(result);
+            setCreatedPayment(result.data);
             if (onSuccess) onSuccess();
         } catch (error) {
             console.error("Error creating salary payment:", error);
@@ -157,9 +157,11 @@ export default function SalaryPaymentModal({ staff, onClose, onSuccess }: Props)
 
 function SalaryPayslip({ payment, staff, onClose }: any) {
 
+    console.log('Rendering SalaryPayslip with payment:', payment, 'and staff:', staff);
     const contentRef = useRef<HTMLDivElement>(null);
     const handlePrint = useReactToPrint({
         contentRef,
+        // documentTitle: `Payslip_${staff.name}_`,
         documentTitle: `Payslip_${staff.name}_${format(new Date(payment.month), "yyyy-MM")}`,
         onAfterPrint: () => alert("Printed successfully"), // Optional callback
     });
@@ -188,16 +190,26 @@ function SalaryPayslip({ payment, staff, onClose }: any) {
                     id="payslip"
                     className="p-8 border rounded-lg bg-white text-black"
                 >
-                    <div className="text-center mb-6">
-                        <h2 className="text-3xl font-bold uppercase tracking-wide">Payslip</h2>
-                        <p className="text-lg font-semibold mt-2">{staff.name}</p>
-                        <p className="text-gray-600">{staff.role}</p>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Period: {format(new Date(payment.month), "MMMM yyyy")}
-                        </p>
+                    <div className="flex justify-between items-start pb-2 mb-6">
+                        <div>
+                            <h1 className="text-3xl font-bold text-blue-800">YOS Car Rentals</h1>
+                            <p className="text-sm text-gray-600"> Opposite Shell filling station, Mango Down, Patasi, Kumasi, Ghana</p>
+                            <p className="text-sm text-gray-600">+233 54 621 3027 | +233 24 445 5757</p>
+                            <p className="text-sm text-gray-600">https://www.yoscarrentals.com | info@yoscarrentals.com</p>
+                        </div>
+                        <div className="text-right">
+                            <h2 className="text-1xl font-bold uppercase tracking-wide">Payslip</h2>
+                            <p className="text-lg font-semibold mt-2">{staff.name}</p>
+                            <p className="text-gray-600">{staff.role}</p>
+                            <p className="text-sm text-gray-500 mt-1">
+                                Period: {format(new Date(payment.month), "MMMM yyyy")}
+                            </p>
+                        </div>
                     </div>
 
-                    <div className="mt-4 border-t border-b py-4 space-y-3">
+
+
+                    <div className="mt-4 border-t py-4 space-y-3">
                         <div className="flex justify-between">
                             <span className="text-gray-600">Basic Salary:</span>
                             <span className="font-medium">¢{payment.basic_salary?.toLocaleString() || payment.basicSalary?.toLocaleString()}</span>
@@ -222,8 +234,8 @@ function SalaryPayslip({ payment, staff, onClose }: any) {
                     </div>
 
                     <div className="mt-8 text-xs text-gray-400 flex justify-between">
-                        <p>Payment Date: {format(new Date(payment.paymentDate), "dd MMM yyyy")}</p>
-                        <p>Method: {payment.paymentMethod.replace("_", " ").toUpperCase()}</p>
+                        <p>Payment Date: {format(new Date(payment.payment_date), "dd MMM yyyy")}</p>
+                        <p>Method: {payment.payment_method.replace("_", " ").toUpperCase()}</p>
                     </div>
                 </div>
 

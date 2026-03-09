@@ -13,6 +13,7 @@ export const useMaintenanceRecords = (params?: any) => {
       // If apiService doesn't have getMaintenance, you'll need to add it.
       // For now, we'll assume a method exists.
       const response = await apiService.getMaintenanceRecords(params);
+      
       return response.data.results.map((item: any) => snakeToCamel(item));
     },
   });

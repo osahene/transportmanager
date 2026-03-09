@@ -25,7 +25,7 @@ export default function CustomersPage() {
   const { data: customers = [], isLoading, error } = useCustomers();
 
   // Fetch bookings for modal when a customer is selected
-  const { data: modalBookings = [], refetch: refetchBookings } = useCustomerBookingsWithGuarantor(selectedCustomerForModal?.id || '');
+  const { data: modalBookings = [] } = useCustomerBookingsWithGuarantor(selectedCustomerForModal?.id || '');
 
   // Mutations for SMS
   const sendSingleSMSMutation = useSendSingleSMS();
@@ -44,7 +44,6 @@ export default function CustomersPage() {
 
   const handleViewDetails = (customerId: string, customerName: string) => {
     setSelectedCustomerForModal({ id: customerId, name: customerName });
-    refetchBookings(); // optionally refetch when modal opens
   };
 
   const handleSendIndividualSMS = async (customerId: string) => {

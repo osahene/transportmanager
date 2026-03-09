@@ -136,11 +136,13 @@ export interface ReceiptData {
   customerName: string;
   customerPhone: string;
   customerEmail: string;
+  customerAddressCity: string;
   customerGPSAddress: string;
   guarantorName?: string;
   guarantorPhone?: string;
   guarantorEmail?: string;
   guarantorGPSAddress?: string;
+  guarantorAddressCity?: string;
   pickupLocation: string;
   dropoffLocation: string;
   selfDrive: boolean;
@@ -176,12 +178,14 @@ export function mapDetailedBookingToReceiptData(detailedBooking: any): ReceiptDa
     customerName: customer.fullName || `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || 'N/A',
     customerPhone: customer.phone || 'N/A',
     customerEmail: customer.email || 'N/A',
+    customerAddressCity: customer.addressCity || 'N/A',
     customerGPSAddress: customer.gpsAddress || 'N/A',
 
     guarantorName: guarantor ? `${guarantor.firstName} ${guarantor.lastName}` : 'N/A',
     guarantorPhone: guarantor?.phone || 'N/A',
     guarantorEmail: guarantor?.email || 'N/A',
     guarantorGPSAddress: guarantor?.gpsAddress || 'N/A',
+    guarantorAddressCity: guarantor?.addressCity || 'N/A',
 
     pickupLocation: detailedBooking.pickupLocation || 'N/A',
     dropoffLocation: detailedBooking.dropoffLocation || 'N/A',
@@ -201,6 +205,6 @@ export function mapDetailedBookingToReceiptData(detailedBooking: any): ReceiptDa
     totalAmount: detailedBooking.totalAmount || 0,
     paymentMethod: detailedBooking.paymentMethod || 'N/A',
     transactionId: `TXN-${detailedBooking.id.slice(0, 8).toUpperCase()}`,
-    date: new Date(),
+    date: detailedBooking.createdAt,
   };
 }

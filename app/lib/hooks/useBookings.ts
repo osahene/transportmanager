@@ -8,6 +8,7 @@ export const useBookings = (params?: any) => {
     queryKey: ['bookings', params],
     queryFn: async () => {
       const response = await apiService.fetchBookings(params);
+      console.log('API Response for Bookings:', response.data);
       // Adjust based on your actual API response
       return response.data.results.map((item: any) => ({
         ...snakeToCamel(item),

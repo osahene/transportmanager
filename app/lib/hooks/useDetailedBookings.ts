@@ -20,8 +20,10 @@ export const useDetailedBookings = () => {
   const detailedBookings = useMemo(() => {
     return allBookings.map((booking) => {
       const car = cars.find((c) => c.id === booking.CarId) || null;
-      const customer = customers.find((c) => c.id === booking.customerId) || null;
-
+      const customer = customers.find((c) => c.id === (booking.customerId as unknown as { id: string }).id) || null;
+      console.log('Booking:', booking);
+      console.log('Car:', car);
+      console.log('Customerzz:', customers);
       return {
         ...booking,
         car,

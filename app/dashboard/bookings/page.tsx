@@ -32,11 +32,13 @@ interface ReceiptData {
   customerName: string;
   customerPhone: string;
   customerEmail: string;
+  customerAddressCity: string;
   customerGPSAddress: string;
   guarantorName?: string;
   guarantorPhone?: string;
   guarantorEmail?: string;
   guarantorGPSAddress?: string;
+  guarantorAddressCity?: string;
   pickupLocation: string;
   dropoffLocation: string;
   selfDrive: boolean;
@@ -701,7 +703,7 @@ const filteredBookings = useMemo(() => {
                       Customer Contact
                     </h3>
                     <p className="text-gray-800">
-                      {selectedBooking.customerPhone} | {selectedBooking.customerEmail} | {selectedBooking.customerGPSAddress}
+                      {selectedBooking.customerPhone} | {selectedBooking.customerEmail} | {selectedBooking.customerAddressCity}
                     </p>
                   </div>
                   <div>
@@ -728,7 +730,7 @@ const filteredBookings = useMemo(() => {
                       Guarantor Contact
                     </h3>
                     <p className="text-gray-800">
-                      {selectedBooking.guarantorPhone} | {selectedBooking.guarantorEmail} | {selectedBooking.guarantorGPSAddress}
+                      {selectedBooking.guarantorPhone} | {selectedBooking.guarantorEmail} | {selectedBooking.guarantorAddressCity}
                     </p>
                   </div>
                 </div>

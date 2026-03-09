@@ -66,17 +66,15 @@ export const useCustomerBookingsWithGuarantor = (customerId: string) => {
         queryKey: ['customerBookingsWithGuarantor', customerId],
         queryFn: async () => {
             const response = await apiService.getCustomerBookingsWithGuarantor(customerId);
-            return response.data.bookings.map((item: any) => ({
+            return response.data.map((item: any) => ({
                 ...item,
-                CarId: item.car,
                 customerId: item.customer,
             }));
         },
         enabled: !!customerId,
         select: (data) => {
-            return data.bookings.map((item: any) => ({
+            return data.map((item: any) => ({
                 ...item,
-                CarId: item.car,
                 customerId: item.customer,
             }));
         }

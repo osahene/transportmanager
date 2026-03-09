@@ -55,7 +55,7 @@ export default function CarDetailPage() {
     }
   };
 
-  const isLoading = carLoading || bookingsLoading || maintenanceLoading || insuranceLoading;
+  const isLoading = carLoading;
 
   if (isLoading) {
     return (

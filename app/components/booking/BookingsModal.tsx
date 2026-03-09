@@ -1,3 +1,5 @@
+'use client'
+
 import { Fragment } from 'react';
 import { DialogPanel, DialogTitle, Dialog, TransitionChild, Transition } from '@headlessui/react';
 import { FaTimes } from 'react-icons/fa';
@@ -18,6 +20,7 @@ interface Props {
 }
 
 export default function BookingsModal({ isOpen, onClose, bookings, customerName }: Props) {
+    console.log('Bookings passed to Modal:', bookings);
     return (
         <Transition appear show={isOpen} as={Fragment}>
             <Dialog as="div" className="relative z-50" onClose={onClose}>
