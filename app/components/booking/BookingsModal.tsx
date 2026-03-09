@@ -20,7 +20,6 @@ interface Props {
 }
 
 export default function BookingsModal({ isOpen, onClose, bookings, customerName }: Props) {
-    console.log('Bookings passed to Modal:', bookings);
     return (
         <Transition appear show={isOpen} as={Fragment}>
             <Dialog as="div" className="relative z-50" onClose={onClose}>

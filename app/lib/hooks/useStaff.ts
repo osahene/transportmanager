@@ -50,9 +50,7 @@ export const useSalaryHistory = (staffId: string) => {
   return useQuery({
     queryKey: ['staff', staffId, 'salaryHistory'],
     queryFn: async () => {
-      console.log('Fetching salary history for staff ID:', staffId);
       const response = await apiService.getSalaryHistory(staffId);
-      console.log('Salary history response:', response.data);
       return snakeToCamel(response.data.results);
     },
     enabled: !!staffId,

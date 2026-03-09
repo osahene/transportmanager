@@ -699,9 +699,7 @@ export default function CreateBookingPage() {
           errorMessage.includes("failed to fetch") ||
           error?.code === "ERR_NETWORK" ||
           !navigator.onLine;
-        console.error("Error creating new booking:", error);
-        console.log("Is network failure:", isNetworkFailure);
-
+       
         if (isNetworkFailure) {
           console.warn("Network failed. Falling back to offline save.");
           const localBooking = buildLocalBooking(summary, customerMode);

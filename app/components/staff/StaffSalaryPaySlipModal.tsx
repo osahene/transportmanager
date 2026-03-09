@@ -11,7 +11,6 @@ interface Props {
 
 export default function StaffPayslipModal({ staff, onClose }: Props) {
   const { data: salaryHistory = [], isLoading, error } = useSalaryHistory(staff.id);
-console.log('Salary history for staff:', salaryHistory);
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

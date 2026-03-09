@@ -19,7 +19,6 @@ export const useCar = (id: string) => {
     queryKey: ['cars', id],
     queryFn: async () => {
       const response = await apiService.getCarById(id);
-      console.log('API Response for Car:', response.data);
       return snakeToCamel(response.data);
     },
     enabled: !!id,

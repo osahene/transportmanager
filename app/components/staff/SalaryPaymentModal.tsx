@@ -156,8 +156,6 @@ export default function SalaryPaymentModal({ staff, onClose, onSuccess }: Props)
 }
 
 function SalaryPayslip({ payment, staff, onClose }: any) {
-
-    console.log('Rendering SalaryPayslip with payment:', payment, 'and staff:', staff);
     const contentRef = useRef<HTMLDivElement>(null);
     const handlePrint = useReactToPrint({
         contentRef,
