@@ -106,7 +106,6 @@ export default function BookingActions({
 
   const extraAmount = extraDays * dailyRate;
   const newTotalAmount = (Number(amountPaid)) + (Number(extraAmount));
-console.log("Extra Days:", extraDays, 'Amount Paid:', Number(amountPaid).toFixed(2), "Extra Amount:", Number(extraAmount).toFixed(2), "New Total:", Number(newTotalAmount).toFixed(2));
   const today = new Date();
   today.setHours(0, 0, 0, 0); // compare only dates
 
@@ -698,7 +697,7 @@ console.log("Extra Days:", extraDays, 'Amount Paid:', Number(amountPaid).toFixed
                     <div className="space-y-1">
                       <p>Extra days: {extraDays}</p>
                       <p>Daily rate: ¢{Number(dailyRate).toFixed(2)}</p>
-                      <p className="text-lg font-bold">Extra amount: ¢{Number(extraAmount).toFixed(2)}</p>
+                      <p className="text-lg font-bold">Extra amount: ¢{Number(extraAmount).toFixed(2)} to be paid</p>
                       <p className="border-t border-green-200 dark:border-green-700 pt-1 mt-1">
                         New total: <span className="font-bold">¢{Number(newTotalAmount).toFixed(2)}</span>
                       </p>

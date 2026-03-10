@@ -126,7 +126,6 @@ export default function CreateBookingPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const { data: selectedCustomerDetails } = useCustomer(selectedCustomerId || '');
-  console.log("Selected customer details:", selectedCustomerDetails);
   // Fetch full customer details when selected
   useEffect(() => {
     if (selectedCustomerDetails) {

@@ -24,13 +24,13 @@ const BookingsTable: React.FC<BookingsTableProps> = ({
     switch (status) {
       case "completed":
         return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-      case "confirmed":
+      case "rented":
         return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-      case "pending":
+      case "reserved":
         return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
       case "cancelled":
         return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-      case "no-show":
+      case "extended_booking":
         return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
@@ -87,7 +87,7 @@ const BookingsTable: React.FC<BookingsTableProps> = ({
           <div className="flex items-center space-x-2">
             <div className="text-sm text-gray-600 dark:text-gray-400">
               <span className="font-medium">
-                {vehicleBookings.filter((b) => b.status === "confirmed").length}
+                {vehicleBookings.filter((b) => b.status === "rented").length}
               </span>{" "}
               Active
             </div>
@@ -218,7 +218,7 @@ const BookingsTable: React.FC<BookingsTableProps> = ({
                             >
                               <FaEye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                             </button>
-                            {booking.status === "confirmed" && (
+                            {booking.status === "rented" && (
                               <button
                                 onClick={() => {
                                   /* Handle cancellation */

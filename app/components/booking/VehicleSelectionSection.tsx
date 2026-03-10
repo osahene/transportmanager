@@ -16,7 +16,6 @@ export default function VehicleSelectionSection({
   onCarSelect,
 }: VehicleSelectionSectionProps) {
   const selectedCar = availableCars.find((car) => car.id === selectedCarId);
-console.log("Available Cars:", selectedCar);
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
