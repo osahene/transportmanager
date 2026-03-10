@@ -16,8 +16,7 @@ export interface DashboardMetrics {
     rented: number;
     maintenance: number;
     insurance_expired: number;
-    accident: number;
-    retired: number;
+    reserved: number;
   };
 }
 
@@ -65,8 +64,7 @@ export function computeDashboardMetrics(
     rented: cars.filter(c => c.status === 'rented').length,
     maintenance: cars.filter(c => c.status === 'maintenance').length,
     insurance_expired: cars.filter(c => c.status === 'insurance_expired').length,
-    accident: cars.filter(c => c.status === 'accident').length,
-    retired: cars.filter(c => c.status === 'retired').length,
+    reserved: cars.filter(c => c.status === 'reserved').length,
   };
 
   return {

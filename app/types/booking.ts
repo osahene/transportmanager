@@ -2,11 +2,11 @@ import { Customer } from "./customer";
 import { Car } from "./cars";
 
 export type BookingStatus =
-  | "pending"
-  | "confirmed"
+  | "reserved"
+  | "rented"
   | "completed"
   | "cancelled"
-  | "no-show";
+  | "extended_booking";
 export type PaymentStatus = "pending" | "paid" | "refunded" | "failed";
 export type PaymentMethod = "cash" | "mobile_money" | "pay_in_slip";
 
@@ -49,7 +49,11 @@ export interface Booking {
   guarantorName?: string;
   guarantorPhone?: string;
   guarantorEmail?: string;
+  guarantorRelationship?: string;
   guarantorGPSAddress?: string;
+  guarantorAddressCity?: string;
+  guarantorAddressRegion?: string;
+  guarantorAddressCountry?: string;
   driverName?: string;
   driverPhone?: string;
   selfDrive: boolean;

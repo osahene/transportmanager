@@ -16,6 +16,11 @@ import {
   FaSort,
   FaSortUp,
   FaSortDown,
+  FaClipboardList,
+  FaKey,
+  FaHistory,
+  FaCheckDouble,
+  FaTimesCircle
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { mapDetailedBookingToReceiptData } from "@/app/types/booking";
@@ -85,7 +90,7 @@ export default function BookingsPage() {
   };
 
   // Client-side filtering
-const filteredBookings = useMemo(() => {
+  const filteredBookings = useMemo(() => {
     return allDetailedBookings
       .filter((booking) => {
         const matchesStatus = statusFilter === "all" || booking.status === statusFilter;
@@ -224,7 +229,7 @@ const filteredBookings = useMemo(() => {
     return buttons;
   };
 
- const openReceiptModal = async (bookingId: string) => {
+  const openReceiptModal = async (bookingId: string) => {
     const bookingFromList = allDetailedBookings.find((b) => b.id === bookingId);
     if (bookingFromList) {
       const receiptData = mapDetailedBookingToReceiptData(bookingFromList);
@@ -273,12 +278,14 @@ const filteredBookings = useMemo(() => {
 
   const getStatusBadge = (status: string) => {
     const colors = {
-      pending:
+      reserved:
         "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300",
-      confirmed:
+      rented:
         "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300",
       completed:
         "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300",
+      extended_booking:
+        "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300",
       cancelled: "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300",
     };
     return (
@@ -314,31 +321,42 @@ const filteredBookings = useMemo(() => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4"> {/* Increased to md:grid-cols-5 since you have 5 cards */}
         {[
           {
             status: "all",
             label: "Total Bookings",
             count: allDetailedBookings.length,
             color: "bg-blue-500",
+            icon: FaClipboardList,
           },
           {
-            status: "confirmed",
-            label: "Confirmed",
-            count: getStatusCount("confirmed"),
+            status: "rented",
+            label: "Rented",
+            count: getStatusCount("rented"),
             color: "bg-green-500",
+            icon: FaKey,
           },
           {
-            status: "pending",
-            label: "Pending",
-            count: getStatusCount("pending"),
+            status: "extended_booking",
+            label: "Extended Bookings",
+            count: getStatusCount("extended_booking"),
             color: "bg-yellow-500",
+            icon: FaHistory,
           },
           {
             status: "completed",
             label: "Completed",
             count: getStatusCount("completed"),
             color: "bg-purple-500",
+            icon: FaCheckDouble,
+          },
+          {
+            status: "cancelled",
+            label: "Cancelled",
+            count: getStatusCount("cancelled"),
+            color: "bg-red-500",
+            icon: FaTimesCircle,
           },
         ].map((stat) => (
           <div
@@ -347,7 +365,7 @@ const filteredBookings = useMemo(() => {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   {stat.label}
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
@@ -355,9 +373,10 @@ const filteredBookings = useMemo(() => {
                 </p>
               </div>
               <div
-                className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center`}
+                className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center text-white shadow-lg`}
               >
-                <FaCalendarAlt className="text-white text-xl" />
+                {/* Note the capital "S" in Stat.icon to treat it as a component */}
+                <stat.icon className="text-xl" />
               </div>
             </div>
           </div>
@@ -386,7 +405,7 @@ const filteredBookings = useMemo(() => {
 
           {/* Status Filter */}
           <div className="flex flex-wrap gap-2">
-            {["all", "pending", "confirmed", "completed", "cancelled"].map(
+            {["all", "reserved", "rented", "extended_booking", "completed", "cancelled"].map(
               (status) => (
                 <button
                   key={status}
@@ -594,7 +613,15 @@ const filteredBookings = useMemo(() => {
                         carName={`${booking.carMake} ${booking.carModel}`}
                         amountPaid={booking.totalAmount}
                         dailyRate={booking.dailyRate || 0}
+                        startDate={booking.startDate}
                         endDate={booking.endDate}
+                        guarantorName={booking.guarantorName}
+                        guarantorPhone={booking.guarantorPhone}
+                        guarantorEmail={booking.guarantorEmail}
+                        guarantorRelationship={booking.guarantorRelationship}
+                        guarantorAddressCity={booking.guarantorAddressCity}
+                        guarantorAddressRegion={booking.guarantorAddressRegion}
+                        guarantorAddressCountry={booking.guarantorAddressCountry}
                       />
                     </td>
                   </motion.tr>

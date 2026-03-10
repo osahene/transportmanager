@@ -1,4 +1,4 @@
-export type CarStatus = "available" | "rented" | "maintenance" | "retired" | "insurance_expired" | "accident";
+export type CarStatus = "available" | "rented" | "maintenance" | "reserved" | "insurance_expired";
 
 export interface Car {
   id: string;

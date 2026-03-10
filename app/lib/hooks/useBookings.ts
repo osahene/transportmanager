@@ -76,3 +76,19 @@ export const useSendEmail = () => {
     mutationFn: (bookingId: string) => apiService.sendEmailReceipt(bookingId),
   });
 };
+
+
+export const useExtendBooking = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bookingId, newEndDate, guarantor }: any) =>
+      apiService.extendBooking(bookingId, {
+        new_end_date: newEndDate,
+        guarantor: guarantor, // optional guarantor data object
+      }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['bookings', variables.bookingId] });
+    },
+  });
+};

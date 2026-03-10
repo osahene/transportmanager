@@ -70,14 +70,6 @@ export default function DashboardPage() {
         fill: true,
         tension: 0.4,
       },
-      {
-        label: "Revenue (¢)",
-        data: metrics.monthlyRevenue,
-        borderColor: "rgb(34, 197, 94)",
-        backgroundColor: "rgba(34, 197, 94, 0.1)",
-        fill: true,
-        tension: 0.4,
-      },
     ],
   };
 
@@ -106,7 +98,7 @@ export default function DashboardPage() {
           font: { size: 11 },
           callback: function (value: number | string) {
             if (typeof value === "number") {
-              return value >= 1000 ? `¢${value / 1000}k` : `¢${value}`;
+              return value >= 1000 ? `${value / 1000}k` : `${value}`;
             }
             return value;
           },
@@ -151,8 +143,7 @@ export default function DashboardPage() {
     { status: "Rented", count: metrics.carStatusCounts.rented, color: "bg-blue-500" },
     { status: "Maintenance", count: metrics.carStatusCounts.maintenance, color: "bg-yellow-500" },
     { status: "Insurance Expired", count: metrics.carStatusCounts.insurance_expired, color: "bg-orange-500" },
-    { status: "Accident", count: metrics.carStatusCounts.accident, color: "bg-red-500" },
-    { status: "Retired", count: metrics.carStatusCounts.retired, color: "bg-gray-500" },
+    { status: "Reserved", count: metrics.carStatusCounts.reserved, color: "bg-gray-500" },
   ];
 
   return (
@@ -200,7 +191,7 @@ export default function DashboardPage() {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Bookings & Revenue Chart */}
+        {/* Bookings Chart */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}

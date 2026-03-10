@@ -207,7 +207,7 @@ export default function CreateBookingPage() {
       driverPhone: driver?.phone || 'N/A',
       selfDrive: summary.selfDrive === 'true',
       amountPaid: 0,
-      paymentStatus: "pending",
+      paymentStatus: "paid",
       startDate: summary.dates.start,
       endDate: summary.dates.end,
       dailyRate: summary.dailyRate,
@@ -223,7 +223,7 @@ export default function CreateBookingPage() {
       driverLicenseClass: summary.driverLicenseClass,
       driverLicenseIssueDate: summary.driverLicenseIssueDate,
       driverLicenseExpiryDate: summary.driverLicenseExpiryDate,
-      status: 'pending',
+      status: 'rented',
       createdAt: new Date().toISOString(),
       // Include nested objects if your Booking type expects them
       customer: customer || undefined,

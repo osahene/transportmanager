@@ -9,7 +9,7 @@ import {
   FaClock,
   FaCalendarCheck,
 } from "react-icons/fa";
-import { useMarkBookingAsReturned, useCancelBooking } from "@/app/lib/hooks/useBookings";
+import { useMarkBookingAsReturned, useCancelBooking, useExtendBooking } from "@/app/lib/hooks/useBookings";
 
 interface BookingActionsProps {
   bookingId: string;
@@ -20,6 +20,15 @@ interface BookingActionsProps {
   amountPaid: number;
   dailyRate: number;
   endDate: string; // Expected return date from booking
+  startDate: string; // Booking start date
+  guarantorName?: string;
+  guarantorPhone?: string;
+  guarantorEmail?: string;
+  guarantorRelationship?: string;
+  guarantorAddressCity?: string;
+  guarantorAddressRegion?: string;
+  guarantorAddressCountry?: string;
+
 }
 
 interface PenaltyCalculation {
@@ -38,42 +47,100 @@ export default function BookingActions({
   carName,
   amountPaid,
   dailyRate,
+  startDate,
   endDate,
+  guarantorName,
+  guarantorPhone,
+  guarantorEmail,
+  guarantorRelationship,
+  guarantorAddressCity,
+  guarantorAddressRegion,
+  guarantorAddressCountry,
 }: BookingActionsProps) {
   // Mutations
+  const [loading, setLoading] = useState(false);
   const markAsReturnedMutation = useMarkBookingAsReturned();
   const cancelBookingMutation = useCancelBooking();
+  const extendBookingMutation = useExtendBooking();
 
+  // Show Modals
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [returnMileage, setReturnMileage] = useState("");
-  const [refundAmount, setRefundAmount] = useState(0);
-  const [reason, setReason] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [showExtendModal, setShowExtendModal] = useState(false);
 
-  // New states for return modal
+  // Return Modal fields
+  const [returnMileage, setReturnMileage] = useState("");
   const [actualReturnTime, setActualReturnTime] = useState("");
   const [penaltyPaid, setPenaltyPaid] = useState(false);
   const [penaltyPaymentMethod, setPenaltyPaymentMethod] = useState<
     "cash" | "mobile_money"
   >("cash");
-  const [lateFeeReceived, setLateFeeReceived] = useState(false);
   const [receiptNumber, setReceiptNumber] = useState("");
 
-  // Initialize actual return time to current time
+  // Cancel Modal fields
+  const [refundAmount, setRefundAmount] = useState(0);
+  const [reason, setReason] = useState("");
+
+  const [newEndDate, setNewEndDate] = useState("");
+  const [guarantorData, setGuarantorData] = useState({
+    first_name: "",
+    last_name: "",
+    phone: "",
+    email: "",
+    relationship: "",
+    address_city: "",
+    address_region: "",
+    address_country: "",
+  });
+
+
+  // computed values for extension
+  const extraDays = useMemo(() => {
+    if (!newEndDate) return 0;
+    const currentEnd = new Date(endDate);
+    const newEnd = new Date(newEndDate);
+    const diffTime = newEnd.getTime() - currentEnd.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  }, [newEndDate, endDate]);
+
+  const extraAmount = extraDays * dailyRate;
+  const newTotalAmount = (Number(amountPaid)) + (Number(extraAmount));
+console.log("Extra Days:", extraDays, 'Amount Paid:', Number(amountPaid).toFixed(2), "Extra Amount:", Number(extraAmount).toFixed(2), "New Total:", Number(newTotalAmount).toFixed(2));
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // compare only dates
+
+  const start = new Date(startDate);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(endDate);
+  end.setHours(0, 0, 0, 0);
+
+  const isActive = currentStatus === "rented" || currentStatus === "extended_booking";
+  const isCompletedOrCancelled = ["completed", "cancelled"].includes(currentStatus);
+
+  // Cancel button: available until end date (inclusive) and not completed/cancelled
+  const canCancel = !isCompletedOrCancelled && today <= end;
+
+  // Return button: available only for active bookings
+  const canReturn = isActive;
+
+  const canExtend = isActive && today <= end;
+
   useEffect(() => {
-    if (showReturnModal) {
-      const now = new Date();
-      const formattedDate = now.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
-      setActualReturnTime(formattedDate);
-
-      // Generate a random receipt number
-      const receiptNum = `RCPT-${Date.now().toString().slice(-8)}`;
-      setReceiptNumber(receiptNum);
+    if (showExtendModal) {
+      setGuarantorData({
+        first_name: guarantorName?.split(" ")[0] || "",
+        last_name: guarantorName?.split(" ")[1] || "",
+        phone: guarantorPhone || "",
+        email: guarantorEmail || "",
+        relationship: guarantorRelationship || "",
+        address_city: guarantorAddressCity || "",
+        address_region: guarantorAddressRegion || "",
+        address_country: guarantorAddressCountry || "",
+      });
     }
-  }, [showReturnModal]);
+  }, [showExtendModal, guarantorName, guarantorPhone, guarantorEmail, guarantorRelationship, guarantorAddressCity, guarantorAddressRegion, guarantorAddressCountry]);
 
-  // Calculate penalty based on return time
   const penaltyCalculation = useMemo((): PenaltyCalculation => {
     if (!actualReturnTime || !endDate) {
       return {
@@ -86,43 +153,20 @@ export default function BookingActions({
       };
     }
 
-    const expectedReturnDate = new Date(endDate);
-    const actualReturnDate = new Date(actualReturnTime);
+    const actual = new Date(actualReturnTime);
+    const expected = new Date(endDate);
+    expected.setHours(9, 0, 0, 0);
 
-    // Set expected return time to 9:00 AM on the end date
-    const expectedReturnTime = new Date(expectedReturnDate);
-    expectedReturnTime.setHours(9, 0, 0, 0);
-
-    const expectedReturnTimeStr = expectedReturnTime.toISOString();
-    const actualReturnTimeStr = actualReturnDate.toISOString();
-
-    // Check if return is late (after 9:00 AM on expected date)
-    const isLate = actualReturnTimeStr > expectedReturnTimeStr;
-
-    let lateDays = 0;
-    let penaltyAmount = 0;
-    let lateFee = 0;
-    let explanation = "";
-
-    if (isLate) {
-      // Calculate hours difference
-      const diffMs = actualReturnDate.getTime() - expectedReturnTime.getTime();
-      const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
-
-      // Company policy: Any return after 9:00 AM incurs full day penalty
-      // Even 1 minute late = 1 day penalty
-      lateDays = Math.ceil(diffHours / 24);
-      penaltyAmount = lateDays * dailyRate;
-
-      // Additional late fee (10% of penalty)
-      lateFee = penaltyAmount * 0.1;
-
-      explanation = `Returned ${diffHours} hours late. Company policy: Any return after 9:00 AM incurs full day penalty.`;
-    } else {
-      explanation = "Returned on time. No penalty applies.";
-    }
-
+    const isLate = actual > expected;
+    const lateDays = isLate
+      ? Math.ceil((actual.getTime() - expected.getTime()) / (1000 * 60 * 60 * 24))
+      : 0;
+    const penaltyAmount = lateDays * dailyRate;
+    const lateFee = Math.round(penaltyAmount * 0.1 * 100) / 100;
     const totalAmount = penaltyAmount + lateFee;
+    const explanation = isLate
+      ? `Car returned ${lateDays} day(s) late. Penalty applies.`
+      : "Car returned on time. No penalty.";
 
     return {
       isLate,
@@ -134,14 +178,24 @@ export default function BookingActions({
     };
   }, [actualReturnTime, endDate, dailyRate]);
 
-  const handleMarkAsReturned = async () => {
-    if (penaltyCalculation.isLate && penaltyCalculation.totalAmount > 0) {
-      if (!penaltyPaid) {
-        alert("Please confirm penalty payment before marking as returned.");
-        return;
-      }
-    }
+  // New states for return modal
+  const [lateFeeReceived, setLateFeeReceived] = useState(false);
 
+  // Initialize actual return time to current time
+  useEffect(() => {
+    if (showReturnModal) {
+      const now = new Date();
+      const formattedDate = now.toISOString().slice(0, 16);
+      setActualReturnTime(formattedDate);
+      setReceiptNumber(`RCPT-${Date.now().toString().slice(-8)}`);
+    }
+  }, [showReturnModal]);
+
+  const handleMarkAsReturned = async () => {
+    if (penaltyCalculation.isLate && penaltyCalculation.totalAmount > 0 && !penaltyPaid) {
+      alert("Please confirm penalty payment before marking as returned.");
+      return;
+    }
     setLoading(true);
     try {
       await markAsReturnedMutation.mutateAsync({
@@ -152,8 +206,7 @@ export default function BookingActions({
       setShowReturnModal(false);
       alert("Car marked as returned successfully!");
     } catch (error) {
-      console.error("Failed to mark as returned:", error);
-      alert("Failed to mark car as returned. Please try again.");
+      alert("Failed to mark as returned. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -164,21 +217,38 @@ export default function BookingActions({
       alert("Please provide a reason for cancellation");
       return;
     }
-
     setLoading(true);
     try {
-      await cancelBookingMutation.mutateAsync({
-        bookingId,
-        refundAmount,
-        reason,
-      });
+      await cancelBookingMutation.mutateAsync({ bookingId, refundAmount, reason });
       setShowCancelModal(false);
-      setReason("");
-      setRefundAmount(0);
       alert("Booking cancelled and refund processed!");
     } catch (error) {
-      console.error("Failed to cancel booking:", error);
-      alert("Failed to cancel booking. Please try again.");
+      alert("Failed to cancel booking.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExtendBooking = async () => {
+    if (!newEndDate) {
+      alert("Please select a new end date.");
+      return;
+    }
+    if (new Date(newEndDate) <= new Date(endDate)) {
+      alert("New end date must be after the current end date.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await extendBookingMutation.mutateAsync({
+        bookingId,
+        newEndDate,
+        guarantor: guarantorData,
+      });
+      setShowExtendModal(false);
+      alert("Booking extended successfully!");
+    } catch (error) {
+      alert("Failed to extend booking.");
     } finally {
       setLoading(false);
     }
@@ -200,7 +270,7 @@ export default function BookingActions({
     <div className="flex flex-wrap gap-2">
       <div className="flex flex-row space-x-2">
         {/* Cancel Booking Button - For pending/confirmed bookings */}
-        {(currentStatus === "pending" || currentStatus === "confirmed") && (
+        {canCancel && (
           <button
             onClick={() => setShowCancelModal(true)}
             className="flex items-center gap-2 px-2 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50"
@@ -210,8 +280,8 @@ export default function BookingActions({
             Cancel Booking
           </button>
         )}
-        {/* Mark as Returned Button - Only for active bookings */}
-        {currentStatus === "confirmed" && (
+
+        {canReturn && (
           <button
             onClick={() => setShowReturnModal(true)}
             className="flex items-center gap-2 px-2 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
@@ -221,6 +291,18 @@ export default function BookingActions({
             Mark as Returned
           </button>
         )}
+
+        {canExtend && (
+          <button
+            onClick={() => setShowExtendModal(true)}
+            className="flex items-center gap-2 px-2 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+            disabled={loading}
+          >
+            <FaCalendarCheck />
+            Extend Booking
+          </button>
+        )}
+
       </div>
 
       {/* Enhanced Return Modal */}
@@ -368,11 +450,10 @@ export default function BookingActions({
                         <button
                           type="button"
                           onClick={() => setPenaltyPaymentMethod("cash")}
-                          className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition ${
-                            penaltyPaymentMethod === "cash"
-                              ? "bg-green-100 dark:bg-green-900 border-green-500 text-green-700 dark:text-green-300"
-                              : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
-                          }`}
+                          className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition ${penaltyPaymentMethod === "cash"
+                            ? "bg-green-100 dark:bg-green-900 border-green-500 text-green-700 dark:text-green-300"
+                            : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
+                            }`}
                         >
                           <FaMoneyBillWave />
                           Cash Payment
@@ -380,11 +461,10 @@ export default function BookingActions({
                         <button
                           type="button"
                           onClick={() => setPenaltyPaymentMethod("mobile_money")}
-                          className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition ${
-                            penaltyPaymentMethod === "mobile_money"
-                              ? "bg-blue-100 dark:bg-blue-900 border-blue-500 text-blue-700 dark:text-blue-300"
-                              : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
-                          }`}
+                          className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition ${penaltyPaymentMethod === "mobile_money"
+                            ? "bg-blue-100 dark:bg-blue-900 border-blue-500 text-blue-700 dark:text-blue-300"
+                            : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
+                            }`}
                         >
                           <FaMobileAlt />
                           Mobile Money
@@ -569,6 +649,195 @@ export default function BookingActions({
                       Cancel & Process Refund
                     </>
                   )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {showExtendModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                Extend Booking
+              </h2>
+
+              {/* Summary Section */}
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mb-4 border border-blue-200 dark:border-blue-800">
+                <h3 className="font-semibold text-blue-700 dark:text-blue-300 mb-2">Booking Summary</h3>
+                <div className="space-y-1 text-sm">
+                  <p><span className="font-medium">Customer:</span> {customerName}</p>
+                  <p><span className="font-medium">Vehicle:</span> {carName}</p>
+                  <p><span className="font-medium">Current End Date:</span> {new Date(endDate).toLocaleDateString()}</p>
+                  <p><span className="font-medium">Daily Rate:</span> ¢{(Number(dailyRate)).toFixed(2)}</p>
+                  <p><span className="font-medium">Current Total:</span> ¢{Number(amountPaid).toFixed(2)}</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {/* New End Date */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    New End Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={newEndDate}
+                    onChange={(e) => setNewEndDate(e.target.value)}
+                    min={endDate} // cannot be before current end
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                {/* Cost Breakdown */}
+                {extraDays > 0 && (
+                  <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                    <h4 className="font-semibold text-green-700 dark:text-green-300 mb-2">Extension Cost</h4>
+                    <div className="space-y-1">
+                      <p>Extra days: {extraDays}</p>
+                      <p>Daily rate: ¢{Number(dailyRate).toFixed(2)}</p>
+                      <p className="text-lg font-bold">Extra amount: ¢{Number(extraAmount).toFixed(2)}</p>
+                      <p className="border-t border-green-200 dark:border-green-700 pt-1 mt-1">
+                        New total: <span className="font-bold">¢{Number(newTotalAmount).toFixed(2)}</span>
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Guarantor Section */}
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                    Guarantor Information (optional)
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                    Update guarantor details if needed.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        First Name
+                      </label>
+                      <input
+                        type="text"
+                        value={guarantorData.first_name}
+                        onChange={(e) =>
+                          setGuarantorData({ ...guarantorData, first_name: e.target.value })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Last Name
+                      </label>
+                      <input
+                        type="text"
+                        value={guarantorData.last_name}
+                        onChange={(e) =>
+                          setGuarantorData({ ...guarantorData, last_name: e.target.value })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Phone
+                      </label>
+                      <input
+                        type="tel"
+                        value={guarantorData.phone}
+                        onChange={(e) =>
+                          setGuarantorData({ ...guarantorData, phone: e.target.value })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        value={guarantorData.email}
+                        onChange={(e) =>
+                          setGuarantorData({ ...guarantorData, email: e.target.value })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Relationship
+                      </label>
+                      <input
+                        type="text"
+                        value={guarantorData.relationship}
+                        onChange={(e) =>
+                          setGuarantorData({ ...guarantorData, relationship: e.target.value })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        City
+                      </label>
+                      <input
+                        type="text"
+                        value={guarantorData.address_city}
+                        onChange={(e) =>
+                          setGuarantorData({ ...guarantorData, address_city: e.target.value })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Region
+                      </label>
+                      <input
+                        type="text"
+                        value={guarantorData.address_region}
+                        onChange={(e) =>
+                          setGuarantorData({ ...guarantorData, address_region: e.target.value })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Country
+                      </label>
+                      <input
+                        type="text"
+                        value={guarantorData.address_country}
+                        onChange={(e) =>
+                          setGuarantorData({ ...guarantorData, address_country: e.target.value })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-4 mt-6">
+                <button
+                  onClick={() => setShowExtendModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleExtendBooking}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+                  disabled={loading}
+                >
+                  {loading ? "Processing..." : "Extend Booking"}
                 </button>
               </div>
             </div>

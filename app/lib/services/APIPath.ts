@@ -21,6 +21,8 @@ const apiService = {
     sendEmailReceipt: (id: string) => $axios.post(`/bookings/${id}/send_email_receipt/`),
     sendSMSReceipt: (id: string) => $axios.post(`/bookings/${id}/send_sms_receipt/`),
     bookingSMS: (bookingId: string) => $axios.post(`/bookings/${bookingId}/send_confirmation_sms/`),
+    extendBooking: (id: string, data: any) => $axios.post(`/bookings/${id}/extend/`, data),
+
 
     // Insurance endpoints
     getInsurancePolicies: (params?: any) => $axios.get("/insurance/", { params }),
