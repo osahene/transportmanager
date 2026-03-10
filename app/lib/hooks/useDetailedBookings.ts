@@ -27,7 +27,7 @@ export const useDetailedBookings = () => {
         customer,
         carMake: car?.make || 'Unknown',
         carModel: car?.model || 'Unknown',
-        carlicense_plate: car?.license_plate || 'N/A',
+        carlicensePlate: car?.licensePlate || 'N/A',
         customerName: customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown Customer',
         customerEmail: customer?.email || 'N/A',
         customerPhone: customer?.phone || 'N/A',

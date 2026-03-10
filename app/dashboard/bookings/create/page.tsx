@@ -126,14 +126,39 @@ export default function CreateBookingPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const { data: selectedCustomerDetails } = useCustomer(selectedCustomerId || '');
-
+  console.log("Selected customer details:", selectedCustomerDetails);
   // Fetch full customer details when selected
   useEffect(() => {
     if (selectedCustomerDetails) {
-      setSelectedCustomer(selectedCustomerDetails);
+      const transformed: Customer = {
+        ...selectedCustomerDetails,
+        address: {
+          city: selectedCustomerDetails.addressCity || selectedCustomerDetails.address_city || '',
+          region: selectedCustomerDetails.addressRegion || selectedCustomerDetails.address_region || '',
+          country: selectedCustomerDetails.addressCountry || selectedCustomerDetails.address_country || '',
+        },
+        guarantor: selectedCustomerDetails.guarantor
+          ? {
+            ...selectedCustomerDetails.guarantor,
+            address: {
+              city: selectedCustomerDetails.guarantor.addressCity || selectedCustomerDetails.guarantor.address_city || '',
+              region: selectedCustomerDetails.guarantor.addressRegion || selectedCustomerDetails.guarantor.address_region || '',
+              country: selectedCustomerDetails.guarantor.addressCountry || selectedCustomerDetails.guarantor.address_country || '',
+            },
+          }
+          : undefined,
+      };
+      setSelectedCustomer(transformed);
+
     }
   }, [selectedCustomerDetails]);
 
+
+  useEffect(() => {
+    if (selectedCustomerDetails) {
+      setSelectedCustomerId(selectedCustomerDetails.id);
+    }
+  }, [selectedCustomerDetails]);
 
   // Payment details
   const [dailyRate, setDailyRate] = useState<number>(0);
@@ -294,13 +319,6 @@ export default function CreateBookingPage() {
     setFormData((prev) => ({ ...prev, totalAmount }));
   }, [totalAmount]);
 
-  useEffect(() => {
-    if (selectedCustomerDetails) {
-      setSelectedCustomerId(selectedCustomerDetails.id);
-    }
-  }, [selectedCustomerDetails]);
-
-
   // Synchronise payInSlip amount when payment method is pay_in_slip
   useEffect(() => {
     if (formData.paymentMethod === "pay_in_slip") {
@@ -366,21 +384,30 @@ export default function CreateBookingPage() {
   const handleExistingCustomerGuarantorChange = useCallback(
     (field: string, value: string) => {
       if (!selectedCustomer) return;
-      // Transform field name to match newCustomer's guarantor structure
-      const newField = field.startsWith("guarantor_") ? field.replace("_", ".") : field;
+      const withoutPrefix = field.replace(/^selectedCustomer_/, '');
+      const nestedPath = withoutPrefix.split('_').join('.');
+
       setSelectedCustomer((prev) => {
         if (!prev) return prev;
         const updated = { ...prev } as any;
+
+        // Ensure the guarantor object exists with a nested address
         if (!updated.guarantor) {
-          updated.guarantor = { id: generateId("GUAR"), address: { city: "", region: "", country: "" } };
+          updated.guarantor = {
+            id: generateId("GUAR"),
+            address: { city: '', region: '', country: '' },
+          };
         }
-        const keys = newField.split(".");
+
+        // Navigate the nested path and set the value
+        const keys = nestedPath.split('.');
         let current = updated;
         for (let i = 0; i < keys.length - 1; i++) {
           if (!current[keys[i]]) current[keys[i]] = {};
           current = current[keys[i]];
         }
         current[keys[keys.length - 1]] = value;
+
         return updated;
       });
     },
@@ -699,7 +726,7 @@ export default function CreateBookingPage() {
           errorMessage.includes("failed to fetch") ||
           error?.code === "ERR_NETWORK" ||
           !navigator.onLine;
-       
+
         if (isNetworkFailure) {
           console.warn("Network failed. Falling back to offline save.");
           const localBooking = buildLocalBooking(summary, customerMode);

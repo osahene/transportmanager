@@ -84,7 +84,7 @@ export default function CustomerSelectionSection({
 }: CustomerSelectionSectionProps) {
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
+console.log("CustomerSelectionSection rendered with props:", selectedCustomer)
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

@@ -22,7 +22,9 @@ export const useCustomer = (id: string) => {
    return useQuery<Customer>({
     queryKey: ['customers', id],
     queryFn: async () => {
+        console.log('Fetching customer with ID:', id);
       const response = await apiService.getCustomerById(id);
+      console.log('Raw API response for customer:', response.data);
       return snakeToCamel(response.data);
     },
     enabled: !!id,

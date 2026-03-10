@@ -387,7 +387,7 @@ export default function CarDetailPage() {
                   License Plate
                 </span>
                 <span className="font-medium text-gray-800 dark:text-white">
-                  {car.license_plate || "N/A"}
+                  {car.licensePlate || "N/A"}
                 </span>
               </div>
               <div className="flex items-center justify-between">

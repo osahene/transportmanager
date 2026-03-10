@@ -39,7 +39,7 @@ export default function CarsPage() {
       !searchTerm ||
       car.make.toLowerCase().includes(searchTerm.toLowerCase()) ||
       car.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      car.license_plate?.toLowerCase().includes(searchTerm.toLowerCase());
+      car.licensePlate?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || car.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -307,7 +307,7 @@ const handleCarClick = (car: Car) => {
                   <span>Fuel: {car.fuel_type || "N/A"}</span>
                 </div>
                 <div className="text-gray-600 dark:text-gray-400">
-                  <span>Plate: {car.license_plate || "N/A"}</span>
+                  <span>Plate: {car.licensePlate || "N/A"}</span>
                 </div>
                 <div className="text-gray-600 dark:text-gray-400">
                   <span>Available: {getNextAvailableDate(car)}</span>

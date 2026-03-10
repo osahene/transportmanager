@@ -519,7 +519,7 @@ const filteredBookings = useMemo(() => {
                           <FaCar className="text-gray-400 dark:text-gray-500" />
                           <span>
                             {booking.carMake} {booking.carModel} (
-                            {booking.carlicense_plate})
+                            {booking.carlicensePlate})
                           </span>
                         </div>
                       </div>

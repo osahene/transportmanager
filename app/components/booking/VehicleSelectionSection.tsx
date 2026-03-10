@@ -16,7 +16,7 @@ export default function VehicleSelectionSection({
   onCarSelect,
 }: VehicleSelectionSectionProps) {
   const selectedCar = availableCars.find((car) => car.id === selectedCarId);
-
+console.log("Available Cars:", selectedCar);
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -69,7 +69,7 @@ export default function VehicleSelectionSection({
                   </div>
                 </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Plate: {car.license_plate}
+                    Plate: {car.licensePlate}
                   </p>
                   {/* <div className="mt-2">
                     <span className="text-lg font-bold text-gray-900 dark:text-white">
@@ -112,15 +112,12 @@ export default function VehicleSelectionSection({
                   className="w-4 h-4 rounded-full"
                   style={{ backgroundColor: selectedCar.color }}
                 />
-                <span className="font-medium text-gray-900 dark:text-white">
-                  {selectedCar.color}
-                </span>
               </div>
             </div>
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Plate</p>
               <p className="font-medium text-gray-900 dark:text-white">
-                {selectedCar.license_plate}
+                {selectedCar.licensePlate}
               </p>
             </div>
           </div>

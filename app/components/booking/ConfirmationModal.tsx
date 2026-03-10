@@ -150,7 +150,7 @@ export default function ConfirmationModal({
                     License Plate
                   </p>
                   <p className="font-medium text-gray-900 dark:text-white">
-                    {summary.car.license_plate}
+                    {summary.car.licensePlate}
                   </p>
                 </div>
                 <div>
