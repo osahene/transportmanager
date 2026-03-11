@@ -164,7 +164,7 @@ export default function CarDetailPage() {
                 Total Revenue
               </p>
               <p className="text-2xl font-bold text-green-600 mt-1">
-                ¢{totalRevenue.toLocaleString()}
+                ¢{Number(totalRevenue.toLocaleString()).toFixed(2)}
               </p>
             </div>
             <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
@@ -179,7 +179,7 @@ export default function CarDetailPage() {
                 Maintenance Costs
               </p>
               <p className="text-2xl font-bold text-yellow-600 mt-1">
-                ¢{maintenanceCosts.toLocaleString()}
+                ¢{Number(maintenanceCosts.toLocaleString()).toFixed(2)}
               </p>
             </div>
             <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
@@ -280,7 +280,7 @@ export default function CarDetailPage() {
                             </p>
                           </div>
                           <span className="font-bold text-gray-900 dark:text-white">
-                            ¢{record.cost.toLocaleString()}
+                            ¢{Number(record.cost).toFixed(2)}
                           </span>
                         </li>
                       ))}

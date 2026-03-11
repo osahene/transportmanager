@@ -184,7 +184,7 @@ const BookingsTable: React.FC<BookingsTableProps> = ({
                             <FaMoneyBillWave className="w-4 h-4 text-green-500" />
                             <div>
                               <div className="font-bold text-gray-900 dark:text-white">
-                                ¢{booking.totalAmount.toLocaleString()}
+                                ¢{(Number(booking.totalAmount).toFixed(2))}
                               </div>
                             </div>
                           </div>
@@ -322,7 +322,7 @@ const BookingsTable: React.FC<BookingsTableProps> = ({
                       Total Amount:
                     </span>
                     <span className="font-bold text-gray-900 dark:text-white">
-                      ¢{selectedBooking.totalAmount.toLocaleString()}
+                      ¢{Number(selectedBooking.totalAmount).toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -357,7 +357,7 @@ const BookingsTable: React.FC<BookingsTableProps> = ({
                           Refund Amount:
                         </span>
                         <span className="font-medium text-red-600">
-                          ¢{selectedBooking.refundAmount.toLocaleString()}
+                          ¢{Number(selectedBooking.refundAmount).toFixed(2)}
                         </span>
                       </div>
                     )}

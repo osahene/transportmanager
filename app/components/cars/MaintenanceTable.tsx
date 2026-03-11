@@ -232,7 +232,7 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
                       <td className="py-3 px-4">
                         <div className="font-medium">{record.type}</div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">
-                          ¢{record.cost.toLocaleString()}
+                          ¢{Number(record.cost).toFixed(2)}
                         </div>
                       </td>
                       <td className="py-3 px-4">
@@ -443,7 +443,7 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
                     Cost
                   </label>
                   <p className="text-gray-800 dark:text-white text-xl font-bold">
-                    ¢{localSelectedRecord.cost.toLocaleString()}
+                    ¢{Number(localSelectedRecord.cost).toFixed(2)}
                   </p>
                 </div>
               </div>

@@ -332,7 +332,7 @@ const handleCarClick = (car: Car) => {
                       </p>
                       <p className="font-bold text-green-600">
                         {car.stats.totalRevenue
-                          ? `¢${car.stats.totalRevenue.toLocaleString()}`
+                          ? `¢${Number(car.stats.totalRevenue).toFixed(2)}`
                           : "¢0"}
                       </p>
                     </div>

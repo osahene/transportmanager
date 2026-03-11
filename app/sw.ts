@@ -11,10 +11,7 @@ declare global {
 declare const self: WorkerGlobalScope;
 
 const serwist = new Serwist({
-  precacheEntries: [
-    ...(self.__SW_MANIFEST || []),
-    '/~offline',
-  ],
+  precacheEntries: self.__SW_MANIFEST,
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
@@ -35,7 +32,7 @@ const serwist = new Serwist({
   fallbacks: {
     entries: [
       {
-        url: "/~offline",
+        url: "/~offline", 
         matcher({ request }) {
           return request.destination === "document";
         },

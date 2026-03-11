@@ -419,7 +419,7 @@ export default function BookingActions({
                           Base Penalty ({penaltyCalculation.lateDays} day(s)):
                         </span>
                         <span className="font-semibold">
-                          ¢{penaltyCalculation.penaltyAmount.toFixed(2)}
+                          ¢{Number(penaltyCalculation.penaltyAmount).toFixed(2)}
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -427,7 +427,7 @@ export default function BookingActions({
                           Late Fee (10%):
                         </span>
                         <span className="font-semibold">
-                          ¢{penaltyCalculation.lateFee.toFixed(2)}
+                          ¢{Number(penaltyCalculation.lateFee).toFixed(2)}
                         </span>
                       </div>
                       <div className="flex justify-between border-t border-red-200 dark:border-red-700 pt-2">
@@ -435,7 +435,7 @@ export default function BookingActions({
                           Total Penalty:
                         </span>
                         <span className="text-lg font-bold text-red-700 dark:text-red-300">
-                          ¢{penaltyCalculation.totalAmount.toFixed(2)}
+                          ¢{Number(penaltyCalculation.totalAmount).toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -487,7 +487,7 @@ export default function BookingActions({
                         >
                           I confirm that the penalty of{" "}
                           <span className="font-bold text-red-600 dark:text-red-400">
-                            ¢{penaltyCalculation.totalAmount.toFixed(2)}
+                            ¢{(Number(penaltyCalculation.totalAmount).toFixed(2))}
                           </span>{" "}
                           has been received via{" "}
                           {penaltyPaymentMethod === "cash"

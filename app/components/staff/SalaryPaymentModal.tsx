@@ -113,7 +113,7 @@ export default function SalaryPaymentModal({ staff, onClose, onSuccess }: Props)
                     </div>
                     <div className="flex justify-between font-bold border-t pt-2">
                         <span>Net Salary:</span>
-                        <span>¢{netSalary.toLocaleString()}</span>
+                        <span>¢{(Number(netSalary).toFixed(2))}</span>
                     </div>
                     <div>
                         <label className="block text-sm font-medium mb-1">Payment Method</label>
@@ -210,25 +210,25 @@ function SalaryPayslip({ payment, staff, onClose }: any) {
                     <div className="mt-4 border-t py-4 space-y-3">
                         <div className="flex justify-between">
                             <span className="text-gray-600">Basic Salary:</span>
-                            <span className="font-medium">¢{payment.basic_salary?.toLocaleString() || payment.basicSalary?.toLocaleString()}</span>
+                            <span className="font-medium">¢{(Number(payment.basic_salary) || Number(payment.basicSalary)).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-gray-600">Overtime:</span>
-                            <span className="font-medium">¢{payment.overtime?.toLocaleString()}</span>
+                            <span className="font-medium">¢{Number(payment.overtime).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-gray-600">Bonuses:</span>
-                            <span className="font-medium">¢{payment.bonuses?.toLocaleString()}</span>
+                            <span className="font-medium">¢{Number(payment.bonuses).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-red-600">
                             <span className="text-gray-600">Deductions:</span>
-                            <span>-¢{payment.deductions?.toLocaleString()}</span>
+                            <span>-¢{Number(payment.deductions).toFixed(2)}</span>
                         </div>
                     </div>
 
                     <div className="flex justify-between items-center font-bold text-xl mt-4 pt-2 border-t border-black">
                         <span>Net Salary:</span>
-                        <span>¢{payment.net_salary?.toLocaleString() || payment.netSalary?.toLocaleString()}</span>
+                        <span>¢{Number(payment.net_salary) || Number(payment.netSalary) ? Number(payment.net_salary || payment.netSalary).toFixed(2) : "0.00"}</span>
                     </div>
 
                     <div className="mt-8 text-xs text-gray-400 flex justify-between">

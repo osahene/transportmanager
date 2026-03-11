@@ -94,7 +94,7 @@ export default function PaymentSummarySection({
             Total Amount:
           </span>
           <span className="text-3xl font-bold text-gray-900 dark:text-white">
-            ¢{totalAmount.toLocaleString()}
+            ¢{(Number(totalAmount).toFixed(2))}
           </span>
         </div>
          {selectedCar && startDate && endDate && (
@@ -141,7 +141,7 @@ export default function PaymentSummarySection({
                   Subtotal:
                 </span>
                 <span className="text-gray-900 dark:text-white">
-                  ¢{subtotal.toLocaleString()}
+                  ¢{Number(subtotal).toFixed(2)}
                 </span>
               </div>
 
@@ -170,7 +170,7 @@ export default function PaymentSummarySection({
               <div className="flex justify-between text-sm font-medium pt-2 border-t ...">
                 <span className="text-gray-700 dark:text-gray-300">Total:</span>
                 <span className="text-gray-900 dark:text-white">
-                  ¢{calculatedTotal.toLocaleString()}
+                  ¢{Number(calculatedTotal).toFixed(2)}
                 </span>
               </div>
             </div>
@@ -307,7 +307,7 @@ export default function PaymentSummarySection({
               </label>
               <span className="text-xl font-bold  text-gray-900 dark:text-white">
                 <span className="text-2xl mr-2">¢</span>
-                {totalAmount.toLocaleString()}
+                {Number(totalAmount).toFixed(2)}
               </span>
             </div>
             <div>

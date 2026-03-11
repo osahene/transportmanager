@@ -214,7 +214,7 @@ export default function StaffPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-lg font-bold text-gray-900 dark:text-white">
-                        ¢{staffMember.salary.toLocaleString()}
+                        ¢{(Number(staffMember.salary).toFixed(2))}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
                         {staffMember.employmentType.replace("_", " ")}

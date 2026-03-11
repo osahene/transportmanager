@@ -562,10 +562,10 @@ export default function BookingsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-lg font-bold text-gray-900 dark:text-white">
-                        ¢{booking.totalAmount.toLocaleString()}
+                        ¢{(Number(booking.totalAmount).toFixed(2))}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        Daily: ¢{booking.dailyRate || 0}
+                        Daily: ¢{Number(booking.dailyRate).toFixed(2) || 0}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -827,29 +827,29 @@ export default function BookingsPage() {
                     <div className="border-t border-b py-4">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-gray-600">Daily Rate (after tax)</span>
-                        <span className="font-bold text-gray-900">¢{netDaily.toFixed(2)}</span>
+                        <span className="font-bold text-gray-900">¢{Number(netDaily).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-gray-600">Number of Days</span>
-                        <span className="font-bold text-gray-900">{days}</span>
+                        <span className="font-bold text-gray-900"> {Number(days).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-gray-600">Subtotal</span>
-                        <span className="font-bold text-gray-900">¢{subtotal.toFixed(2)}</span>
+                        <span className="font-bold text-gray-900">¢{Number(subtotal).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-gray-600">Tax (12%)</span>
-                        <span className="font-bold text-gray-900">¢{totalTax.toFixed(2)}</span>
+                        <span className="font-bold text-gray-900">¢{Number(totalTax).toFixed(2)}</span>
                       </div>
                       {discount > 0 && (
                         <div className="flex justify-between items-center mb-2">
                           <span className="text-gray-600">Discount</span>
-                          <span className="font-bold text-gray-900">¢{discount.toFixed(2)}</span>
+                          <span className="font-bold text-gray-900">¢{Number(discount).toFixed(2)}</span>
                         </div>
                       )}
                       <div className="flex justify-between items-center text-lg font-bold pt-2 border-t">
                         <span className="text-gray-900">Grand Total</span>
-                        <span className="text-gray-900">¢{grandTotal.toFixed(2)}</span>
+                        <span className="text-gray-900">¢{Number(grandTotal).toFixed(2)}</span>
                       </div>
                     </div>
                   );

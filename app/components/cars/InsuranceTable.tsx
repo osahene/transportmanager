@@ -219,7 +219,7 @@ const InsuranceTable: React.FC<InsuranceTableProps> = ({
                           <div className="flex items-center gap-2">
                             <FaMoneyBillWave className="w-4 h-4 text-green-500" />
                             <div className="font-bold text-gray-900 dark:text-white">
-                              ¢{policy.premium.toLocaleString()}
+                              ¢{Number(policy.premium).toFixed(2)}
                             </div>
                           </div>
                           
@@ -337,7 +337,7 @@ const InsuranceTable: React.FC<InsuranceTableProps> = ({
                       Annual Premium
                     </label>
                     <p className="text-xl font-bold text-green-600">
-                      ¢{selectedPolicy.premium.toLocaleString()}
+                      ¢{Number(selectedPolicy.premium).toFixed(2)}
                     </p>
                   </div>
                   

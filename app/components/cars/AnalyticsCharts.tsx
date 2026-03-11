@@ -164,7 +164,7 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ transactions }) => {
           label: (context: TooltipItem<"line">) => {
             const value = context.parsed.y ?? 0;
             const label = context.dataset.label || "";
-            return `${label}: ¢${value.toLocaleString()}`;
+            return `${label}: ¢${Number(value).toFixed(2)}`;
           },
         },
       },
@@ -197,7 +197,7 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ transactions }) => {
           },
           callback: (value: string | number) => {
             if (typeof value === "number") {
-              return value >= 1000 ? `¢${value / 1000}k` : `¢${value}`;
+              return value >= 1000 ? `¢${(Number(value) / 1000).toFixed(1)}k` : `¢${Number(value).toFixed(2)}`;
             }
             return value;
           },
@@ -279,7 +279,7 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ transactions }) => {
             Total Revenue
           </div>
           <div className="text-2xl font-bold text-green-600">
-            ¢{totalRevenue.toLocaleString()}
+            ¢{(Number(totalRevenue.toLocaleString()).toFixed(2))}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             {revenueTransactions.length} transactions
@@ -291,7 +291,7 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ transactions }) => {
             Total Expenses
           </div>
           <div className="text-2xl font-bold text-red-600">
-            ¢{totalExpenses.toLocaleString()}
+            ¢{Number(totalExpenses.toLocaleString()).toFixed(2)}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             {expenseTransactions.length} transactions
@@ -307,7 +307,7 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ transactions }) => {
               netProfit >= 0 ? "text-blue-600" : "text-red-600"
             }`}
           >
-            ¢{Math.abs(netProfit).toLocaleString()}
+            ¢{(Number(Math.abs(netProfit).toLocaleString()).toFixed(2))}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             {netProfit >= 0 ? "Profit" : "Loss"}
@@ -319,7 +319,7 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ transactions }) => {
             Total Refunds
           </div>
           <div className="text-2xl font-bold text-purple-600">
-            ¢{totalRefunds.toLocaleString()}
+            ¢{(Number(totalRefunds.toLocaleString()).toFixed(2))}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             {refundTransactions.length} refunds
@@ -335,7 +335,7 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ transactions }) => {
               Avg. Revenue per Transaction
             </span>
             <span className="font-bold text-green-600">
-              ¢{avgRevenue.toLocaleString()}
+              ¢{(Number(avgRevenue.toLocaleString()).toFixed(2))}
             </span>
           </div>
         </div>
@@ -346,7 +346,7 @@ const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ transactions }) => {
               Avg. Expense per Transaction
             </span>
             <span className="font-bold text-red-600">
-              ¢{avgExpense.toLocaleString()}
+              ¢{(Number(avgExpense.toLocaleString()).toFixed(2))}
             </span>
           </div>
         </div>

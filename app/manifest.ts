@@ -11,16 +11,6 @@ export default function manifest(): MetadataRoute.Manifest {
     "theme_color": "#1e40af",
     "icons": [
       {
-        "src": "/icons/icon-192x192.svg",
-        "sizes": "192x192",
-        "type": 'image/svg+xml',
-      },
-      {
-        "src": "/icons/icon-512x512.svg",
-        "sizes": "512x512",
-        "type": 'image/svg+xml',
-      },
-      {
         "src": "/icons/icon-192x192.png",
         "sizes": "192x192",
         "type": "image/png",
@@ -29,12 +19,6 @@ export default function manifest(): MetadataRoute.Manifest {
         "src": "/icons/icon-512x512.png",
         "sizes": "512x512",
         "type": "image/png",
-      },
-      {
-        "src": "/icons/icon-192x192.svg",
-        "sizes": "192x192",
-        "type": "image/svg+xml",
-        "purpose": "any",
       },
     ],
   }

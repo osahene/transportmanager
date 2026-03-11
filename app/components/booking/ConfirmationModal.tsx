@@ -311,7 +311,7 @@ export default function ConfirmationModal({
                   <>
                     <div className="flex justify-between">
                       <span className="text-gray-700 dark:text-gray-300">Daily Rate (after tax)</span>
-                      <span className="font-medium text-gray-900 dark:text-white">¢{netDaily.toFixed(2)}</span>
+                      <span className="font-medium text-gray-900 dark:text-white">¢{(Number(netDaily).toFixed(2))}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-700 dark:text-gray-300">Number of Days</span>
@@ -319,21 +319,21 @@ export default function ConfirmationModal({
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-700 dark:text-gray-300">Subtotal</span>
-                      <span className="font-medium text-gray-900 dark:text-white">¢{subtotal.toFixed(2)}</span>
+                      <span className="font-medium text-gray-900 dark:text-white">¢{(Number(subtotal).toFixed(2))}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-700 dark:text-gray-300">Tax (12%)</span>
-                      <span className="font-medium text-gray-900 dark:text-white">¢{totalTax.toFixed(2)}</span>
+                      <span className="font-medium text-gray-900 dark:text-white">¢{(Number(totalTax).toFixed(2))}</span>
                     </div>
                     {discount > 0 && (
                       <div className="flex justify-between">
                         <span className="text-gray-700 dark:text-gray-300">Discount</span>
-                        <span className="font-medium text-gray-900 dark:text-white">¢{discount.toFixed(2)}</span>
+                        <span className="font-medium text-gray-900 dark:text-white">¢{(Number(discount).toFixed(2))}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200 dark:border-gray-700">
                       <span className="text-gray-900 dark:text-white">Grand Total</span>
-                      <span className="text-gray-900 dark:text-white">¢{grandTotal.toFixed(2)}</span>
+                      <span className="text-gray-900 dark:text-white">¢{(Number(grandTotal).toFixed(2))}</span>
                     </div>
                   </>
                 );
@@ -406,7 +406,7 @@ export default function ConfirmationModal({
                         Amount Paid
                       </p>
                       <p className="font-medium text-gray-900 dark:text-white">
-                        ¢{summary.paymentData.payInSlipDetails.amount.toLocaleString()}                        {summary.paymentData.payInSlipDetails.amount.toLocaleString()}
+                        ¢{Number(summary.paymentData.payInSlipDetails.amount).toFixed(2)}                        {summary.paymentData.payInSlipDetails.amount.toLocaleString()}
                       </p>
                     </div>
                     <div>
