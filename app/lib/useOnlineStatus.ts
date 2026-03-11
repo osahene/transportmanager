@@ -1,10 +1,9 @@
-// app/lib/useOnlineStatus.ts
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 const CHECK_INTERVAL = 30000; // 30 seconds
 const CHECK_TIMEOUT = 5000;    // 5 seconds
-const TEST_URL = 'https://www.google.com/favicon.ico'; // or 'https://www.google.com/favicon.ico' (CORS may apply)
+const PING_URL = '/ping.txt';  // Relative URL – same origin
 
 export function useOnlineStatus() {
   const [isOnline, setIsOnline] = useState(true);
@@ -15,12 +14,14 @@ export function useOnlineStatus() {
       const controller = new AbortController();
       const id = setTimeout(() => controller.abort(), CHECK_TIMEOUT);
 
-      const response = await fetch(TEST_URL, {
-        method: 'HEAD',
-        cache: 'no-cache',
+      // Add a cache-busting timestamp to avoid cached responses
+      const url = `${PING_URL}?t=${Date.now()}`;
+
+      const response = await fetch(url, {
+        method: 'HEAD',        // We only need headers, not the body
+        cache: 'no-cache',     // Force revalidation
         signal: controller.signal,
       });
-      console.log('Connectivity check response:', response);
 
       clearTimeout(id);
       setIsOnline(response.ok);
