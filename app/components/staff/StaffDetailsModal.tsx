@@ -178,7 +178,7 @@ export default function StaffDetailsModal({ staff, onClose }: Props) {
                           <td className="px-4 py-2">
                             <span className={`px-2 py-1 rounded-full text-xs ${
                               b.status === "completed" ? "bg-green-100" : 
-                              b.status === "confirmed" ? "bg-blue-100" : "bg-yellow-100"
+                              b.status === "rented" ? "bg-blue-100" : "bg-yellow-100"
                             }`}>
                               {b.status}
                             </span>
