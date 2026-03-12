@@ -12,7 +12,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "YOS Car Rentals - Transport Manager",
   description: "Comprehensive transport management system",
-  manifest: "/manifest.webmanifest",  
+  // manifest: "/manifest.webmanifest",  
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -32,6 +32,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <SecureHeaders />
+        <link rel="manifest" href="/manifest.webmanifest" />
       </head>
       <body className={`${inter.className} antialiased`}>
         <OfflineBanner />
