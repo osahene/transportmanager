@@ -14,11 +14,9 @@ import {
   FaBars,
   FaTimes,
   FaCog,
-  FaDownload,
   // FaChartLine,
 } from "react-icons/fa";
 import Link from "next/link";
-import InstallPWA from "../InstallPWA";
 
 const navItems = [
   {
@@ -119,8 +117,8 @@ export default function SideNav() {
             return (
               <Link
                 key={item.id}
-                href={item.path}
-                onClick={() => handleNavigation(item.id)}
+                href={item.path} 
+                onClick={() => handleNavigation(item.id)} 
                 className={`w-full flex items-center ${sidebarOpen ? "justify-start px-4 space-x-3" : "justify-center"
                   } py-3 rounded-xl transition-all duration-200
                  ${active
@@ -149,13 +147,6 @@ export default function SideNav() {
         {/* Bottom Section */}
         <div className="absolute bottom-0 left-0 right-0 p-2 border-t border-gray-200 dark:border-gray-700">
           <div className="space-y-2">
-            <button
-              className={`flex items-center ${sidebarOpen ? "justify-start px-4 space-x-3" : "justify-center"
-                } w-full py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl`}
-              title={sidebarOpen ? "" : "Install App"}>
-              <FaDownload className="w-5 h-5" />
-              <InstallPWA />
-            </button>
             <button
               className={`flex items-center ${sidebarOpen ? "justify-start px-4 space-x-3" : "justify-center"
                 } w-full py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl`}
