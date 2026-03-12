@@ -53,16 +53,16 @@ const apiService = {
     sendSalarySMS: (paymentId: string) => $axios.post(`/salary-payments/${paymentId}/send_sms/`),
 
     // Maintenance endpoints
-    getMaintenanceRecords: (params?: any) => $axios.get("/maintenance/", { params }),
+    getMaintenanceRecords: (car_id: string) => $axios.get(`/cars/${car_id}/maintenance_records/`),
     createMaintenanceRecord: (data: any) => $axios.post("/maintenance/", data),
     updateMaintenanceStatus: (recordId: string, data: any) => $axios.patch(`/maintenance/${recordId}/`, data),
-    getMaintenanceStats: () => $axios.get("/maintenance/stats/"),
+    getMaintenanceStats: () => $axios.get("/events/maintenance/stats/"),
     getOverdueMaintenance: () => {
         const today = new Date().toISOString().split("T")[0];
-        return $axios.get("/maintenance/overdue/", { params: { end_date__lt: today } });
+        return $axios.get("/events/maintenance/overdue/", { params: { end_date__lt: today } });
     },
-    completeMaintenance: (recordId: string, data: any) => $axios.post(`/maintenance/${recordId}/complete/`, data),  
-    extendMaintenanceDeadline: (recordId: string, data: any) => $axios.post(`/maintenance/${recordId}/extend_deadline/`, data),
+    completeMaintenance: (recordId: string, data: any) => $axios.post(`/events/maintenance/${recordId}/complete/`, data),  
+    extendMaintenanceDeadline: (recordId: string, data: any) => $axios.post(`/events/maintenance/${recordId}/extend_deadline/`, data),
 
 };
 

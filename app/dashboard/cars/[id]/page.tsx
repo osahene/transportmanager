@@ -32,7 +32,6 @@ export default function CarDetailPage() {
   const { data: bookings = [], isLoading: bookingsLoading } = useBookings({ carId }); // Assuming API supports filtering by carId
   const { data: maintenanceRecords = [], isLoading: maintenanceLoading } = useMaintenanceRecords(carId);
   const { data: insurancePolicies = [], isLoading: insuranceLoading } = useInsurancePolicies({ vehicleId: carId });
-
   const [activeTab, setActiveTab] = useState<string>("overview");
 
   const handleBack = () => {
@@ -98,9 +97,9 @@ export default function CarDetailPage() {
   const utilizationRate = totalBookings > 0 ? Math.round((completedBookings / totalBookings) * 100) : 0;
   const totalRevenue = carBookings
     .filter((b) => b.status === "completed")
-    .reduce((sum, b) => sum + (b.totalAmount || 0), 0);
-  const maintenanceCosts = maintenanceRecords.reduce((sum, r) => sum + (r.cost || 0), 0);
-
+    .reduce((sum, b) => sum + (Number(b.totalAmount) || 0), 0);
+  const maintenanceCosts = maintenanceRecords.reduce((sum, r) => sum + (Number(r.cost) || 0), 0);
+  console.log('maint', maintenanceCosts)
   // Get last booking date
   const lastBooking = carBookings.length > 0
     ? carBookings.sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())[0]
@@ -164,7 +163,7 @@ export default function CarDetailPage() {
                 Total Revenue
               </p>
               <p className="text-2xl font-bold text-green-600 mt-1">
-                ¢{Number(totalRevenue.toLocaleString()).toFixed(2)}
+                ¢{totalRevenue.toLocaleString()}
               </p>
             </div>
             <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
@@ -179,7 +178,7 @@ export default function CarDetailPage() {
                 Maintenance Costs
               </p>
               <p className="text-2xl font-bold text-yellow-600 mt-1">
-                ¢{Number(maintenanceCosts.toLocaleString()).toFixed(2)}
+                ¢{maintenanceCosts.toLocaleString()}
               </p>
             </div>
             <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
@@ -312,11 +311,10 @@ export default function CarDetailPage() {
                                 {policy.provider}
                               </p>
                               <span
-                                className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                  isActive
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${isActive
                                     ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                                     : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                                }`}
+                                  }`}
                               >
                                 {isActive ? "Active" : "Expired"}
                               </span>

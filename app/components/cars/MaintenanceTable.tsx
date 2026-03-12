@@ -73,8 +73,7 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
         await updateStatusMutation.mutateAsync({
           recordId: selectedRecordForAction.id,
           status: newStatus,
-          estimatedEndDate: selectedRecordForAction.estimatedEndDate,
-          notes: `Status updated to ${newStatus}`,
+          notes: `Status updated to ${newStatus}`, // or leave empty
         });
         setIsStatusModalOpen(false);
         setSelectedRecordForAction(null);
@@ -225,9 +224,8 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
                   return (
                     <tr
                       key={record.id}
-                      className={`border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
-                        isDelayed ? "bg-orange-50 dark:bg-orange-900/10" : ""
-                      }`}
+                      className={`border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 ${isDelayed ? "bg-orange-50 dark:bg-orange-900/10" : ""
+                        }`}
                     >
                       <td className="py-3 px-4">
                         <div className="font-medium">{record.type}</div>
@@ -283,24 +281,24 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
                           {(record.status === "in-progress" ||
                             record.status === "scheduled" ||
                             record.status === "delayed") && (
-                            <>
-                              <button
-                                onClick={() => handleCompleteEarly(record)}
-                                className="p-1 hover:bg-green-100 dark:hover:bg-green-900 rounded"
-                                title="Mark as Completed (Early)"
-                              >
-                                <FaCheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
-                              </button>
+                              <>
+                                <button
+                                  onClick={() => handleCompleteEarly(record)}
+                                  className="p-1 hover:bg-green-100 dark:hover:bg-green-900 rounded"
+                                  title="Mark as Completed (Early)"
+                                >
+                                  <FaCheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                                </button>
 
-                              <button
-                                onClick={() => handleExtendDeadline(record)}
-                                className="p-1 hover:bg-purple-100 dark:hover:bg-purple-900 rounded"
-                                title="Extend Deadline"
-                              >
-                                <FaCalendarPlus className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                              </button>
-                            </>
-                          )}
+                                <button
+                                  onClick={() => handleExtendDeadline(record)}
+                                  className="p-1 hover:bg-purple-100 dark:hover:bg-purple-900 rounded"
+                                  title="Extend Deadline"
+                                >
+                                  <FaCalendarPlus className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                                </button>
+                              </>
+                            )}
 
                           <button
                             onClick={() => handleUpdateStatus(record)}
